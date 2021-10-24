@@ -19,15 +19,10 @@ const _filterCallChain = (chain, minStrike) => chain.filter(option => {
     // Filter out all below minStrike if minStrike was passed
     return false
   }
-  if (option.delta > 0.4 || option.delta < 0.1) {
-    // Filter out anything with a delta higher than .40 or lower than 0.1
-    return false
-  }
-  if (option.premium < 5) {
-    // Filter out anything with a shit premium
-    return false
-  }
-  return true
+
+  // Filter out anything with a delta higher than .40 or lower than 0.1
+  // Filter out anything with a shit premium
+  return option.delta < 0.4 && option.delta > 0.1 && option.premium >= 5
 })
 
 const _selectOptionClosestTo30 = chain => chain.reduce((acc, option) =>
