@@ -32,6 +32,12 @@ const _selectOptionClosestTo30 = chain => chain.length > 0 ? chain.reduce((acc, 
 ) : {}
 
 
+const _selectOptionWithBestWeeklyRate = options => options.length > 0 ? options.reduce((acc, option) =>
+  option.weeklyRate > acc.weeklyRate ? option : acc,
+  options[0]
+).symbol : null
+
+
 const _selectBestStrikeForDay = async (symbol, expiration, minStrike) => {
   const url = `markets/options/chains?symbol=${symbol}&expiration=${expiration}&greeks=true`
 
@@ -51,14 +57,27 @@ const _selectBestStrikeForDay = async (symbol, expiration, minStrike) => {
 }
 
 
-const selectBestCall = async (symbol, minStrike = null) => {
+const selectBestCall = async (symbol, minStrike = null, maxWeeksOut = 4) => {
   const expirationDates = nextStrikeDates()
 
-  const hello = await _selectBestStrikeForDay(symbol, expirationDates[0], minStrike)
+  // Week is used to calculate the weekly rate
+  // Premium / week = weekly rate
+  let week = 1
+  const options = []
 
-  console.log(hello)
+  for (let x = 0; x < expirationDates.length; x++) {
+    const expiration = expirationDates[x]
+    const bestOption = await _selectBestStrikeForDay(symbol, expiration, minStrike)
 
-  //await _selectBestStrikeForDay(symbol, strikeDates[0], minStrike)
+    // Skip if best option is empty object
+    if (bestOption.symbol) {
+      const weeklyRate = bestOption.premium / week
+      options.push({ ...bestOption, weeklyRate })
+    }
+    week++
+  }
+
+  return _selectOptionWithBestWeeklyRate(options)
 }
 
 
@@ -66,6 +85,7 @@ module.exports = {
   _formatCallChain,
   _filterCallChain,
   _selectOptionClosestTo30,
+  _selectOptionWithBestWeeklyRate,
   _selectBestStrikeForDay,
   selectBestCall,
 }

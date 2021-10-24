@@ -8,8 +8,8 @@ const launch = async () => {
 
   // console.log(watchlist)
 
-  await selectBestCall('PINS')
-
+  const result = await selectBestCall('NOTREAL')
+  console.log(result)
 }
 
 launch()
