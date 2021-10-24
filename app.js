@@ -8,7 +8,7 @@ const launch = async () => {
 
   // console.log(watchlist)
 
-  const result = await selectBestCall('NOTREAL')
+  const result = await selectBestCall('PINS')
   console.log(result)
 }
 
