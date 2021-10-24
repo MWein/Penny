@@ -1,15 +1,17 @@
 require('dotenv').config()
 
 const { getWatchlistSymbols } = require('./tradier/watchlist')
-const { selectBestCall } = require('./tradier/selectBestCall')
+const { selectBestOption } = require('./tradier/selectBestOption')
 
 const launch = async () => {
   // const watchlist = await getWatchlistSymbols()
 
   // console.log(watchlist)
 
-  const result = await selectBestCall('PINS')
-  console.log(result)
+  const bestCall = await selectBestOption('AAPL', 'call')
+  const bestPut = await selectBestOption('AAPL', 'put')
+  console.log(bestCall)
+  console.log(bestPut)
 }
 
 launch()

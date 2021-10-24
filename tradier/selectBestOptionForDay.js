@@ -1,19 +1,19 @@
 const network = require('../utils/network')
 
 
-const _formatCallChain = chain => chain
-  .filter(option => option.option_type === 'call')
+const _formatChain = (chain, type) => chain
+  .filter(option => option.option_type === type)
   .map(option => ({
     symbol: option.symbol,
     premium: Number((option.bid * 100).toFixed()),
     strike: option.strike,
-    delta: option.greeks.delta,
-    distanceTo30: Math.abs(0.3 - option.greeks.delta),
+    delta: Math.abs(option.greeks.delta),
+    distanceTo30: Math.abs(0.3 - Math.abs(option.greeks.delta)),
     expiration: option.expiration_date,
   }))
 
 
-const _filterCallChain = (chain, minStrike) => chain.filter(option => {
+const _filterChain = (chain, minStrike) => chain.filter(option => {
   if (minStrike !== null && option.strike < minStrike) {
     // Filter out all below minStrike if minStrike was passed
     return false
@@ -31,19 +31,16 @@ const _selectOptionClosestTo30 = chain => chain.length > 0 ? chain.reduce((acc, 
 ) : {}
 
 
-const selectBestStrikeForDay = async (symbol, expiration, minStrike) => {
+const selectBestStrikeForDay = async (symbol, type, expiration, minStrike) => {
   const url = `markets/options/chains?symbol=${symbol}&expiration=${expiration}&greeks=true`
 
   // If a bad expiration date is chosen, this will throw
   try {
     const response = await network.get(url)
-    const callChain = _formatCallChain(response.options.option)
-    const filteredCallChain = _filterCallChain(callChain, minStrike)
-    const closestTo30Delta = _selectOptionClosestTo30(filteredCallChain)
-    return {
-      symbol: closestTo30Delta.symbol,
-      premium: closestTo30Delta.premium,
-    }
+    const chain = _formatChain(response.options.option, type)
+    const filteredChain = _filterChain(chain, minStrike)
+    const closestTo30Delta = _selectOptionClosestTo30(filteredChain)
+    return closestTo30Delta
   } catch (e) {
     return {}
   }
@@ -51,8 +48,8 @@ const selectBestStrikeForDay = async (symbol, expiration, minStrike) => {
 
 
 module.exports = {
-  _formatCallChain,
-  _filterCallChain,
+  _formatChain,
+  _filterChain,
   _selectOptionClosestTo30,
   selectBestStrikeForDay,
 }
