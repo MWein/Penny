@@ -3,7 +3,8 @@ require('dotenv').config()
 const { getWatchlistSymbols } = require('./tradier/watchlist')
 const { selectBestOption } = require('./tradier/selectBestOption')
 const { getPrices } = require('./tradier/getPrices')
-const { getOpenOrders } = require('./tradier/getOrders')
+const { getOrders } = require('./tradier/getOrders')
+const { getPositions } = require('./tradier/getPositions')
 
 const launch = async () => {
   // const watchlist = await getWatchlistSymbols()
@@ -15,8 +16,11 @@ const launch = async () => {
   // console.log(bestCall)
   // console.log(bestPut)
 
-  const orders = await getOpenOrders()
+  const orders = await getOrders()
   console.log(orders)
+
+  const positions = await getPositions()
+  console.log(positions)
 
   // const prices = await getPrices([ 'AAPL', 'TSLA' ])
   // console.log(prices)
