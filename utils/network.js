@@ -4,7 +4,7 @@ const superagent = require('superagent')
 // Superagent doesn't handle this without multiple sends
 const _createFormString = body => Object.keys(body).map(key => {
     const value = body[key]
-    const formattedValue = typeof value !== String ? value : value.join(',')
+    const formattedValue = Array.isArray(value) ? value.join(',') : value
     return `${key}=${formattedValue}`
   }).join('&')
 
@@ -26,7 +26,6 @@ const post = async (path, body) => {
     .set('Authorization', `Bearer ${process.env.APIKEY}`)
     .set('Accept', 'application/json')
     .send(formString)
-    //.type('application/x-www-form-urlencoded')
 
   return response.body
 }
