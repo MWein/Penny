@@ -1,43 +1,77 @@
-const { get } = require('../utils/network')
+const network = require('../utils/network')
+const nextStrikeDates = require('../utils/nextStrikeDates')
 
 
-const _nextStrikeDates = () => {
-  const date = new Date()
-  const dates = []
+const _formatCallChain = chain => chain
+  .filter(option => option.option_type === 'call')
+  .map(option => ({
+    symbol: option.symbol,
+    premium: Number((option.bid * 100).toFixed()),
+    strike: option.strike,
+    delta: option.greeks.delta,
+    distanceTo30: Math.abs(0.3 - option.greeks.delta),
+    expiration: option.expiration_date,
+  }))
 
-  while(dates.length < 4) {
-    switch (date.getDay()) {
-      case 0: date.setDate(date.getDate() + 5)
-      break
-      case 1: date.setDate(date.getDate() + 4)
-      break
-      case 2: date.setDate(date.getDate() + 3)
-      break
-      case 3: date.setDate(date.getDate() + 2)
-      break
-      case 4: date.setDate(date.getDate() + 1)
-      break
-      case 5: date.setDate(date.getDate() + 7) // Off to next friday
-      break
-      case 6: date.setDate(date.getDate() + 6)
-      break
-    }
-    // ISO string returns zulu time and can screw up the date
-    const offset = date.getTimezoneOffset()
-    const actualDate = new Date(date.getTime() - (offset*60*1000))
-    dates.push(actualDate.toISOString().split('T')[0])
+
+const _filterCallChain = (chain, minStrike) => chain.filter(option => {
+  if (minStrike !== null && option.strike < minStrike) {
+    // Filter out all below minStrike if minStrike was passed
+    return false
   }
-  
-  return dates
+  if (option.delta > 0.4 || option.delta < 0.1) {
+    // Filter out anything with a delta higher than .40 or lower than 0.1
+    return false
+  }
+  if (option.premium < 5) {
+    // Filter out anything with a shit premium
+    return false
+  }
+  return true
+})
+
+const _selectOptionClosestTo30 = chain => chain.reduce((acc, option) =>
+  option.distanceTo30 < acc.distanceTo30 ? option : acc,
+  chain[0]
+)
+
+const _selectBestStrikeForDay = async (symbol, expiration, minStrike) => {
+  const url = `markets/options/chains?symbol=${symbol}&expiration=${expiration}&greeks=true`
+
+  // If a bad expiration date is chosen, this will throw
+  try {
+    const response = await network.get(url)
+    const callChain = _formatCallChain(response.options.option)
+    const filteredCallChain = _filterCallChain(callChain, minStrike)
+
+    // If there aren't any good calls, return {}
+    if (filteredCallChain.length === 0) {
+      return {}
+    }
+
+    const closestTo30Delta = _selectOptionClosestTo30(filteredCallChain)
+    return closestTo30Delta
+  } catch (e) {
+    return {}
+  }
 }
 
 
-const selectBestCall = async (symbol, minStrik) => {
+const selectBestCall = async (symbol, minStrike = null) => {
+  const expirationDates = nextStrikeDates()
 
+  const hello = await _selectBestStrikeForDay(symbol, expirationDates[0], minStrike)
+
+  console.log(hello)
+
+  //await _selectBestStrikeForDay(symbol, strikeDates[0], minStrike)
 }
 
 
 module.exports = {
-  _nextStrikeDates,
+  _formatCallChain,
+  _filterCallChain,
+  _selectOptionClosestTo30,
+  _selectBestStrikeForDay,
   selectBestCall,
 }
