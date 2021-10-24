@@ -1,8 +1,8 @@
 const {
   _selectOptionWithBestWeeklyRate,
   selectBestCall,
-} = require('./selectBestCall')
-const selectBest = require('./selectBestCallForDay')
+} = require('./selectBestOption')
+const selectBest = require('./selectBestOptionForDay')
 
 
 describe('_selectOptionWithBestWeeklyRate', () => {
@@ -32,7 +32,7 @@ describe('selectBestCall', () => {
     selectBest.selectBestStrikeForDay.mockReturnValue({})
     await selectBestCall('AAPL')
     expect(selectBest.selectBestStrikeForDay).toHaveBeenCalledTimes(4)
-    expect(selectBest.selectBestStrikeForDay.mock.calls[0][2]).toEqual(null)
+    expect(selectBest.selectBestStrikeForDay.mock.calls[0][3]).toEqual(null)
   })
 
   it('If not given maxWeeksOut, defaults to 4 expirations', async () => {
@@ -52,7 +52,7 @@ describe('selectBestCall', () => {
     await selectBestCall('AAPL', 30, 1)
     expect(selectBest.selectBestStrikeForDay.mock.calls[0][0]).toEqual('AAPL')
     // Skipping the date one so I don't have to use fake timers
-    expect(selectBest.selectBestStrikeForDay.mock.calls[0][2]).toEqual(30)
+    expect(selectBest.selectBestStrikeForDay.mock.calls[0][3]).toEqual(30)
   })
 
   it('Returns null if nothing is returned', async () => {

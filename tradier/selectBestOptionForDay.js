@@ -31,13 +31,13 @@ const _selectOptionClosestTo30 = chain => chain.length > 0 ? chain.reduce((acc, 
 ) : {}
 
 
-const selectBestStrikeForDay = async (symbol, expiration, minStrike) => {
+const selectBestStrikeForDay = async (symbol, type, expiration, minStrike) => {
   const url = `markets/options/chains?symbol=${symbol}&expiration=${expiration}&greeks=true`
 
   // If a bad expiration date is chosen, this will throw
   try {
     const response = await network.get(url)
-    const chain = _formatChain(response.options.option, 'call')
+    const chain = _formatChain(response.options.option, type)
     const filteredChain = _filterChain(chain, minStrike)
     const closestTo30Delta = _selectOptionClosestTo30(filteredChain)
     return {

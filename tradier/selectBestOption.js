@@ -1,5 +1,5 @@
 const nextStrikeDates = require('../utils/nextStrikeDates')
-const selectBest = require('./selectBestCallForDay')
+const selectBest = require('./selectBestOptionForDay')
 
 
 const _selectOptionWithBestWeeklyRate = options => options.length > 0 ? options.reduce((acc, option) =>
@@ -18,7 +18,7 @@ const selectBestCall = async (symbol, minStrike = null, maxWeeksOut = 4) => {
 
   for (let x = 0; x < expirationDates.length; x++) {
     const expiration = expirationDates[x]
-    const bestOption = await selectBest.selectBestStrikeForDay(symbol, expiration, minStrike)
+    const bestOption = await selectBest.selectBestStrikeForDay(symbol, 'call', expiration, minStrike)
 
     // Skip if best option is empty object
     if (bestOption.symbol) {

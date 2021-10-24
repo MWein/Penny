@@ -4,7 +4,7 @@ const {
   _filterChain,
   _selectOptionClosestTo30,
   selectBestStrikeForDay,
-} = require('./selectBestCallForDay')
+} = require('./selectBestOptionForDay')
 
 
 describe('_formatChain', () => {
@@ -272,7 +272,7 @@ describe('selectBestStrikeForDay', () => {
     network.get.mockImplentation = () => {
       throw new Error('Damn it')
     }
-    const result = await selectBestStrikeForDay('AAPL', '2021-01-01', 60)
+    const result = await selectBestStrikeForDay('AAPL', 'call', '2021-01-01', 60)
     expect(result).toEqual({})
   })
 
@@ -282,7 +282,7 @@ describe('selectBestStrikeForDay', () => {
         option: []
       }
     })
-    await selectBestStrikeForDay('AAPL', '2021-01-01', 60)
+    await selectBestStrikeForDay('AAPL', 'call', '2021-01-01', 60)
     expect(network.get).toHaveBeenCalledWith('markets/options/chains?symbol=AAPL&expiration=2021-01-01&greeks=true')
   })
 
@@ -323,7 +323,7 @@ describe('selectBestStrikeForDay', () => {
         ]
       }
     })
-    const result = await selectBestStrikeForDay('AAPL', '2021-01-01')
+    const result = await selectBestStrikeForDay('AAPL', 'call', '2021-01-01')
     expect(result).toEqual({
       symbol: 'AAPL1',
       premium: 107,
@@ -367,7 +367,7 @@ describe('selectBestStrikeForDay', () => {
         ]
       }
     })
-    const result = await selectBestStrikeForDay('AAPL', '2021-01-01', 62)
+    const result = await selectBestStrikeForDay('AAPL', 'call', '2021-01-01', 62)
     expect(result).toEqual({
       symbol: 'AAPL2',
       premium: 107,
