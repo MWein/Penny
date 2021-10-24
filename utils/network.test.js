@@ -1,3 +1,4 @@
+const superagent = require('superagent')
 const { _createFormString, get, post } = require('./network')
 
 describe('_createFormString', () => {
@@ -26,4 +27,50 @@ describe('_createFormString', () => {
     const formString = _createFormString(body)
     expect(formString).toEqual('hello=goodbye&what=something,somethingelse')
   })
+})
+
+
+describe('get', () => {
+  let set1
+  let set2
+
+  beforeEach(() => {
+    process.env.BASEPATH = 'hello/'
+    process.env.APIKEY = 'somekey'
+
+    // Last set thats called
+    set2 = jest.fn().mockReturnValue({
+      body: 'someresponse'
+    })
+
+    // First set thats called. Authorization
+    set1 = jest.fn().mockReturnValue({
+      set: set2
+    })
+
+    superagent.get = jest.fn().mockReturnValue({
+      set: set1
+    })
+  })
+
+  it('Returns the response body', async () => {
+    const response = await get('somepath')
+    expect(response).toEqual('someresponse')
+  })
+
+  it('Creates url out of BASEPATH and path', async () => {
+    await get('somepath')
+    expect(superagent.get).toHaveBeenCalledWith('hello/somepath')
+  })
+
+  it('Sets authorization header using APIKEY in the proper format', async () => {
+    await get('somepath')
+    expect(set1).toHaveBeenCalledWith('Authorization', 'Bearer somekey')
+  })
+
+  it('Sets accept header', async () => {
+    await get('somepath')
+    expect(set2).toHaveBeenCalledWith('Accept', 'application/json')
+  })
+
 })
