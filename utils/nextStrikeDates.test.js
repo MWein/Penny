@@ -12,6 +12,20 @@ describe('nextStrikeDates', () => {
     expect(result).toEqual([ '2021-10-15', '2021-10-22', '2021-10-29', '2021-11-05' ])
   })
 
+  it('If maxWeeksOut limit is given, only returns that number of dates; lower than default', () => {
+    // 12 Oct 2021 is a tuesday
+    jest.useFakeTimers().setSystemTime(new Date('2021-10-12').getTime())
+    const result = nextStrikeDates(3)
+    expect(result).toEqual([ '2021-10-15', '2021-10-22', '2021-10-29' ])
+  })
+
+  it('If maxWeeksOut limit is given, only returns that number of dates; higher than default', () => {
+    // 12 Oct 2021 is a tuesday
+    jest.useFakeTimers().setSystemTime(new Date('2021-10-12').getTime())
+    const result = nextStrikeDates(5)
+    expect(result).toEqual([ '2021-10-15', '2021-10-22', '2021-10-29', '2021-11-05', '2021-11-12' ])
+  })
+
   it('Does not return the current date if its a friday', () => {
     // 1 Oct 2021 is a friday
     jest.useFakeTimers().setSystemTime(new Date('2021-10-01T05:10:00Z').getTime())

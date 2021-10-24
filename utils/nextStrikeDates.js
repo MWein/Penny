@@ -1,8 +1,8 @@
-const nextStrikeDates = () => {
+const nextStrikeDates = (maxWeeksOut = 4) => {
   const date = new Date()
   const dates = []
 
-  while(dates.length < 4) {
+  while(dates.length < maxWeeksOut) {
     switch (date.getDay()) {
       case 0: date.setDate(date.getDate() + 5)
       break
