@@ -40,11 +40,7 @@ const selectBestStrikeForDay = async (symbol, type, expiration, minStrike) => {
     const chain = _formatChain(response.options.option, type)
     const filteredChain = _filterChain(chain, minStrike)
     const closestTo30Delta = _selectOptionClosestTo30(filteredChain)
-    return {
-      symbol: closestTo30Delta.symbol,
-      strike: closestTo30Delta.strike,
-      premium: closestTo30Delta.premium,
-    }
+    return closestTo30Delta
   } catch (e) {
     return {}
   }

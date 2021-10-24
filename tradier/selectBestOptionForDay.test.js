@@ -328,6 +328,9 @@ describe('selectBestStrikeForDay', () => {
       symbol: 'AAPL1',
       strike: 61,
       premium: 107,
+      delta: 0.3,
+      distanceTo30: 0,
+      expiration: 'tomorrow'
     })
   })
 
@@ -373,6 +376,9 @@ describe('selectBestStrikeForDay', () => {
       symbol: 'AAPL2',
       strike: 62,
       premium: 107,
+      delta: 0.31,
+      distanceTo30: 0.010000000000000009,
+      expiration: 'tomorrow'
     })
   })
 })
