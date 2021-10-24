@@ -198,3 +198,12 @@ ETrade actually has a really good amount of documentation complete with a develo
 ### Commissions...
 
 All of the viable brokers charge $0.65 per option trade. TD brings it down to $0.50 if you make a certain number of trades per quarter. Assuming $0.65 per trade and 10 different options positions per week, without buying them back, I'd be looking at $338/year in fees. Which isn't the worst thing in the world. Almost makes me wish Robinhood had an API.
+
+### Other notes
+
+I looked more closely at TD and ETrade and they have this stupid manual-authentication process that kind of kills the fire-and-forget thing I'm going for here. TD's tokens last for 90 days, ETrade expires after 2 hours. I don't think they had trading bots in mind when they spun them up.
+
+
+### Tradier
+
+Now this looks interesting. They're an API-first broker like Alpaca, but unlike Alpaca they support options. Their option trade price is $0.35/contract which is cheaper than the others. There's also a $30/month option which lets me get past the $0.35/contract fee. I'd have to make around 85 options trades or more to make that worth it which I might end up running into later on. They also have a watchlist feature which might mean I won't have to use a database. Best of all they provide some awesome code samples including Go!
