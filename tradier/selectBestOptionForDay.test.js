@@ -326,6 +326,7 @@ describe('selectBestStrikeForDay', () => {
     const result = await selectBestStrikeForDay('AAPL', 'call', '2021-01-01')
     expect(result).toEqual({
       symbol: 'AAPL1',
+      strike: 61,
       premium: 107,
     })
   })
@@ -370,6 +371,7 @@ describe('selectBestStrikeForDay', () => {
     const result = await selectBestStrikeForDay('AAPL', 'call', '2021-01-01', 62)
     expect(result).toEqual({
       symbol: 'AAPL2',
+      strike: 62,
       premium: 107,
     })
   })
