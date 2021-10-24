@@ -1,78 +1,144 @@
 const network = require('../utils/network')
 const {
-  _formatCallChain,
-  _filterCallChain,
+  _formatChain,
+  _filterChain,
   _selectOptionClosestTo30,
   selectBestStrikeForDay,
 } = require('./selectBestCallForDay')
 
 
-describe('_formatCallChain', () => {
-  it('Takes the response from Tradier and formats it to be easier for me to read when debugging', async () => {
-    const chain = [
-      {
-        symbol: 'AAPL',
-        bid: 1.07,
-        strike: 1000,
-        greeks: {
-          delta: 0.4
+describe('_formatChain', () => {
+  describe('Calls', () => {
+    it('Takes the response from Tradier and formats it to be easier for me to read when debugging', async () => {
+      const chain = [
+        {
+          symbol: 'AAPL',
+          bid: 1.07,
+          strike: 1000,
+          greeks: {
+            delta: 0.4
+          },
+          expiration_date: 'tomorrow',
+          option_type: 'call'
+        }
+      ]
+      const formattedCallChain = _formatChain(chain, 'call')
+      expect(formattedCallChain).toEqual([
+        {
+          symbol: 'AAPL',
+          premium: 107,
+          strike: 1000,
+          delta: 0.4,
+          distanceTo30: 0.10000000000000003,
+          expiration: 'tomorrow',
+        }
+      ])
+    })
+  
+    it('Filters for calls only', async () => {
+      const chain = [
+        {
+          symbol: 'AAPL',
+          bid: 1.07,
+          strike: 1000,
+          greeks: {
+            delta: 0.4
+          },
+          expiration_date: 'tomorrow',
+          option_type: 'call'
         },
-        expiration_date: 'tomorrow',
-        option_type: 'call'
-      }
-    ]
-    const formattedCallChain = _formatCallChain(chain)
-    expect(formattedCallChain).toEqual([
-      {
-        symbol: 'AAPL',
-        premium: 107,
-        strike: 1000,
-        delta: 0.4,
-        distanceTo30: 0.10000000000000003,
-        expiration: 'tomorrow',
-      }
-    ])
+        {
+          symbol: 'TSLA',
+          bid: 1.09,
+          strike: 80000,
+          greeks: {
+            delta: 0.1
+          },
+          expiration_date: 'day after tomorrow',
+          option_type: 'put'
+        }
+      ]
+      const formattedCallChain = _formatChain(chain, 'call')
+      expect(formattedCallChain).toEqual([
+        {
+          symbol: 'AAPL',
+          premium: 107,
+          strike: 1000,
+          delta: 0.4,
+          distanceTo30: 0.10000000000000003,
+          expiration: 'tomorrow',
+        }
+      ])
+    })
   })
 
-  it('Filters for calls only', async () => {
-    const chain = [
-      {
-        symbol: 'AAPL',
-        bid: 1.07,
-        strike: 1000,
-        greeks: {
-          delta: 0.4
+  describe('Puts', () => {
+    it('Takes the response from Tradier and formats it to be easier for me to read when debugging', async () => {
+      const chain = [
+        {
+          symbol: 'AAPL',
+          bid: 1.07,
+          strike: 1000,
+          greeks: {
+            delta: -0.4
+          },
+          expiration_date: 'tomorrow',
+          option_type: 'put'
+        }
+      ]
+      const formattedCallChain = _formatChain(chain, 'put')
+      expect(formattedCallChain).toEqual([
+        {
+          symbol: 'AAPL',
+          premium: 107,
+          strike: 1000,
+          delta: 0.4,
+          distanceTo30: 0.10000000000000003,
+          expiration: 'tomorrow',
+        }
+      ])
+    })
+  
+    it('Filters for puts only', async () => {
+      const chain = [
+        {
+          symbol: 'AAPL',
+          bid: 1.07,
+          strike: 1000,
+          greeks: {
+            delta: 0.4
+          },
+          expiration_date: 'tomorrow',
+          option_type: 'call'
         },
-        expiration_date: 'tomorrow',
-        option_type: 'call'
-      },
-      {
-        symbol: 'TSLA',
-        bid: 1.09,
-        strike: 80000,
-        greeks: {
-          delta: 0.1
-        },
-        expiration_date: 'day after tomorrow',
-        option_type: 'put'
-      }
-    ]
-    const formattedCallChain = _formatCallChain(chain)
-    expect(formattedCallChain).toEqual([
-      {
-        symbol: 'AAPL',
-        premium: 107,
-        strike: 1000,
-        delta: 0.4,
-        distanceTo30: 0.10000000000000003,
-        expiration: 'tomorrow',
-      }
-    ])
+        {
+          symbol: 'TSLA',
+          bid: 1.09,
+          strike: 80000,
+          greeks: {
+            delta: -0.1
+          },
+          expiration_date: 'day after tomorrow',
+          option_type: 'put'
+        }
+      ]
+      const formattedCallChain = _formatChain(chain, 'put')
+      expect(formattedCallChain).toEqual([
+        {
+          symbol: 'TSLA',
+          premium: 109,
+          strike: 80000,
+          delta: 0.1,
+          distanceTo30: 0.19999999999999998,
+          expiration: 'day after tomorrow',
+        }
+      ])
+    })
   })
 })
 
 
-describe('_filterCallChain', () => {
+describe('_filterChain', () => {
   it('If minStrike is passed, filters out anything lower than the minimum', () => {
     const chain = [
       {
@@ -94,7 +160,7 @@ describe('_filterCallChain', () => {
         delta: 0.3,
       },
     ]
-    const filteredChain = _filterCallChain(chain, 63)
+    const filteredChain = _filterChain(chain, 63)
     expect(filteredChain).toEqual([
       {
         symbol: 'AAPL',
@@ -126,7 +192,7 @@ describe('_filterCallChain', () => {
         delta: 0.5,
       },
     ]
-    const filteredChain = _filterCallChain(chain)
+    const filteredChain = _filterChain(chain)
     expect(filteredChain).toEqual([
       {
         symbol: 'AAPL',
@@ -158,7 +224,7 @@ describe('_filterCallChain', () => {
         delta: 0.3,
       },
     ]
-    const filteredChain = _filterCallChain(chain)
+    const filteredChain = _filterChain(chain)
     expect(filteredChain).toEqual([
       {
         symbol: 'AAPL',
