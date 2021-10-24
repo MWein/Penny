@@ -175,3 +175,22 @@ describe('_filterCallChain', () => {
     ])
   })
 })
+
+
+describe('_selectOptionClosestTo30', () => {
+  it('Returns empty object if given an empty array', () => {
+    const bestOption = _selectOptionClosestTo30([])
+    expect(bestOption).toEqual({})
+  })
+
+  it('Selects the delta closest to 0.30', () => {
+    const chain = [
+      { distanceTo30: 0.2 },
+      { distanceTo30: 0.1 },
+      { distanceTo30: 0.7 },
+      { distanceTo30: 0.8 },
+    ]
+    const bestOption = _selectOptionClosestTo30(chain)
+    expect(bestOption).toEqual({ distanceTo30: 0.1 })
+  })
+})

@@ -25,10 +25,12 @@ const _filterCallChain = (chain, minStrike) => chain.filter(option => {
   return option.delta < 0.4 && option.delta > 0.1 && option.premium >= 5
 })
 
-const _selectOptionClosestTo30 = chain => chain.reduce((acc, option) =>
+
+const _selectOptionClosestTo30 = chain => chain.length > 0 ? chain.reduce((acc, option) =>
   option.distanceTo30 < acc.distanceTo30 ? option : acc,
   chain[0]
-)
+) : {}
+
 
 const _selectBestStrikeForDay = async (symbol, expiration, minStrike) => {
   const url = `markets/options/chains?symbol=${symbol}&expiration=${expiration}&greeks=true`
@@ -38,12 +40,6 @@ const _selectBestStrikeForDay = async (symbol, expiration, minStrike) => {
     const response = await network.get(url)
     const callChain = _formatCallChain(response.options.option)
     const filteredCallChain = _filterCallChain(callChain, minStrike)
-
-    // If there aren't any good calls, return {}
-    if (filteredCallChain.length === 0) {
-      return {}
-    }
-
     const closestTo30Delta = _selectOptionClosestTo30(filteredCallChain)
     return closestTo30Delta
   } catch (e) {
