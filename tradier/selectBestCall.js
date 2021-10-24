@@ -41,7 +41,10 @@ const _selectBestStrikeForDay = async (symbol, expiration, minStrike) => {
     const callChain = _formatCallChain(response.options.option)
     const filteredCallChain = _filterCallChain(callChain, minStrike)
     const closestTo30Delta = _selectOptionClosestTo30(filteredCallChain)
-    return closestTo30Delta
+    return {
+      symbol: closestTo30Delta.symbol,
+      premium: closestTo30Delta.premium,
+    }
   } catch (e) {
     return {}
   }

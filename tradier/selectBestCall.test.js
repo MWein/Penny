@@ -1,3 +1,4 @@
+const network = require('../utils/network')
 const {
   _formatCallChain,
   _filterCallChain,
@@ -192,5 +193,118 @@ describe('_selectOptionClosestTo30', () => {
     ]
     const bestOption = _selectOptionClosestTo30(chain)
     expect(bestOption).toEqual({ distanceTo30: 0.1 })
+  })
+})
+
+
+describe('_selectBestStrikeForDay', () => {
+  beforeEach(() => {
+    network.get = jest.fn()
+  })
+
+  it('Returns empty object if the network call fails for some reason', async () => {
+    network.get.mockImplentation = () => {
+      throw new Error('Damn it')
+    }
+    const result = await _selectBestStrikeForDay('AAPL', '2021-01-01', 60)
+    expect(result).toEqual({})
+  })
+
+  it('Makes a call with the correct URL', async () => {
+    network.get.mockReturnValue({
+      options: {
+        option: []
+      }
+    })
+    await _selectBestStrikeForDay('AAPL', '2021-01-01', 60)
+    expect(network.get).toHaveBeenCalledWith('markets/options/chains?symbol=AAPL&expiration=2021-01-01&greeks=true')
+  })
+
+  it('Returns the best option symbol and premium for the day, without minimum strike', async () => {
+    network.get.mockReturnValue({
+      options: {
+        option: [
+          {
+            symbol: 'AAPL1',
+            bid: 1.07,
+            strike: 61,
+            greeks: {
+              delta: 0.3
+            },
+            expiration_date: 'tomorrow',
+            option_type: 'call'
+          },
+          {
+            symbol: 'AAPL2',
+            bid: 1.07,
+            strike: 62,
+            greeks: {
+              delta: 0.31
+            },
+            expiration_date: 'tomorrow',
+            option_type: 'call'
+          },
+          {
+            symbol: 'AAPL3',
+            bid: 1.08,
+            strike: 63,
+            greeks: {
+              delta: 0.7
+            },
+            expiration_date: 'tomorrow',
+            option_type: 'call'
+          },
+        ]
+      }
+    })
+    const result = await _selectBestStrikeForDay('AAPL', '2021-01-01')
+    expect(result).toEqual({
+      symbol: 'AAPL1',
+      premium: 107,
+    })
+  })
+
+  it('Returns the best option for the day, with minimum strike', async () => {
+    network.get.mockReturnValue({
+      options: {
+        option: [
+          {
+            symbol: 'AAPL1',
+            bid: 1.07,
+            strike: 61,
+            greeks: {
+              delta: 0.3
+            },
+            expiration_date: 'tomorrow',
+            option_type: 'call'
+          },
+          {
+            symbol: 'AAPL2',
+            bid: 1.07,
+            strike: 62,
+            greeks: {
+              delta: 0.31
+            },
+            expiration_date: 'tomorrow',
+            option_type: 'call'
+          },
+          {
+            symbol: 'AAPL3',
+            bid: 1.08,
+            strike: 63,
+            greeks: {
+              delta: 0.7
+            },
+            expiration_date: 'tomorrow',
+            option_type: 'call'
+          },
+        ]
+      }
+    })
+    const result = await _selectBestStrikeForDay('AAPL', '2021-01-01', 62)
+    expect(result).toEqual({
+      symbol: 'AAPL2',
+      premium: 107,
+    })
   })
 })
