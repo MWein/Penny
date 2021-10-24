@@ -1,0 +1,21 @@
+{
+  "name": "penny",
+  "version": "1.0.0",
+  "description": "Trading bot",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MWein/Penny.git"
+  },
+  "author": "Mike Weinberg",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MWein/Penny/issues"
+  },
+  "homepage": "https://github.com/MWein/Penny#readme"
+}

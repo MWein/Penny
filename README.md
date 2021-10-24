@@ -3,7 +3,7 @@
 
 ## TL;DR
 
-Penny is a daytrading bot that will sell weekly [covered calls](https://www.investopedia.com/terms/c/coveredcall.asp#:~:text=The%20term%20covered%20call%20refers,to%20generate%20an%20income%20stream.).
+Penny is a trading bot that will sell weekly [covered calls](https://www.investopedia.com/terms/c/coveredcall.asp#:~:text=The%20term%20covered%20call%20refers,to%20generate%20an%20income%20stream.).
 
 ## Legal Stuff
 
