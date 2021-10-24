@@ -8,7 +8,7 @@ const _selectOptionWithBestWeeklyRate = options => options.length > 0 ? options.
 ).symbol : null
 
 
-const selectBestCall = async (symbol, minStrike = null, maxWeeksOut = 4) => {
+const selectBestOption = async (symbol, minStrike = null, maxWeeksOut = 4) => {
   const expirationDates = nextStrikeDates(maxWeeksOut)
 
   // Week is used to calculate the weekly rate
@@ -34,5 +34,5 @@ const selectBestCall = async (symbol, minStrike = null, maxWeeksOut = 4) => {
 
 module.exports = {
   _selectOptionWithBestWeeklyRate,
-  selectBestCall,
+  selectBestOption,
 }
