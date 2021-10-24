@@ -101,7 +101,7 @@ Also when sending the orders, I've found that they are more likely to execute if
 
 ```mermaid
 flowchart TD
-
+\n
 Stop1{{Exit}}
 GetPositions([Retreive All Positions\nfrom Broker])
 100Shares[Select Stocks\nwith >100 Shares]
