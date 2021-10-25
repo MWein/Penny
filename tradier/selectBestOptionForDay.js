@@ -26,8 +26,7 @@ const _filterChain = (chain, minStrike) => chain.filter(option => {
 
 
 const _selectOptionClosestTo30 = chain => chain.length > 0 ? chain.reduce((acc, option) =>
-  option.distanceTo30 < acc.distanceTo30 ? option : acc,
-  chain[0]
+  option.distanceTo30 < acc.distanceTo30 ? option : acc, chain[0]
 ) : {}
 
 

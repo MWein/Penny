@@ -4,19 +4,19 @@ const nextStrikeDates = (maxWeeksOut = 4) => {
 
   while(dates.length < maxWeeksOut) {
     switch (date.getDay()) {
-      case 0: date.setDate(date.getDate() + 5)
+    case 0: date.setDate(date.getDate() + 5)
       break
-      case 1: date.setDate(date.getDate() + 4)
+    case 1: date.setDate(date.getDate() + 4)
       break
-      case 2: date.setDate(date.getDate() + 3)
+    case 2: date.setDate(date.getDate() + 3)
       break
-      case 3: date.setDate(date.getDate() + 2)
+    case 3: date.setDate(date.getDate() + 2)
       break
-      case 4: date.setDate(date.getDate() + 1)
+    case 4: date.setDate(date.getDate() + 1)
       break
-      case 5: date.setDate(date.getDate() + 7) // Off to next friday
+    case 5: date.setDate(date.getDate() + 7) // Off to next friday
       break
-      case 6: date.setDate(date.getDate() + 6)
+    case 6: date.setDate(date.getDate() + 6)
       break
     }
     // ISO string returns zulu time and can screw up the date

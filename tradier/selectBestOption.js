@@ -3,8 +3,7 @@ const selectBest = require('./selectBestOptionForDay')
 
 
 const _selectOptionWithBestWeeklyRate = options => options.length > 0 ? options.reduce((acc, option) =>
-  option.weeklyRate > acc.weeklyRate ? option : acc,
-  options[0]
+  option.weeklyRate > acc.weeklyRate ? option : acc, options[0]
 ) : null
 
 
