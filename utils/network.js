@@ -3,10 +3,10 @@ const superagent = require('superagent')
 // Generate form string from object
 // Superagent doesn't handle this without multiple sends
 const _createFormString = body => Object.keys(body).map(key => {
-    const value = body[key]
-    const formattedValue = Array.isArray(value) ? value.join(',') : value
-    return `${key}=${formattedValue}`
-  }).join('&')
+  const value = body[key]
+  const formattedValue = Array.isArray(value) ? value.join(',') : value
+  return `${key}=${formattedValue}`
+}).join('&')
 
 const get = async (path) => {
   const url = `${process.env.BASEPATH}${path}`

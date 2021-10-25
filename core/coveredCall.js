@@ -50,7 +50,7 @@ const _generatePermittedPositionsArray = (optionableStocks, currentOptions, pend
           costPerShare,
         }
       ]
-    }, [])
+  }, [])
 }
 
 

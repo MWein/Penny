@@ -20,7 +20,7 @@ describe('getPrices', () => {
         }
       }
     })
-    const prices = await getPrices([ 'AAPL', 'FAKE' ])
+    await getPrices([ 'AAPL', 'FAKE' ])
     expect(network.get).toHaveBeenCalledWith('markets/quotes?symbols=AAPL,FAKE')
   })
 
