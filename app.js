@@ -6,6 +6,7 @@ const { getPrices } = require('./tradier/getPrices')
 const { getOrders } = require('./tradier/getOrders')
 const { getPositions } = require('./tradier/getPositions')
 const { sellToOpen } = require('./tradier/sendOrders')
+const { getBalances } = require('./tradier/getBalances')
 
 const launch = async () => {
   // const watchlist = await getWatchlistSymbols()
@@ -24,9 +25,12 @@ const launch = async () => {
   // console.log(positions)
 
 
+  const results = await getBalances()
+  console.log(results)
 
-  const result = await sellToOpen('AAPL', 'AAPL211029C00152500', 1)
-  console.log(result)
+
+  //const result = await sellToOpen('AAPL', 'AAPL211029C00152500', 1)
+  //console.log(result)
 
   // const prices = await getPrices([ 'AAPL', 'TSLA' ])
   // console.log(prices)
