@@ -1,11 +1,12 @@
 const positions = require('../tradier/getPositions')
 const orders = require('../tradier/getOrders')
-
+const bestOption = require('../tradier/selectBestOption')
+const sendOrders = require('../tradier/sendOrders')
 const {
   _generatePermittedPositionsArray,
   _determineCoverableTickers,
+  sellCoveredCalls,
 } = require('./coveredCall')
-
 
 
 describe('_generatePermittedPositionsArray', () => {
@@ -297,7 +298,7 @@ describe('_determineCoverableTickers', () => {
     orders.getOrders = jest.fn()
   })
 
-  it('Returns \'no available positions reason 1\' if there are no optionable positions', async () => {
+  it('Returns empty array if there are no optionable positions', async () => {
     positions.getPositions.mockReturnValue([
       {
         cost_basis: 207.01,
@@ -318,7 +319,7 @@ describe('_determineCoverableTickers', () => {
     expect(status).toEqual([])
   })
 
-  it('Returns \'no available positions; reason 2\' if the position map comes up all zeros', async () => {
+  it('Returns empty array if the position map comes up all zeros', async () => {
     positions.getPositions.mockReturnValue([
       {
         cost_basis: 207.01,
@@ -440,5 +441,91 @@ describe('_determineCoverableTickers', () => {
       },
     ])
   })
+})
 
+
+describe('sellCoveredCalls', () => {
+  beforeEach(() => {
+    bestOption.selectBestOption = jest.fn()
+    positions.getPositions = jest.fn()
+    orders.getOrders = jest.fn()
+    sendOrders.sellToOpen = jest.fn()
+  })
+
+  it('If the opportunity array is empty, do nothing', async () => {
+    positions.getPositions.mockReturnValue([
+      {
+        cost_basis: 207.01,
+        date_acquired: '2018-08-08T14:41:11.405Z',
+        id: 130089,
+        quantity: 99.00000000,
+        symbol: 'AAPL'
+      },
+      {
+        cost_basis: 1870.70,
+        date_acquired: '2018-08-08T14:42:00.774Z',
+        id: 130090,
+        quantity: 5.00000000,
+        symbol: 'TSLA',
+      }
+    ])
+    await sellCoveredCalls()
+    expect(bestOption.selectBestOption).not.toHaveBeenCalled()
+  })
+
+  it('For each stock returned, calls selectBestOption and sendOrder', async () => {
+    positions.getPositions.mockReturnValue([
+      {
+        cost_basis: 207.01,
+        date_acquired: '2018-08-08T14:41:11.405Z',
+        id: 130089,
+        quantity: 100.00000000,
+        symbol: 'AAPL'
+      },
+      {
+        cost_basis: 1870.70,
+        date_acquired: '2018-08-08T14:42:00.774Z',
+        id: 130090,
+        quantity: 200.00000000,
+        symbol: 'TSLA',
+      }
+    ])
+    orders.getOrders.mockReturnValue([])
+
+    bestOption.selectBestOption.mockReturnValueOnce({
+      symbol: 'AAPL1234C3214'
+    })
+    bestOption.selectBestOption.mockReturnValueOnce({
+      symbol: 'TSLA1234C3214'
+    })
+
+    await sellCoveredCalls()
+    expect(bestOption.selectBestOption).toHaveBeenCalledTimes(2)
+    expect(bestOption.selectBestOption).toHaveBeenCalledWith('AAPL', 'call')
+    expect(bestOption.selectBestOption).toHaveBeenCalledWith('TSLA', 'call')
+
+    expect(sendOrders.sellToOpen).toHaveBeenCalledTimes(2)
+    expect(sendOrders.sellToOpen).toHaveBeenCalledWith('AAPL', 'AAPL1234C3214', 1)
+    expect(sendOrders.sellToOpen).toHaveBeenCalledWith('TSLA', 'TSLA1234C3214', 2)
+  })
+
+  it('Skips a sell order if bestOption returns a null', async () => {
+    positions.getPositions.mockReturnValue([
+      {
+        cost_basis: 207.01,
+        date_acquired: '2018-08-08T14:41:11.405Z',
+        id: 130089,
+        quantity: 100.00000000,
+        symbol: 'AAPL'
+      }
+    ])
+    orders.getOrders.mockReturnValue([])
+
+    bestOption.selectBestOption.mockReturnValueOnce(null)
+
+    await sellCoveredCalls()
+    expect(bestOption.selectBestOption).toHaveBeenCalledTimes(1)
+    expect(bestOption.selectBestOption).toHaveBeenCalledWith('AAPL', 'call')
+    expect(sendOrders.sellToOpen).not.toHaveBeenCalled()
+  })
 })

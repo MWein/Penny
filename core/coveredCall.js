@@ -1,5 +1,7 @@
 const position = require('../tradier/getPositions')
 const order = require('../tradier/getOrders')
+const bestOption = require('../tradier/selectBestOption')
+const sendOrders = require('../tradier/sendOrders')
 const {
   determineOptionTypeFromSymbol,
   isOption,
@@ -66,7 +68,17 @@ const _determineCoverableTickers = async () => {
 
 
 const sellCoveredCalls = async () => {
+  const coverableTickers = await _determineCoverableTickers()
 
+  // In a for-loop so each request isn't sent up all at once
+  for (let x = 0; x < coverableTickers.length; x++) {
+    const currentTicker = coverableTickers[x]
+    const best = bestOption.selectBestOption(currentTicker.symbol, 'call')
+    if (best) {
+      // Send sell order for listed quantity
+      await sendOrders.sellToOpen(currentTicker.symbol, best.symbol, currentTicker.quantity)
+    }
+  }
 }
 
 module.exports = {
