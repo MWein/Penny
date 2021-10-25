@@ -3,6 +3,7 @@ const order = require('../tradier/getOrders')
 const sendOrders = require('../tradier/sendOrders')
 const {
   isOption,
+  getUnderlying,
 } = require('../utils/determineOptionType')
 
 
@@ -35,6 +36,12 @@ const createGTCOrders = async () => {
 
   console.log(oldOptionsPositions)
 
+  // For-loop so we don't send every one of them at once
+  for (let x = 0; x < oldOptionsPositions.length; x++) {
+    const oldOption = oldOptionsPositions[x]
+    const symbol = getUnderlying(oldOption.symbol)
+    await sendOrders.buyToClose(symbol, oldOption.symbol, oldOption.quantity)
+  }
 }
 
 module.exports = {

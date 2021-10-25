@@ -1,12 +1,6 @@
 const position = require('../tradier/getPositions')
 const order = require('../tradier/getOrders')
-const bestOption = require('../tradier/selectBestOption')
 const sendOrders = require('../tradier/sendOrders')
-const {
-  determineOptionTypeFromSymbol,
-  isOption,
-  getUnderlying,
-} = require('../utils/determineOptionType')
 
 const {
   _getOldOptionsPositions,
@@ -175,6 +169,7 @@ describe('gtcOrders', () => {
   beforeEach(() => {
     position.getPositions = jest.fn()
     order.getOrders = jest.fn()
+    sendOrders.buyToClose = jest.fn()
   })
 
   it('If there are no positions, do nothing', async () => {
@@ -184,15 +179,37 @@ describe('gtcOrders', () => {
     expect(order.getOrders).not.toHaveBeenCalled()
   })
 
-  it('If there are positions but each already has an order, do nothing', async () => {
-
-  })
-
-  it('If there are positions and a few dont have GTCs, send em', async () => {
-
-  })
-
   it('If there are positions and none have GTCs, send em all', async () => {
-    
+    jest.useFakeTimers().setSystemTime(new Date('2021-10-12').getTime())
+    position.getPositions.mockReturnValue([
+      {
+        cost_basis: 207.01,
+        date_acquired: '2021-10-12T14:41:11.405Z',
+        id: 130089,
+        quantity: 1.00000000,
+        symbol: 'AAPL123C321'
+      },
+      {
+        cost_basis: 1870.70,
+        date_acquired: '2018-08-08T14:42:00.774Z',
+        id: 130090,
+        quantity: -2.00000000,
+        symbol: 'AMZN123C321'
+      },
+      {
+        cost_basis: 50.41,
+        date_acquired: '2021-10-09T17:05:44.674Z',
+        id: 133590,
+        quantity: 3.00000000,
+        symbol: 'CAH123C321'
+      },
+    ])
+    order.getOrders.mockReturnValue([])
+    await createGTCOrders()
+    expect(position.getPositions).toHaveBeenCalled()
+    expect(order.getOrders).toHaveBeenCalled()
+    expect(sendOrders.buyToClose).toHaveBeenCalledTimes(2)
+    expect(sendOrders.buyToClose).toHaveBeenCalledWith('AMZN', 'AMZN123C321', 2)
+    expect(sendOrders.buyToClose).toHaveBeenCalledWith('CAH', 'CAH123C321', 3)
   })
 })
