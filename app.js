@@ -1,11 +1,12 @@
 require('dotenv').config()
+const CronJob = require('cron').CronJob
 
 const { getWatchlistSymbols } = require('./tradier/watchlist')
-const { selectBestOption } = require('./tradier/selectBestOption')
-const { getPrices } = require('./tradier/getPrices')
-const { getOrders } = require('./tradier/getOrders')
+//const { selectBestOption } = require('./tradier/selectBestOption')
+//const { getPrices } = require('./tradier/getPrices')
+//const { getOrders } = require('./tradier/getOrders')
 const { getPositions } = require('./tradier/getPositions')
-const { sellToOpen } = require('./tradier/sendOrders')
+//const { sellToOpen } = require('./tradier/sendOrders')
 const { getBalances } = require('./tradier/getBalances')
 
 const { _determineCoverableTickers } = require('./core/coveredCall')
@@ -28,6 +29,19 @@ const launch = async () => {
 
   const watchlist = await getWatchlistSymbols()
   console.log(watchlist)
+
+
+  new CronJob('0 0 8 * * 1-5', () => {
+    console.log('Some early mornin cronin for the GTC, biotch!')
+  }, null, true, 'America/New_York')
+
+  new CronJob('0 0 10 * * 1-5', () => {
+    console.log('One for the Mornin: Sell them covered calls and them puts, son!')
+  }, null, true, 'America/New_York')
+  
+  new CronJob('0 0 12 * * 1-5', () => {
+    console.log('One for the afternooooon: Maybe sell some more covered calls')
+  }, null, true, 'America/New_York')
 }
 
 launch()
