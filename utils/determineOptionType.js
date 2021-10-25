@@ -5,7 +5,7 @@ const determineOptionTypeFromSymbol = symbol => {
   const lastChar = lettersInSymbol[lettersInSymbol.length - 1]
   if (lastChar === 'P') {
     return 'put'
-  } else if (lastChar === 'C') {
+  } else {
     return 'call'
   }
 }

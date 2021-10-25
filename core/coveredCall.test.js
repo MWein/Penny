@@ -8,7 +8,7 @@ const {
 
 
 
-describe.only('_generatePermittedPositionsMap', () => {
+describe('_generatePermittedPositionsMap', () => {
   it('Returns empty object if there are no optionable stocks', () => {
     const optionableStocks = []
     const currentOptions = []

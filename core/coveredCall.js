@@ -12,7 +12,7 @@ const _generatePermittedPositionsMap = (optionableStocks, currentOptions, pendin
     return {}
   }
 
-  const startingMap = optionableStocks.reduce((acc, stock) => ({
+  const permittedCallsMap = optionableStocks.reduce((acc, stock) => ({
     ...acc,
     [stock.symbol]: Math.floor(stock.quantity / 100)
   }), {})
@@ -20,23 +20,23 @@ const _generatePermittedPositionsMap = (optionableStocks, currentOptions, pendin
   currentOptions.map(opt => {
     const underlying = getUnderlying(opt.symbol)
     const quantity = Math.abs(opt.quantity) // Short options are negative
-    startingMap[underlying] = startingMap[underlying] - quantity
+    permittedCallsMap[underlying] = permittedCallsMap[underlying] - quantity
   })
 
   pendingOptions.map(opt => {
     const underlying = opt.symbol
     const quantity = Math.abs(opt.quantity) // Short options are negative
-    startingMap[underlying] = startingMap[underlying] - quantity
+    permittedCallsMap[underlying] = permittedCallsMap[underlying] - quantity
   })
 
-  return startingMap
+  return permittedCallsMap
 }
 
 
 const sellCoveredCalls = async () => {
   const positions = await position.getPositions()
-  const optionableStocks = positions.filter(pos => pos.quantity >= 100 || !isOption(pos.symbol))
-  if (optionablePositions.length === 0) {
+  const optionableStocks = positions.filter(pos => pos.quantity >= 100 && !isOption(pos.symbol))
+  if (optionableStocks.length === 0) {
     return 'no available positions'
   }
   const currentOptions = positions.filter(pos => isOption(pos.symbol))
