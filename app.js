@@ -8,13 +8,15 @@ const { getPositions } = require('./tradier/getPositions')
 const { sellToOpen } = require('./tradier/sendOrders')
 const { getBalances } = require('./tradier/getBalances')
 
+const { sellCoveredCalls } = require('./core/coveredCall')
+
 const launch = async () => {
   // const watchlist = await getWatchlistSymbols()
 
   // console.log(watchlist)
 
-  //const bestCall = await selectBestOption('AAPL', 'call')
-  //const bestPut = await selectBestOption('AAPL', 'put')
+  //const bestCall = await selectBestOption('TSLA', 'call')
+  //const bestPut = await selectBestOption('TSLA', 'put')
   //console.log(bestCall)
   //console.log(bestPut)
 
@@ -25,9 +27,11 @@ const launch = async () => {
   // console.log(positions)
 
 
-  const results = await getBalances()
-  console.log(results)
+  // const results = await getBalances()
+  // console.log(results)
 
+  const status = await sellCoveredCalls()
+  console.log(status)
 
   //const result = await sellToOpen('AAPL', 'AAPL211029C00152500', 1)
   //console.log(result)
