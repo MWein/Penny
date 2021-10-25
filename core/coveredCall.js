@@ -26,14 +26,18 @@ const _generatePermittedPositionsArray = (optionableStocks, currentOptions, pend
   currentOptions.map(opt => {
     const underlying = getUnderlying(opt.symbol)
     const quantity = Math.abs(opt.quantity) // Short options are negative
-    permittedCallsMap[underlying] = permittedCallsMap[underlying] - quantity
+    if (permittedCallsMap[underlying]) {
+      permittedCallsMap[underlying] = permittedCallsMap[underlying] - quantity
+    }
   })
 
   // Decrease by 1 for every call option order that exists
   pendingOptions.map(opt => {
     const underlying = opt.symbol
     const quantity = Math.abs(opt.quantity) // Short options are negative
-    permittedCallsMap[underlying] = permittedCallsMap[underlying] - quantity
+    if (permittedCallsMap[underlying]) {
+      permittedCallsMap[underlying] = permittedCallsMap[underlying] - quantity
+    }
   })
 
   // Format map into an array

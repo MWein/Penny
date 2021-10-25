@@ -20,15 +20,15 @@ const launch = async () => {
   // 1. Manually sell a covered call against TSLA at market open and run again. Should say COKE PINS
   // 2. Put an order in after market close for COKE. Should only say PINS
 
-  const positions = await getPositions()
-  console.log(positions)
+  //const positions = await getPositions()
+  //console.log(positions)
   // Tomorrow it should have TSLA COKE and PINS
 
-  const balances = await getBalances()
-  console.log(balances)
+  //const balances = await getBalances()
+  //console.log(balances)
 
-  const watchlist = await getWatchlistSymbols()
-  console.log(watchlist)
+  //const watchlist = await getWatchlistSymbols()
+  //console.log(watchlist)
 
 
   new CronJob('0 0 8 * * 1-5', () => {
