@@ -5,7 +5,7 @@ const getWatchlistSymbols = async () => {
     const response = await network.get('watchlists/penny')
     const watchlistItems = response.watchlist.items.item
 
-    // If theres one item in the watchlist, its an object. Why
+    // If theres one item in the watchlist, its an object. Why...
     if (Array.isArray(watchlistItems)) {
       return watchlistItems.map(x => x.symbol)
     } else {

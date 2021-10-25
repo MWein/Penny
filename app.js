@@ -8,36 +8,26 @@ const { getPositions } = require('./tradier/getPositions')
 const { sellToOpen } = require('./tradier/sendOrders')
 const { getBalances } = require('./tradier/getBalances')
 
-const { sellCoveredCalls } = require('./core/coveredCall')
+const { _determineCoverableTickers } = require('./core/coveredCall')
 
 const launch = async () => {
-  // const watchlist = await getWatchlistSymbols()
+  const coverableTickers = await _determineCoverableTickers()
+  console.log(coverableTickers)
+  // Tomorrow it should have TSLA COKE and PINS
 
-  // console.log(watchlist)
+  // TODO other test cases
+  // 1. Manually sell a covered call against TSLA at market open and run again. Should say COKE PINS
+  // 2. Put an order in after market close for COKE. Should only say PINS
 
-  //const bestCall = await selectBestOption('TSLA', 'call')
-  //const bestPut = await selectBestOption('TSLA', 'put')
-  //console.log(bestCall)
-  //console.log(bestPut)
+  const positions = await getPositions()
+  console.log(positions)
+  // Tomorrow it should have TSLA COKE and PINS
 
-  //const orders = await getOrders()
-  //console.log(orders)
+  const balances = await getBalances()
+  console.log(balances)
 
-  // const positions = await getPositions()
-  // console.log(positions)
-
-
-  // const results = await getBalances()
-  // console.log(results)
-
-  const status = await sellCoveredCalls()
-  console.log(status)
-
-  //const result = await sellToOpen('AAPL', 'AAPL211029C00152500', 1)
-  //console.log(result)
-
-  // const prices = await getPrices([ 'AAPL', 'TSLA' ])
-  // console.log(prices)
+  const watchlist = await getWatchlistSymbols()
+  console.log(watchlist)
 }
 
 launch()
