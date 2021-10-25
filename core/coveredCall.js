@@ -80,9 +80,10 @@ const sellCoveredCalls = async () => {
   // In a for-loop so each request isn't sent up all at once
   for (let x = 0; x < coverableTickers.length; x++) {
     const currentTicker = coverableTickers[x]
-    const best = bestOption.selectBestOption(currentTicker.symbol, 'call', currentTicker.costPerShare)
+    const best = await bestOption.selectBestOption(currentTicker.symbol, 'call', currentTicker.costPerShare)
     if (best) {
       // Send sell order for listed quantity
+      console.log('Sending order', currentTicker.symbol, best.symbol, currentTicker.quantity)
       await sendOrders.sellToOpen(currentTicker.symbol, best.symbol, currentTicker.quantity)
     }
   }
