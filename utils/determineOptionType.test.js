@@ -1,4 +1,7 @@
-const { determineOptionTypeFromSymbol } = require('./determineOptionType')
+const {
+  determineOptionTypeFromSymbol,
+  isOption,
+} = require('./determineOptionType')
 
 describe('determineOptionTypeFromSymbol', () => {
   it('Properly identifies AAPL211029C00146000 as call', () => {
@@ -19,5 +22,26 @@ describe('determineOptionTypeFromSymbol', () => {
   })
   it('Properly identifies TSLA211029P00885000 as put', () => {
     expect(determineOptionTypeFromSymbol('TSLA211029P00885000')).toEqual('put')
+  })
+})
+
+describe('determineIfOptionFromSymbol', () => {
+  it('Properly identifies AAPL', () => {
+    expect(isOption('AAPL')).toEqual(false)
+  })
+  it('Properly identified PINS', () => {
+    expect(isOption('PINS')).toEqual(false)
+  })
+  it('Properly identified TSLA', () => {
+    expect(isOption('TSLA')).toEqual(false)
+  })
+  it('Properly identifies AAPL211029P00146000', () => {
+    expect(isOption('AAPL211029P00146000')).toEqual(true)
+  })
+  it('Properly identifies PINS211029P00055000', () => {
+    expect(isOption('PINS211029P00055000')).toEqual(true)
+  })
+  it('Properly identifies TSLA211029P00885000', () => {
+    expect(isOption('TSLA211029P00885000')).toEqual(true)
   })
 })
