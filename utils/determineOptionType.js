@@ -12,7 +12,11 @@ const determineOptionTypeFromSymbol = symbol => {
 
 const isOption = symbol => symbol.split('').some(char => nums.includes(char))
 
+const getUnderlying = symbol =>
+  isOption(symbol) ? symbol.split('').filter(char => !nums.includes(char)).slice(0, -1).join('') : symbol
+
 module.exports = {
   determineOptionTypeFromSymbol,
   isOption,
+  getUnderlying,
 }

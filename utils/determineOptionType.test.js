@@ -1,6 +1,7 @@
 const {
   determineOptionTypeFromSymbol,
   isOption,
+  getUnderlying,
 } = require('./determineOptionType')
 
 describe('determineOptionTypeFromSymbol', () => {
@@ -25,6 +26,7 @@ describe('determineOptionTypeFromSymbol', () => {
   })
 })
 
+
 describe('determineIfOptionFromSymbol', () => {
   it('Properly identifies AAPL', () => {
     expect(isOption('AAPL')).toEqual(false)
@@ -43,5 +45,21 @@ describe('determineIfOptionFromSymbol', () => {
   })
   it('Properly identifies TSLA211029P00885000', () => {
     expect(isOption('TSLA211029P00885000')).toEqual(true)
+  })
+})
+
+
+describe('getUnderlying', () => {
+  it('Doesnt shit the bed if given a stock symbol', () => {
+    expect(getUnderlying('AAPL')).toEqual('AAPL')
+  })
+  it('Extracts AAPL', () => {
+    expect(getUnderlying('AAPL211029P00146000')).toEqual('AAPL')
+  })
+  it('Extracts PINS', () => {
+    expect(getUnderlying('PINS211029P00055000')).toEqual('PINS')
+  })
+  it('Extracts TSLA', () => {
+    expect(getUnderlying('TSLA211029P00885000')).toEqual('TSLA')
   })
 })
