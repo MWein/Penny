@@ -24,6 +24,10 @@ describe('determineOptionTypeFromSymbol', () => {
   it('Properly identifies TSLA211029P00885000 as put', () => {
     expect(determineOptionTypeFromSymbol('TSLA211029P00885000')).toEqual('put')
   })
+
+  it('Returns neither if not an option', () => {
+    expect(determineOptionTypeFromSymbol('TSLAC')).toEqual('neither')
+  })
 })
 
 
