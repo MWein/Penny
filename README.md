@@ -3,7 +3,7 @@
 
 ## TL;DR
 
-Penny is a trading bot that will sell weekly [covered calls](https://www.investopedia.com/terms/c/coveredcall.asp#:~:text=The%20term%20covered%20call%20refers,to%20generate%20an%20income%20stream.).
+Penny is a trading bot that will sell weekly [covered calls](https://www.investopedia.com/terms/c/coveredcall.asp) and [cash-secured puts](https://www.investopedia.com/terms/n/nakedput.asp).
 
 ## Legal Stuff
 
@@ -45,7 +45,7 @@ If you use this program on a real account you will lose money. <- This is financ
 
 - **IV Rank**: Implied volatility will be different for every stock. Telsa's chart, for example, looks like an arrhythmic heart rate monitor. At&T has been hovering around the same price for a long time. What you want to focus on is IV Rank because that will tell you when implied volatility is higher or lower than normal for a particular stock. 50% or higher means that IV is higher than it's 52-week average. [Market Chameleon](https://marketchameleon.com/Overview/AAPL/IV/) is a good place to look... for a fee.
 
-- **Covered Call**: A strategy where you own 100 shares of a certain stock and sell a call option to some r/WallStreetBets gambler. Ideally, the underlying stock would trade sideways up until expiration so you can keep both the premium and the shares. You can lose out on some tendies if the underlying skyrockets above the strike. Should only be attempted on blue chip stocks or index funds that you actually want to own long term. Don't go chasing high premiums, son. The premiums could be high but the underlying stock might be s***t that brokers will make laugh at you for owning.
+- **Covered Call**: A strategy where you own 100 shares of a certain stock and sell a call option to some r/WallStreetBets gambler. Ideally, the underlying stock would trade sideways up until expiration so you can keep both the premium and the shares. You can lose out on some tendies if the underlying skyrockets above the strike. Should only be attempted on blue chip stocks or index funds that you actually want to own long term. Don't go chasing high premiums, son. The premiums could be high but the underlying stock might be s***t that brokers will make fun of you for owning.
 
 - **Naked Put**: Also known as a **Cash-Secured Put**. This is a strategy where you don't own the shares but have the money to buy them at whatever strike price you sell the option for. If you sell a put on AAPL for $147, your broker will hold on to $14,700 as collateral.
 
@@ -181,29 +181,20 @@ I used [Alpaca](https://alpaca.markets/) for past versions of Penny but they don
 
 ### Robinhood
 
-My membership in r/WallStreetBets requires me to consider Robinhood, but they don't offer a dedicated API. They probably use CORS so that only their own clients (UI clients) can use it. But even if they don't, I wouldn't want to use it because I'd have to reverse engineer their API. They have no documentation and all tradeable assets have a weird ID attached to them that means I couldn't hope to find for the options chain. They are off the table. Probably for the better. They don't even offer paper trading.
+My membership in r/WallStreetBets requires me to consider Robinhood, but they don't offer a dedicated API. They probably use CORS so that only their own clients (UI clients) can use it. But even if they don't, I wouldn't want to use it because I'd have to reverse engineer their API. They have no documentation and all tradeable assets have a weird ID attached to them that means I couldn't hope to find for the options chain. They are off the table. Probably for the better. They even offer paper trading.
 
 ### Interactive Brokers
 
-Interactive brokers does have [documentation](https://www.interactivebrokers.com/en/index.php?f=5041) for their API. They welcome bot writers with open arms but their documentation hurts my eyes so I haven't actually read through it yet. Interactive Brokers doesn't have the same huge name as TD or ETrade. That probably shouldn't factor into my decision but...
+Interactive brokers does have [documentation](https://www.interactivebrokers.com/en/index.php?f=5041) for their API. They welcome bot writers but their documentation hurts my eyes so I haven't actually read through it yet.
 
 ### TD Ameritrade
 
-They have documentation and also have endpoints for live market data, including the options chain! I have an API registered complete with a key. At the time of this writing I haven't played with it too much but it looks like they'll have everything I need. The downside, however, is that their API might be a bit dated. The API account is also separate from my brokerage so I have to figure out how to link them. The documentation isn't clear on how to do that.
+They have documentation and also have endpoints for live market data, including the options chain. I have an API registered complete with a key. At the time of this writing I haven't played with it too much but their authentication model is a crapshoot. The API account is also separate from my brokerage so I have to figure out how to link them. The documentation isn't clear on how to do that. It's not clear on how to do anything.
 
 ### ETrade
 
-ETrade actually has a really good amount of documentation complete with a developer page like TD. It looks like they put a lot more into their API than the others aside from Alpaca. They even have example API's including one written with Node! I still haven't decided on whether to use Golang or Node as of this writing but having half of my code written already would be a big plus.
-
-### Commissions...
-
-All of the viable brokers charge $0.65 per option trade. TD brings it down to $0.50 if you make a certain number of trades per quarter. Assuming $0.65 per trade and 10 different options positions per week, without buying them back, I'd be looking at $338/year in fees. Which isn't the worst thing in the world. Almost makes me wish Robinhood had an API.
-
-### Other notes
-
-I looked more closely at TD and ETrade and they have this stupid manual-authentication process that kind of kills the fire-and-forget thing I'm going for here. TD's tokens last for 90 days, ETrade expires after 2 hours. I don't think they had trading bots in mind when they spun them up.
-
+ETrade actually has a really good amount of documentation complete with a developer page like TD. It looks like they put a lot more into their API than the others aside from Alpaca. They even have example API's including one written with Node. Update: I looked at their node example and it's dogshit. They do the same callback crap that TD does which doesn't work for a bot unless I want to manually authenticate every 3 hours. Kind of kills the point.
 
 ### Tradier
 
-Now this looks interesting. They're an API-first broker like Alpaca, but unlike Alpaca they support options. Their option trade price is $0.35/contract which is cheaper than the others. There's also a $30/month option which lets me get past the $0.35/contract fee. I'd have to make around 85 options trades or more to make that worth it which I might end up running into later on. They also have a watchlist feature which might mean I won't have to use a database. Best of all they provide some awesome code samples including Go!
+Now this looks interesting. I happened upon this from some youtube ad where the guy was selling a worthless course on algotrading for $3000 and Tradier was mentioned in one of the sample lessons. Maybe I should sell courses... They're an API-first broker like Alpaca, but unlike Alpaca they support options. Their option trade price is $0.35/contract which is cheaper than the others. There's also a $30/month option which lets me get past the $0.35/contract fee. I'd have to make around 85 options trades or more to make that worth it which I might end up running into later on. They also have a watchlist feature which might mean I won't have to use a database. Best of all they provide some awesome code samples including Go. Update: Tradier is who I went with. No stupid-ass auth callback or anything.
