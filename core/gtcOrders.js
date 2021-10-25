@@ -34,9 +34,7 @@ const createGTCOrders = async () => {
   const allOrders = await order.getOrders()
   const oldOptionsPositions = _getOldOptionsPositions(allPositions, allOrders)
 
-  console.log(oldOptionsPositions)
-
-  // For-loop so we don't send every one of them at once
+  // For-loop so we don't send every one of them at once, not that there will be that many
   for (let x = 0; x < oldOptionsPositions.length; x++) {
     const oldOption = oldOptionsPositions[x]
     const symbol = getUnderlying(oldOption.symbol)
