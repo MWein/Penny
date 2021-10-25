@@ -39,12 +39,15 @@ const _generatePermittedPositionsArray = (optionableStocks, currentOptions, pend
   // Format map into an array
   return Object.keys(permittedCallsMap).reduce((acc, key) => {
     const quantity = permittedCallsMap[key]
+    const stock = optionableStocks.find(x => x.symbol === key)
+    const costPerShare = Number((stock.cost_basis / stock.quantity).toFixed(2))
     return quantity <= 0 ? acc : 
       [
         ...acc,
         {
           symbol: key,
           quantity,
+          costPerShare,
         }
       ]
     }, [])
@@ -73,7 +76,7 @@ const sellCoveredCalls = async () => {
   // In a for-loop so each request isn't sent up all at once
   for (let x = 0; x < coverableTickers.length; x++) {
     const currentTicker = coverableTickers[x]
-    const best = bestOption.selectBestOption(currentTicker.symbol, 'call')
+    const best = bestOption.selectBestOption(currentTicker.symbol, 'call', currentTicker.costPerShare)
     if (best) {
       // Send sell order for listed quantity
       await sendOrders.sellToOpen(currentTicker.symbol, best.symbol, currentTicker.quantity)

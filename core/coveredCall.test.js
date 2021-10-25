@@ -56,14 +56,17 @@ describe('_generatePermittedPositionsArray', () => {
       {
         symbol: 'AAPL',
         quantity: 1,
+        costPerShare: 2.07,
       },
       {
         symbol: 'AMZN',
         quantity: 1,
+        costPerShare: 15.59
       },
       {
         symbol: 'CAH',
         quantity: 2,
+        costPerShare: 0.25
       },
     ])
   })
@@ -121,10 +124,12 @@ describe('_generatePermittedPositionsArray', () => {
       {
         symbol: 'AMZN',
         quantity: 1,
+        costPerShare: 15.59,
       },
       {
         symbol: 'CAH',
         quantity: 1,
+        costPerShare: 0.25,
       },
     ])
   })
@@ -204,6 +209,7 @@ describe('_generatePermittedPositionsArray', () => {
       {
         symbol: 'AMZN',
         quantity: 1,
+        costPerShare: 15.59,
       },
     ])
   })
@@ -437,7 +443,8 @@ describe('_determineCoverableTickers', () => {
     expect(result).toEqual([
       {
         symbol: 'TSLA',
-        quantity: 1
+        quantity: 1,
+        costPerShare: 9.35,
       },
     ])
   })
@@ -501,8 +508,8 @@ describe('sellCoveredCalls', () => {
 
     await sellCoveredCalls()
     expect(bestOption.selectBestOption).toHaveBeenCalledTimes(2)
-    expect(bestOption.selectBestOption).toHaveBeenCalledWith('AAPL', 'call')
-    expect(bestOption.selectBestOption).toHaveBeenCalledWith('TSLA', 'call')
+    expect(bestOption.selectBestOption).toHaveBeenCalledWith('AAPL', 'call', 2.07)
+    expect(bestOption.selectBestOption).toHaveBeenCalledWith('TSLA', 'call', 9.35)
 
     expect(sendOrders.sellToOpen).toHaveBeenCalledTimes(2)
     expect(sendOrders.sellToOpen).toHaveBeenCalledWith('AAPL', 'AAPL1234C3214', 1)
@@ -525,7 +532,7 @@ describe('sellCoveredCalls', () => {
 
     await sellCoveredCalls()
     expect(bestOption.selectBestOption).toHaveBeenCalledTimes(1)
-    expect(bestOption.selectBestOption).toHaveBeenCalledWith('AAPL', 'call')
+    expect(bestOption.selectBestOption).toHaveBeenCalledWith('AAPL', 'call', 2.07)
     expect(sendOrders.sellToOpen).not.toHaveBeenCalled()
   })
 })
