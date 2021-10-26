@@ -1,35 +1,32 @@
 const balanceUtil = require('../tradier/getBalances')
-const priceUtil = require('../tradier/getPrices')
 const positionUtil = require('../tradier/getPositions')
 const orderUtil = require('../tradier/getOrders')
-const bestOption = require('../tradier/selectBestOption')
 const { getUnderlying } = require('../utils/determineOptionType')
 const sendOrdersUtil = require('../tradier/sendOrders')
 
 
-// Returns stocks whose price is under buying power and maximum allocation setting
-// Maximum allocation is redundant here since it will do it later, but this potentially save network calls
-const _getAffordableStocks = (prices, buyingPower) =>
-  prices.filter(stock =>
-    stock.price * 100 < process.env.MAXIMUMALLOCATION
-    && stock.price * 100 < buyingPower
+
+const _getAffordableOptions = (bestOptions, buyingPower) =>
+  bestOptions.filter(opt =>
+    opt.strike * 100 < buyingPower
   )
+
 
 // Gets the approximate allocation for each stock in the price list based on the current price and number of positions/orders already held
 // Sorts lowest to highest
-const _getEstimatedAllocation = (prices, putPositions, putOrders) =>
-  prices.map(stock => {
-    const numPositions = putPositions.filter(pos => getUnderlying(pos.symbol) === stock.symbol)
+const _getEstimatedAllocation = (bestOptions, putPositions, putOrders) =>
+  bestOptions.map(opt => {
+    const numPositions = putPositions.filter(pos => getUnderlying(pos.symbol) === getUnderlying(opt.symbol))
       .reduce((acc, x) => acc + Math.abs(x.quantity), 0)
-    const numOrders = putOrders.filter(ord => ord.symbol === stock.symbol)
+    const numOrders = putOrders.filter(ord => ord.symbol === getUnderlying(opt.symbol))
       .reduce((acc, x) => acc + Math.abs(x.quantity), 0)
 
     const existing = numPositions + numOrders
-    const allocation = (stock.price * 100) * existing
-    const potentialAllocation = allocation + (stock.price * 100)
+    const allocation = (opt.strike * 100) * existing
+    const potentialAllocation = allocation + (opt.strike * 100)
 
     return {
-      ...stock,
+      ...opt,
       allocation,
       potentialAllocation,
     }
@@ -77,9 +74,9 @@ const _getOptionsToSell = (options, optionBuyingPower) => {
 
 // One cycle of sellNakedPuts
 // Will likely run multiple times
-const sellNakedPutsCycle = async (watchlist=[]) => {
-  if (watchlist.length === 0) {
-    return 'Nothing in watchlist =('
+const sellNakedPutsCycle = async (watchlist=[], bestOptions=[]) => {
+  if (bestOptions.length === 0) {
+    return 'No options choices =('
   }
 
   const balances = await balanceUtil.getBalances()
@@ -88,9 +85,9 @@ const sellNakedPutsCycle = async (watchlist=[]) => {
     return 'No money =('
   }
 
-  const prices = await priceUtil.getPrices(watchlist)
-  const affordableStocks = _getAffordableStocks(prices, optionBuyingPower)
-  if (affordableStocks.length === 0) {
+  //const prices = await priceUtil.getPrices(watchlist)
+  const affordableOptions = _getAffordableOptions(bestOptions, optionBuyingPower)
+  if (affordableOptions.length === 0) {
     return 'Too broke for this =('
   }
 
@@ -100,18 +97,12 @@ const sellNakedPutsCycle = async (watchlist=[]) => {
   const orders = await orderUtil.getOrders()
   const putOptionOrders = orderUtil.filterForCashSecuredPutOrders(orders)
 
-  const estimatedAllocation = _getEstimatedAllocation(affordableStocks, putPositions, putOptionOrders)
+  const estimatedAllocation = _getEstimatedAllocation(affordableOptions, putPositions, putOptionOrders)
+  console.log(estimatedAllocation)
+
   const permittedStocks = _getStocksUnderMaxAllocation(estimatedAllocation)
   if (permittedStocks.length === 0) {
     return 'Looks like everything is maxed out =('
-  }
-
-  // Get the best options for everything
-  const bestOptions = []
-  for (let x = 0; x < permittedStocks.length; x++) {
-    const symbol = permittedStocks[x]
-    const best = await bestOption.selectBestOption(symbol, 'put')
-    bestOptions.push(best)
   }
 
   const prioritizedOptions = _getPutOptionPriority(bestOptions)
@@ -131,7 +122,6 @@ const sellNakedPutsCycle = async (watchlist=[]) => {
 
 
 module.exports = {
-  _getAffordableStocks,
   _getEstimatedAllocation,
   _getStocksUnderMaxAllocation,
   _getPutOptionPriority,
