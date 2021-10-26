@@ -3,7 +3,6 @@ const order = require('../tradier/getOrders')
 const bestOption = require('../tradier/selectBestOption')
 const sendOrders = require('../tradier/sendOrders')
 const {
-  determineOptionTypeFromSymbol,
   isOption,
   getUnderlying,
 } = require('../utils/determineOptionType')
@@ -43,8 +42,7 @@ const _determineCoverableTickers = async () => {
   const currentOptions = positions.filter(pos => isOption(pos.symbol))
 
   const orders = await order.getOrders()
-  const callOrders = orders.filter(ord => ord.class === 'option' && ['pending', 'open'].includes(ord.status))
-    .filter(ord => determineOptionTypeFromSymbol(ord.option_symbol) === 'call')
+  const callOrders = order.filterForCoveredCallOrders(orders)
 
   return _generatePermittedPositionsArray(optionableStocks, currentOptions, callOrders)
 }
