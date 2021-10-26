@@ -65,42 +65,8 @@ describe('_getOldOptionsPositions', () => {
       generatePositionObject('CAH', 3, 'call', 50.41, '2021-10-09T17:05:44.674Z'),
     ]
     const orders = [
-      {
-        id: 228749,
-        type: 'market',
-        symbol: 'AAPL',
-        side: 'buy_to_close',
-        quantity: 1.00000000,
-        status: 'pending',
-        duration: 'pre',
-        avg_fill_price: 0.00000000,
-        exec_quantity: 0.00000000,
-        last_fill_price: 0.00000000,
-        last_fill_quantity: 0.00000000,
-        remaining_quantity: 0.00000000,
-        create_date: '2018-06-06T20:16:17.342Z',
-        transaction_date: '2018-06-06T20:16:17.357Z',
-        class: 'option',
-        option_symbol: 'AAPL1234C3214'
-      },
-      {
-        id: 228749,
-        type: 'market',
-        symbol: 'AAPL',
-        side: 'sell_to_open',
-        quantity: 1.00000000,
-        status: 'pending',
-        duration: 'pre',
-        avg_fill_price: 0.00000000,
-        exec_quantity: 0.00000000,
-        last_fill_price: 0.00000000,
-        last_fill_quantity: 0.00000000,
-        remaining_quantity: 0.00000000,
-        create_date: '2018-06-06T20:16:17.342Z',
-        transaction_date: '2018-06-06T20:16:17.357Z',
-        class: 'option',
-        option_symbol: 'AMZN123C321'
-      },
+      generateOrderObject('AAPL', 1, 'call', 'buy_to_close', 'pending'),
+      generateOrderObject('AMZN', 1, 'call', 'sell_to_open', 'pending'),
     ]
     const results = _getOldOptionsPositions(positions, orders)
     expect(results).toEqual([
