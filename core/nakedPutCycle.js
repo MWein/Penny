@@ -117,6 +117,8 @@ const sellNakedPutsCycle = async (watchlist=[]) => {
   const prioritizedOptions = _getPutOptionPriority(bestOptions)
   const tickersToSell = _getOptionsToSell(prioritizedOptions, optionBuyingPower)
 
+  console.log('Selling', tickersToSell)
+
   // For-loop so they dont send all at once
   for (let x = 0; x < tickersToSell.length; x++) {
     const optionSymbol = tickersToSell[x]

@@ -7,7 +7,9 @@ const sellNakedPuts = async () => {
 
   // Cycle until cycle function returns something other than 'success'
   const _sellNakedPutsHelper = async () => {
+    console.log('Selling Puts')
     const result = await nakedPutHelpers.sellNakedPutsCycle(watchlist)
+    console.log(result)
     if (result === 'success') {
       await _sellNakedPutsHelper()
     }

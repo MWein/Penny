@@ -15,9 +15,9 @@ const {
   sellCoveredCalls
 } = require('./core/coveredCall')
 
-// const {
-//   sellNakedPuts,
-// } = require('./core/nakedPut')
+const {
+  sellNakedPuts,
+} = require('./core/nakedPut')
 
 const { createGTCOrders } = require('./core/gtcOrders')
 
@@ -34,8 +34,8 @@ const launch = async () => {
   // In createGTCOrders function, oldOptionsPositions should be empty after 7am local time
 
 
-
-
+  //sellNakedPuts()
+  // Should sell TTD, ATVI, JD, IRBT
 
   //await createGTCOrders()
 
