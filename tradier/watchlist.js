@@ -2,7 +2,7 @@ const network = require('../utils/network')
 
 const getWatchlistSymbols = async () => {
   try {
-    const response = await network.get('watchlists/penny')
+    const response = await network.get('watchlists/default')
     const watchlistItems = response.watchlist.items.item
 
     // If theres one item in the watchlist, its an object. Why...
