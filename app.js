@@ -11,7 +11,7 @@ const CronJob = require('cron').CronJob
 
 // Permanent imports
 const {
-  _determineCoverableTickers,
+  //_determineCoverableTickers,
   sellCoveredCalls
 } = require('./core/coveredCall')
 
