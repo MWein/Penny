@@ -1,4 +1,35 @@
 const network = require('../utils/network')
+const {
+  isOption,
+  determineOptionTypeFromSymbol
+} = require('../utils/determineOptionType')
+
+const filterForCoveredCallOrders = orders =>
+  orders.filter(ord =>
+    ord.class === 'option'
+    && [ 'open', 'pending' ].includes(ord.status)
+    && ord.side === 'sell_to_open'
+    && determineOptionTypeFromSymbol(ord.option_symbol) === 'call'
+  )
+
+
+const filterForCashSecuredPutOrders = orders =>
+  orders.filter(ord =>
+    ord.class === 'option'
+    && [ 'open', 'pending' ].includes(ord.status)
+    && ord.side === 'sell_to_open'
+    && determineOptionTypeFromSymbol(ord.option_symbol) === 'put'
+  )
+
+
+const filterForOptionBuyToCloseOrders = orders =>
+  orders.filter(ord =>
+    ord.class === 'option'
+    && [ 'open', 'pending' ].includes(ord.status)
+    && ord.side === 'buy_to_close'
+    && isOption(ord.option_symbol)
+  )
+
 
 const getOrders = async () => {
   const url = `accounts/${process.env.ACCOUNTNUM}/orders`
@@ -14,5 +45,8 @@ const getOrders = async () => {
 }
 
 module.exports = {
-  getOrders
+  filterForCoveredCallOrders,
+  filterForCashSecuredPutOrders,
+  filterForOptionBuyToCloseOrders,
+  getOrders,
 }

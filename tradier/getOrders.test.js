@@ -1,6 +1,49 @@
 const network = require('../utils/network')
-const { getOrders } = require('./getOrders')
+const {
+  filterForCoveredCallOrders,
+  filterForCashSecuredPutOrders,
+  filterForOptionBuyToCloseOrders,
+  getOrders,
+} = require('./getOrders')
 const { generateOrderObject } = require('../utils/testHelpers')
+
+
+describe('Order filter functions', () => {
+  const orders = [
+    generateOrderObject('AAPL', 50, 'stock', 'buy', 'pending'),
+    generateOrderObject('AXON', 7, 'call', 'sell_to_open', 'pending'),
+    generateOrderObject('TSLA', 50, 'call', 'buy_to_close', 'open'),
+    generateOrderObject('FB', 50, 'put', 'sell_to_open', 'canceled'),
+    generateOrderObject('MSFT', 50, 'call', 'sell_to_open', 'open'),
+    generateOrderObject('SFIX', 50, 'put', 'sell_to_open', 'pending'),
+    generateOrderObject('WMT', 50, 'put', 'sell_to_open', 'open'),
+    generateOrderObject('IBKR', 50, 'put', 'buy_to_close', 'open'),
+  ]
+
+  it('filterForCoveredCallOrders', () => {
+    const actual = filterForCoveredCallOrders(orders)
+    expect(actual).toEqual([
+      generateOrderObject('AXON', 7, 'call', 'sell_to_open', 'pending'),
+      generateOrderObject('MSFT', 50, 'call', 'sell_to_open', 'open'),
+    ])
+  })
+
+  it('filterForCashSecuredPutOrders', () => {
+    const actual = filterForCashSecuredPutOrders(orders)
+    expect(actual).toEqual([
+      generateOrderObject('SFIX', 50, 'put', 'sell_to_open', 'pending'),
+      generateOrderObject('WMT', 50, 'put', 'sell_to_open', 'open'),
+    ])
+  })
+
+  it('filterForOptionBuyToCloseOrders', () => {
+    const actual = filterForOptionBuyToCloseOrders(orders)
+    expect(actual).toEqual([
+      generateOrderObject('TSLA', 50, 'call', 'buy_to_close', 'open'),
+      generateOrderObject('IBKR', 50, 'put', 'buy_to_close', 'open'),
+    ])
+  })
+})
 
 
 describe('getOrders', () => {
