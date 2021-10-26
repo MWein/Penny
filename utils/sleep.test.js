@@ -22,5 +22,9 @@ describe('sleep', () => {
       sleep(10)
       expect(setTimeout).toHaveBeenCalledWith(expect.any(Function), 10000)
     })
+    it('Sleeps for 0.7 seconds, calls setTimeout with sec*1000', () => {
+      sleep(0.7)
+      expect(setTimeout).toHaveBeenCalledWith(expect.any(Function), 700)
+    })
   })
 })
