@@ -35,11 +35,11 @@ const _generatePermittedPositionsArray = (optionableStocks, currentOptions, pend
 
 const _determineCoverableTickers = async () => {
   const positions = await position.getPositions()
-  const optionableStocks = positions.filter(pos => pos.quantity >= 100 && !isOption(pos.symbol))
+  const optionableStocks = position.filterForOptionableStockPositions(positions)
   if (optionableStocks.length === 0) {
     return []
   }
-  const currentOptions = positions.filter(pos => isOption(pos.symbol))
+  const currentOptions = position.filterForCallPositions(positions)
 
   const orders = await order.getOrders()
   const callOrders = order.filterForCoveredCallOrders(orders)

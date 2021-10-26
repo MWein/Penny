@@ -147,9 +147,7 @@ describe('_determineCoverableTickers', () => {
       generateOrderObject('TSLA', 1, 'call', 'sell_to_open', 'pending'),
       generateOrderObject('AAPL', 1, 'call', 'sell_to_open', 'pending'),
     ])
-
     const result = await _determineCoverableTickers()
-
     expect(result).toEqual([])
   })
 
@@ -162,9 +160,27 @@ describe('_determineCoverableTickers', () => {
     orders.getOrders.mockReturnValue([
       generateOrderObject('AAPL', 1, 'call', 'sell_to_open', 'pending'),
     ])
-
     const result = await _determineCoverableTickers()
+    expect(result).toEqual([
+      {
+        symbol: 'TSLA',
+        quantity: 1,
+        costPerShare: 9.35,
+      },
+    ])
+  })
 
+  it('Ignores put option positions', async () => {
+    positions.getPositions.mockReturnValue([
+      generatePositionObject('AAPL', 100, 'stock', 207.01),
+      generatePositionObject('TSLA', 200, 'stock', 1870.70),
+      generatePositionObject('TSLA', -1, 'call', 1870.70),
+      generatePositionObject('TSLA', -1, 'put', 1870.70),
+    ])
+    orders.getOrders.mockReturnValue([
+      generateOrderObject('AAPL', 1, 'call', 'sell_to_open', 'pending'),
+    ])
+    const result = await _determineCoverableTickers()
     expect(result).toEqual([
       {
         symbol: 'TSLA',
