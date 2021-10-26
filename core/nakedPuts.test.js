@@ -5,7 +5,10 @@ const priceUtil = require('../tradier/getPrices')
 const {
   _getAffordableStocks,
   _getEstimatedAllocation,
-  _sellNakedPutsCycle
+  _getStocksUnderMaxAllocation,
+  _getPutOptionPriority,
+  _getOptionsToSell,
+  _sellNakedPutsCycle,
 } = require('./nakedPut')
 
 const {
@@ -99,6 +102,193 @@ describe('_getEstimatedAllocation', () => {
         allocation: 150300,
         potentialAllocation: 200400,
       },
+    ])
+  })
+})
+
+
+describe('_getStocksUnderMaxAllocation', () => {
+  it('Returns the tickers whose potential allocation is lower than the maximum', () => {
+    process.env.MAXIMUMALLOCATION = 48000
+    const stocks = [
+      {
+        symbol: 'AXON',
+        price: 12,
+        allocation: 0,
+        potentialAllocation: 1200,
+      },
+      {
+        symbol: 'TSLA',
+        price: 100,
+        allocation: 20000,
+        potentialAllocation: 30000,
+      },
+      {
+        symbol: 'AAPL',
+        price: 120,
+        allocation: 36000,
+        potentialAllocation: 48000,
+      },
+      {
+        symbol: 'PINS',
+        price: 501,
+        allocation: 150300,
+        potentialAllocation: 200400,
+      },
+    ]
+    const result = _getStocksUnderMaxAllocation(stocks)
+    expect(result).toEqual([ 'AXON', 'TSLA' ])
+  })
+})
+
+
+describe('_getPutOptionPriority', () => {
+  it('Returns a list of best options with percent return; sorted best to worst', () => {
+    const bestOptions = [
+      {
+        symbol: 'AAPL211029P00146000',
+        premium: 121,
+        strike: 146,
+        delta: 0.321088,
+        distanceTo30: 0.021087999999999996,
+        expiration: '2021-10-29',
+        weeklyRate: 121,
+      },
+      {
+        symbol: 'PINS211105P00047500',
+        premium: 168,
+        strike: 47.5,
+        delta: 0.305893,
+        distanceTo30: 0.005893000000000037,
+        expiration: '2021-11-05',
+        weeklyRate: 84,
+      },
+      {
+        symbol: 'WMT211029P00149000',
+        premium: 62,
+        strike: 149,
+        delta: 0.33609,
+        distanceTo30: 0.03609000000000001,
+        expiration: '2021-10-29',
+        weeklyRate: 62,
+      }
+    ]
+    const result = _getPutOptionPriority(bestOptions)
+    expect(result).toEqual([
+      {
+        symbol: 'PINS211105P00047500',
+        premium: 168,
+        strike: 47.5,
+        delta: 0.305893,
+        distanceTo30: 0.005893000000000037,
+        expiration: '2021-11-05',
+        weeklyRate: 84,
+        percReturn: 0.03536842105263158
+      },
+      {
+        symbol: 'AAPL211029P00146000',
+        premium: 121,
+        strike: 146,
+        delta: 0.321088,
+        distanceTo30: 0.021087999999999996,
+        expiration: '2021-10-29',
+        weeklyRate: 121,
+        percReturn: 0.008287671232876713
+      },
+      {
+        symbol: 'WMT211029P00149000',
+        premium: 62,
+        strike: 149,
+        delta: 0.33609,
+        distanceTo30: 0.03609000000000001,
+        expiration: '2021-10-29',
+        weeklyRate: 62,
+        percReturn: 0.004161073825503355
+      }
+    ])
+  })
+})
+
+
+describe('_getOptionsToSell', () => {
+  it('Returns all if the buying power is greater than the sum of the options', () => {
+    const options = [
+      {
+        symbol: 'PINS211105P00047500',
+        premium: 168,
+        strike: 47.5,
+        delta: 0.305893,
+        distanceTo30: 0.005893000000000037,
+        expiration: '2021-11-05',
+        weeklyRate: 84,
+        percReturn: 0.03536842105263158
+      },
+      {
+        symbol: 'AAPL211029P00146000',
+        premium: 121,
+        strike: 146,
+        delta: 0.321088,
+        distanceTo30: 0.021087999999999996,
+        expiration: '2021-10-29',
+        weeklyRate: 121,
+        percReturn: 0.008287671232876713
+      },
+      {
+        symbol: 'WMT211029P00149000',
+        premium: 62,
+        strike: 149,
+        delta: 0.33609,
+        distanceTo30: 0.03609000000000001,
+        expiration: '2021-10-29',
+        weeklyRate: 62,
+        percReturn: 0.004161073825503355
+      }
+    ]
+    const results = _getOptionsToSell(options, 35000)
+    expect(results).toEqual([
+      'PINS211105P00047500',
+      'AAPL211029P00146000',
+      'WMT211029P00149000'
+    ])
+  })
+
+  it('Returns only the best options, cuts off when buying power is exhaused', () => {
+    const options = [
+      {
+        symbol: 'PINS211105P00047500',
+        premium: 168,
+        strike: 47.5,
+        delta: 0.305893,
+        distanceTo30: 0.005893000000000037,
+        expiration: '2021-11-05',
+        weeklyRate: 84,
+        percReturn: 0.03536842105263158
+      },
+      {
+        symbol: 'AAPL211029P00146000',
+        premium: 121,
+        strike: 146,
+        delta: 0.321088,
+        distanceTo30: 0.021087999999999996,
+        expiration: '2021-10-29',
+        weeklyRate: 121,
+        percReturn: 0.008287671232876713
+      },
+      {
+        symbol: 'WMT211029P00149000',
+        premium: 62,
+        strike: 149,
+        delta: 0.33609,
+        distanceTo30: 0.03609000000000001,
+        expiration: '2021-10-29',
+        weeklyRate: 62,
+        percReturn: 0.004161073825503355
+      }
+    ]
+    const results = _getOptionsToSell(options, 21000)
+    expect(results).toEqual([
+      'PINS211105P00047500',
+      'AAPL211029P00146000'
     ])
   })
 })
