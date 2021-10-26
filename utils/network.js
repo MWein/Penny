@@ -1,4 +1,15 @@
 const superagent = require('superagent')
+const sleepUtil = require('./sleep')
+
+
+// Throttle
+const _throttle = async throttle => {
+  if (throttle) {
+    const throttleTime = process.env.BASEPATH.includes('sandbox') ? 1.2 : 0.7
+    await sleepUtil.sleep(throttleTime)
+  }
+}
+
 
 // Generate form string from object
 // Superagent doesn't handle this without multiple sends
@@ -7,6 +18,7 @@ const _createFormString = body => Object.keys(body).map(key => {
   const formattedValue = Array.isArray(value) ? value.join(',') : value
   return `${key}=${formattedValue}`
 }).join('&')
+
 
 const get = async (path) => {
   const url = `${process.env.BASEPATH}${path}`
@@ -17,6 +29,7 @@ const get = async (path) => {
 
   return response.body
 }
+
 
 const post = async (path, body) => {
   const url = `${process.env.BASEPATH}${path}`
@@ -31,6 +44,7 @@ const post = async (path, body) => {
 }
 
 module.exports = {
+  _throttle,
   _createFormString,
   get,
   post,

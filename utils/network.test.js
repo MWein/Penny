@@ -1,5 +1,34 @@
 const superagent = require('superagent')
-const { _createFormString, get, post } = require('./network')
+const {
+  _throttle,
+  _createFormString,
+  get,
+  post,
+} = require('./network')
+const sleep = require('./sleep')
+
+
+describe('_throttle tests', () => {
+  beforeEach(() => sleep.sleep = jest.fn())
+
+  it('Does nothing throttle is false', async () => {
+    await _throttle(false)
+    expect(sleep.sleep).not.toHaveBeenCalled()
+  })
+
+  it('Sleeps for 1.2 seconds if in paper trading environment', async () => {
+    process.env.BASEPATH = 'https://sandbox.tradier.com/v1/'
+    await _throttle(true)
+    expect(sleep.sleep).toHaveBeenCalledWith(1.2)
+  })
+
+  it('Sleeps for 0.7 seconds if in production environment', async () => {
+    process.env.BASEPATH = 'https://api.tradier.com/v1/'
+    await _throttle(true)
+    expect(sleep.sleep).toHaveBeenCalledWith(0.7)
+  })
+})
+
 
 describe('_createFormString', () => {
   it('Creates form string with a single value', () => {
