@@ -1,6 +1,46 @@
 const network = require('../utils/network')
-const { getPositions } = require('./getPositions')
+const {
+  filterForOptionableStockPositions,
+  filterForPutPositions,
+  filterForCallPositions,
+  getPositions,
+} = require('./getPositions')
 const { generatePositionObject } = require('../utils/testHelpers')
+
+
+describe('Filter functions', () => {
+  const positions = [
+    generatePositionObject('AAPL', 50, 'stock'),
+    generatePositionObject('MSFT', 99, 'stock'),
+    generatePositionObject('FB', 100, 'stock'),
+    generatePositionObject('AXON', 240, 'stock'),
+    generatePositionObject('SFIX', 1, 'call'),
+    generatePositionObject('IBKR', 1, 'call'),
+    generatePositionObject('ZNGA', -7, 'put'),
+    generatePositionObject('GME', 19, 'put'),
+  ]
+
+  it('filterForOptionableStockPositions', () => {
+    expect(filterForOptionableStockPositions(positions)).toEqual([
+      generatePositionObject('FB', 100, 'stock'),
+      generatePositionObject('AXON', 240, 'stock'),
+    ])
+  })
+
+  it('filterForPutPositions', () => {
+    expect(filterForPutPositions(positions)).toEqual([
+      generatePositionObject('ZNGA', -7, 'put'),
+      generatePositionObject('GME', 19, 'put'),
+    ])
+  })
+
+  it('filterForCallPositions', () => {
+    expect(filterForCallPositions(positions)).toEqual([
+      generatePositionObject('SFIX', 1, 'call'),
+      generatePositionObject('IBKR', 1, 'call'),
+    ])
+  })
+})
 
 
 describe('getPositions', () => {
