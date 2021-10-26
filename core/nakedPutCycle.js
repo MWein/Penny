@@ -81,11 +81,10 @@ const sellNakedPutsCycle = async bestOptions => {
 
   const balances = await balanceUtil.getBalances()
   const optionBuyingPower = balances.optionBuyingPower
-  if (optionBuyingPower <= 0) {
+  if (optionBuyingPower <= 0) { // Probably wont be below zero but ya never know
     return 'No money =('
   }
 
-  //const prices = await priceUtil.getPrices(watchlist)
   const affordableOptions = _getAffordableOptions(bestOptions, optionBuyingPower)
   if (affordableOptions.length === 0) {
     return 'Too broke for this =('
@@ -112,6 +111,7 @@ const sellNakedPutsCycle = async bestOptions => {
   for (let x = 0; x < tickersToSell.length; x++) {
     const optionSymbol = tickersToSell[x]
     const symbol = getUnderlying(optionSymbol)
+    //console.log('Selling', symbol)
     await sendOrdersUtil.sellToOpen(symbol, optionSymbol, 1)
   }
 
