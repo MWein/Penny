@@ -8,6 +8,11 @@ const {
   sellCoveredCalls,
 } = require('./coveredCall')
 
+const {
+  generateOrderObject,
+  generatePositionObject,
+} = require('../utils/testHelpers')
+
 
 describe('_generatePermittedPositionsArray', () => {
   it('Returns empty array if there are no optionable stocks', () => {
@@ -20,34 +25,10 @@ describe('_generatePermittedPositionsArray', () => {
 
   it('Returns array of stocks with their permitted call number; no current or pending options', () => {
     const optionableStocks = [
-      {
-        cost_basis: 207.01,
-        date_acquired: '2018-08-08T14:41:11.405Z',
-        id: 130089,
-        quantity: 100.00000000,
-        symbol: 'AAPL'
-      },
-      {
-        cost_basis: 1870.70,
-        date_acquired: '2018-08-08T14:42:00.774Z',
-        id: 130090,
-        quantity: 120.00000000,
-        symbol: 'AMZN'
-      },
-      {
-        cost_basis: 50.41,
-        date_acquired: '2019-01-31T17:05:44.674Z',
-        id: 133590,
-        quantity: 203.00000000,
-        symbol: 'CAH'
-      },
-      {
-        cost_basis: 50.41,
-        date_acquired: '2019-01-31T17:05:44.674Z',
-        id: 133590,
-        quantity: 20.00000000,
-        symbol: 'FB'
-      },
+      generatePositionObject('AAPL', 100, 'stock', 207.01),
+      generatePositionObject('AMZN', 120, 'stock', 1870.70),
+      generatePositionObject('CAH', 203, 'stock', 50.41),
+      generatePositionObject('FB', 20, 'stock', 50.41),
     ]
     const currentOptions = []
     const pendingOptions = []
@@ -73,50 +54,14 @@ describe('_generatePermittedPositionsArray', () => {
 
   it('Returns array of stocks with their permitted call number; no pending options', () => {
     const optionableStocks = [
-      {
-        cost_basis: 207.01,
-        date_acquired: '2018-08-08T14:41:11.405Z',
-        id: 130089,
-        quantity: 100.00000000,
-        symbol: 'AAPL'
-      },
-      {
-        cost_basis: 1870.70,
-        date_acquired: '2018-08-08T14:42:00.774Z',
-        id: 130090,
-        quantity: 120.00000000,
-        symbol: 'AMZN'
-      },
-      {
-        cost_basis: 50.41,
-        date_acquired: '2019-01-31T17:05:44.674Z',
-        id: 133590,
-        quantity: 203.00000000,
-        symbol: 'CAH'
-      },
-      {
-        cost_basis: 50.41,
-        date_acquired: '2019-01-31T17:05:44.674Z',
-        id: 133590,
-        quantity: 20.00000000,
-        symbol: 'FB'
-      },
+      generatePositionObject('AAPL', 100, 'stock', 207.01),
+      generatePositionObject('AMZN', 120, 'stock', 1870.70),
+      generatePositionObject('CAH', 203, 'stock', 50.41),
+      generatePositionObject('FB', 20, 'stock', 50.41),
     ]
     const currentOptions = [
-      {
-        cost_basis: 50.41,
-        date_acquired: '2019-01-31T17:05:44.674Z',
-        id: 133590,
-        quantity: -1.00000000,
-        symbol: 'CAH1234C3214'
-      },
-      {
-        cost_basis: 50.41,
-        date_acquired: '2019-01-31T17:05:44.674Z',
-        id: 133590,
-        quantity: -1.00000000,
-        symbol: 'AAPL1234C3214'
-      }
+      generatePositionObject('CAH', -1, 'call', 50.41),
+      generatePositionObject('AAPL', -1, 'call', 50.41),
     ]
     const pendingOptions = []
     const result = _generatePermittedPositionsArray(optionableStocks, currentOptions, pendingOptions)
@@ -136,34 +81,10 @@ describe('_generatePermittedPositionsArray', () => {
 
   it('Returns array of stocks with permitted call number; no current options; handles multiple options orders with the same underlying', () => {
     const optionableStocks = [
-      {
-        cost_basis: 207.01,
-        date_acquired: '2018-08-08T14:41:11.405Z',
-        id: 130089,
-        quantity: 100.00000000,
-        symbol: 'AAPL'
-      },
-      {
-        cost_basis: 1870.70,
-        date_acquired: '2018-08-08T14:42:00.774Z',
-        id: 130090,
-        quantity: 120.00000000,
-        symbol: 'AMZN'
-      },
-      {
-        cost_basis: 50.41,
-        date_acquired: '2019-01-31T17:05:44.674Z',
-        id: 133590,
-        quantity: 203.00000000,
-        symbol: 'CAH'
-      },
-      {
-        cost_basis: 50.41,
-        date_acquired: '2019-01-31T17:05:44.674Z',
-        id: 133590,
-        quantity: 20.00000000,
-        symbol: 'FB'
-      },
+      generatePositionObject('AAPL', 100, 'stock', 207.01),
+      generatePositionObject('AMZN', 120, 'stock', 1870.70),
+      generatePositionObject('CAH', 203, 'stock', 50.41),
+      generatePositionObject('FB', 20, 'stock', 50.41),
     ]
     const currentOptions = []
     const pendingOptions = [
@@ -234,43 +155,13 @@ describe('_generatePermittedPositionsArray', () => {
 
   it('Returns array of stocks with permitted call number', () => {
     const optionableStocks = [
-      {
-        cost_basis: 207.01,
-        date_acquired: '2018-08-08T14:41:11.405Z',
-        id: 130089,
-        quantity: 100.00000000,
-        symbol: 'AAPL'
-      },
-      {
-        cost_basis: 1870.70,
-        date_acquired: '2018-08-08T14:42:00.774Z',
-        id: 130090,
-        quantity: 120.00000000,
-        symbol: 'AMZN'
-      },
-      {
-        cost_basis: 50.41,
-        date_acquired: '2019-01-31T17:05:44.674Z',
-        id: 133590,
-        quantity: 203.00000000,
-        symbol: 'CAH'
-      },
-      {
-        cost_basis: 50.41,
-        date_acquired: '2019-01-31T17:05:44.674Z',
-        id: 133590,
-        quantity: 20.00000000,
-        symbol: 'FB'
-      },
+      generatePositionObject('AAPL', 100, 'stock', 207.01),
+      generatePositionObject('AMZN', 120, 'stock', 1870.70),
+      generatePositionObject('CAH', 203, 'stock', 50.41),
+      generatePositionObject('FB', 20, 'stock', 50.41),
     ]
     const currentOptions = [
-      {
-        cost_basis: 50.41,
-        date_acquired: '2019-01-31T17:05:44.674Z',
-        id: 133590,
-        quantity: -1.00000000,
-        symbol: 'AMZN1234C3214'
-      },
+      generatePositionObject('AMZN', -1, 'call', 50.41),
     ]
     const pendingOptions = [
       {
@@ -324,20 +215,8 @@ describe('_determineCoverableTickers', () => {
 
   it('Returns empty array if there are no optionable positions', async () => {
     positions.getPositions.mockReturnValue([
-      {
-        cost_basis: 207.01,
-        date_acquired: '2018-08-08T14:41:11.405Z',
-        id: 130089,
-        quantity: 99.00000000,
-        symbol: 'AAPL'
-      },
-      {
-        cost_basis: 1870.70,
-        date_acquired: '2018-08-08T14:42:00.774Z',
-        id: 130090,
-        quantity: 5.00000000,
-        symbol: 'TSLA',
-      }
+      generatePositionObject('AAPL', 99, 'stock', 201.01),
+      generatePositionObject('TSLA', 5, 'stock', 1870.70),
     ])
     const status = await _determineCoverableTickers()
     expect(status).toEqual([])
@@ -345,27 +224,9 @@ describe('_determineCoverableTickers', () => {
 
   it('Returns empty array if the position map comes up all zeros', async () => {
     positions.getPositions.mockReturnValue([
-      {
-        cost_basis: 207.01,
-        date_acquired: '2018-08-08T14:41:11.405Z',
-        id: 130089,
-        quantity: 100.00000000,
-        symbol: 'AAPL'
-      },
-      {
-        cost_basis: 1870.70,
-        date_acquired: '2018-08-08T14:42:00.774Z',
-        id: 130090,
-        quantity: 200.00000000,
-        symbol: 'TSLA',
-      },
-      {
-        cost_basis: 1870.70,
-        date_acquired: '2018-08-08T14:42:00.774Z',
-        id: 130090,
-        quantity: -1.00000000,
-        symbol: 'TSLA1234C4321',
-      },
+      generatePositionObject('AAPL', 100, 'stock', 207.01),
+      generatePositionObject('TSLA', 200, 'stock', 1870.70),
+      generatePositionObject('TSLA', -1, 'call', 1870.70),
     ])
     orders.getOrders.mockReturnValue([
       {
@@ -413,27 +274,9 @@ describe('_determineCoverableTickers', () => {
 
   it('Returns list of coverable tickers', async () => {
     positions.getPositions.mockReturnValue([
-      {
-        cost_basis: 207.01,
-        date_acquired: '2018-08-08T14:41:11.405Z',
-        id: 130089,
-        quantity: 100.00000000,
-        symbol: 'AAPL'
-      },
-      {
-        cost_basis: 1870.70,
-        date_acquired: '2018-08-08T14:42:00.774Z',
-        id: 130090,
-        quantity: 200.00000000,
-        symbol: 'TSLA',
-      },
-      {
-        cost_basis: 1870.70,
-        date_acquired: '2018-08-08T14:42:00.774Z',
-        id: 130090,
-        quantity: -1.00000000,
-        symbol: 'TSLA1234C4321',
-      },
+      generatePositionObject('AAPL', 100, 'stock', 207.01),
+      generatePositionObject('TSLA', 200, 'stock', 1870.70),
+      generatePositionObject('TSLA', -1, 'call', 1870.70),
     ])
     orders.getOrders.mockReturnValue([
       {
@@ -479,20 +322,8 @@ describe('sellCoveredCalls', () => {
 
   it('If the opportunity array is empty, do nothing', async () => {
     positions.getPositions.mockReturnValue([
-      {
-        cost_basis: 207.01,
-        date_acquired: '2018-08-08T14:41:11.405Z',
-        id: 130089,
-        quantity: 99.00000000,
-        symbol: 'AAPL'
-      },
-      {
-        cost_basis: 1870.70,
-        date_acquired: '2018-08-08T14:42:00.774Z',
-        id: 130090,
-        quantity: 5.00000000,
-        symbol: 'TSLA',
-      }
+      generatePositionObject('AAPL', 99, 'stock', 207.01),
+      generatePositionObject('TSLA', 5, 'stock', 1870.70),
     ])
     await sellCoveredCalls()
     expect(bestOption.selectBestOption).not.toHaveBeenCalled()
@@ -500,20 +331,8 @@ describe('sellCoveredCalls', () => {
 
   it('For each stock returned, calls selectBestOption and sendOrder', async () => {
     positions.getPositions.mockReturnValue([
-      {
-        cost_basis: 207.01,
-        date_acquired: '2018-08-08T14:41:11.405Z',
-        id: 130089,
-        quantity: 100.00000000,
-        symbol: 'AAPL'
-      },
-      {
-        cost_basis: 1870.70,
-        date_acquired: '2018-08-08T14:42:00.774Z',
-        id: 130090,
-        quantity: 200.00000000,
-        symbol: 'TSLA',
-      }
+      generatePositionObject('AAPL', 100, 'stock', 207.01),
+      generatePositionObject('TSLA', 200, 'stock', 1870.70),
     ])
     orders.getOrders.mockReturnValue([])
 
@@ -536,13 +355,7 @@ describe('sellCoveredCalls', () => {
 
   it('Skips a sell order if bestOption returns a null', async () => {
     positions.getPositions.mockReturnValue([
-      {
-        cost_basis: 207.01,
-        date_acquired: '2018-08-08T14:41:11.405Z',
-        id: 130089,
-        quantity: 100.00000000,
-        symbol: 'AAPL'
-      }
+      generatePositionObject('AAPL', 100, 'stock', 207.01),
     ])
     orders.getOrders.mockReturnValue([])
 
