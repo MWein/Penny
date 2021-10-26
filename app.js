@@ -34,11 +34,8 @@ const launch = async () => {
   // In createGTCOrders function, oldOptionsPositions should be empty after 7am local time
 
 
-  sellNakedPuts()
+  //sellNakedPuts()
   // Should sell TTD, ATVI, JD, IRBT
-
-
-  return
 
   //await createGTCOrders()
 
@@ -77,7 +74,8 @@ const launch = async () => {
   }, null, true, 'America/New_York')
 
   new CronJob('0 0 11 * * 1-5', () => {
-    console.log('Another for the Mornin: Sell them naked puts, son!')
+    console.log('Selling Naked Puts')
+    sellNakedPuts()
   }, null, true, 'America/New_York')
   
   new CronJob('0 0 12 * * 1-5', () => {
@@ -86,7 +84,8 @@ const launch = async () => {
   }, null, true, 'America/New_York')
 
   new CronJob('0 0 13 * * 1-5', () => {
-    console.log('Afternoonin: Naked puts')
+    console.log('Selling Naked Puts')
+    sellNakedPuts()
   }, null, true, 'America/New_York')
 }
 
