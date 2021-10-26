@@ -15,7 +15,7 @@ const sellToOpen = async (symbol, option_symbol, quantity) => {
   }
 
   try {
-    const result = await network.post(url, body)
+    const result = await network.post(url, body, false)
     return result
   } catch (e) {
     return {
@@ -40,7 +40,7 @@ const buyToClose = async (symbol, option_symbol, quantity) => {
   }
 
   try {
-    const result = await network.post(url, body)
+    const result = await network.post(url, body, false)
     return result
   } catch (e) {
     return {

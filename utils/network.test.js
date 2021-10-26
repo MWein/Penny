@@ -1,5 +1,34 @@
 const superagent = require('superagent')
-const { _createFormString, get, post } = require('./network')
+const {
+  _throttle,
+  _createFormString,
+  get,
+  post,
+} = require('./network')
+const sleepUtil = require('./sleep')
+
+
+describe('_throttle tests', () => {
+  beforeEach(() => sleepUtil.sleep = jest.fn())
+
+  it('Does nothing throttle is false', async () => {
+    await _throttle(false)
+    expect(sleepUtil.sleep).not.toHaveBeenCalled()
+  })
+
+  it('Sleeps for 1.2 seconds if in paper trading environment', async () => {
+    process.env.BASEPATH = 'https://sandbox.example.com'
+    await _throttle(true)
+    expect(sleepUtil.sleep).toHaveBeenCalledWith(1.2)
+  })
+
+  it('Sleeps for 0.7 seconds if in production environment', async () => {
+    process.env.BASEPATH = 'https://api.example.com'
+    await _throttle(true)
+    expect(sleepUtil.sleep).toHaveBeenCalledWith(0.7)
+  })
+})
+
 
 describe('_createFormString', () => {
   it('Creates form string with a single value', () => {
@@ -35,7 +64,9 @@ describe('get', () => {
   let set2
 
   beforeEach(() => {
-    process.env.BASEPATH = 'hello/'
+    sleepUtil.sleep = jest.fn()
+
+    process.env.BASEPATH = 'https://sandbox.example.com/'
     process.env.APIKEY = 'somekey'
 
     // Last set thats called
@@ -58,9 +89,19 @@ describe('get', () => {
     expect(response).toEqual('someresponse')
   })
 
+  it('By default, throttles', async () => {
+    await get('somepath')
+    expect(sleepUtil.sleep).toHaveBeenCalled()
+  })
+
+  it('Skips throttle if throttle param is false', async () => {
+    await get('somepath', false)
+    expect(sleepUtil.sleep).not.toHaveBeenCalled()
+  })
+
   it('Creates url out of BASEPATH and path', async () => {
     await get('somepath')
-    expect(superagent.get).toHaveBeenCalledWith('hello/somepath')
+    expect(superagent.get).toHaveBeenCalledWith('https://sandbox.example.com/somepath')
   })
 
   it('Sets authorization header using APIKEY in the proper format', async () => {
@@ -94,7 +135,9 @@ describe('post', () => {
   let send1
 
   beforeEach(() => {
-    process.env.BASEPATH = 'hello/'
+    sleepUtil.sleep = jest.fn()
+
+    process.env.BASEPATH = 'https://sandbox.example.com/'
     process.env.APIKEY = 'somekey'
 
     // Send
@@ -122,9 +165,19 @@ describe('post', () => {
     expect(response).toEqual('someresponse')
   })
 
+  it('By default, throttles', async () => {
+    await post('somepath', { some: 'body' })
+    expect(sleepUtil.sleep).toHaveBeenCalled()
+  })
+
+  it('Skips throttle if throttle param is false', async () => {
+    await post('somepath', { some: 'body' }, false)
+    expect(sleepUtil.sleep).not.toHaveBeenCalled()
+  })
+
   it('Creates url out of BASEPATH and path', async () => {
     await post('somepath', { some: 'body' })
-    expect(superagent.post).toHaveBeenCalledWith('hello/somepath')
+    expect(superagent.post).toHaveBeenCalledWith('https://sandbox.example.com/somepath')
   })
 
   it('Sets authorization header using APIKEY in the proper format', async () => {
