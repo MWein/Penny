@@ -1,5 +1,7 @@
 const network = require('../utils/network')
 const { getPositions } = require('./getPositions')
+const { generatePositionObject } = require('../utils/testHelpers')
+
 
 describe('getPositions', () => {
   beforeEach(() => {
@@ -26,13 +28,7 @@ describe('getPositions', () => {
   it('Returns list of positions, single position', async () => {
     const response = {
       positions: {
-        position: {
-          cost_basis: 207.01,
-          date_acquired: '2018-08-08T14:41:11.405Z',
-          id: 130089,
-          quantity: 1.00000000,
-          symbol: 'AAPL'
-        },
+        position: generatePositionObject('AAPL', 1, 'stock', 207.01)
       }
     }
     network.get.mockReturnValue(response)
@@ -45,20 +41,8 @@ describe('getPositions', () => {
     const response = {
       positions: {
         position: [
-          {
-            cost_basis: 207.01,
-            date_acquired: '2018-08-08T14:41:11.405Z',
-            id: 130089,
-            quantity: 1.00000000,
-            symbol: 'AAPL'
-          },
-          {
-            cost_basis: 173.04,
-            date_acquired: '2019-03-11T16:51:51.987Z',
-            id: 134134,
-            quantity: 1.00000000,
-            symbol: 'FB'
-          },
+          generatePositionObject('AAPL', 1, 'stock', 207.01),
+          generatePositionObject('FB', 1, 'stock', 173.04),
         ]
       }
     }
