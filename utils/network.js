@@ -21,7 +21,7 @@ const _createFormString = body => Object.keys(body).map(key => {
 
 
 const get = async (path, throttle=true) => {
-  _throttle(throttle)
+  await _throttle(throttle)
 
   const url = `${process.env.BASEPATH}${path}`
 
@@ -34,7 +34,7 @@ const get = async (path, throttle=true) => {
 
 
 const post = async (path, body, throttle=true) => {
-  _throttle(throttle)
+  await _throttle(throttle)
 
   const url = `${process.env.BASEPATH}${path}`
   const formString = _createFormString(body)
