@@ -1,21 +1,38 @@
 require('dotenv').config()
 const CronJob = require('cron').CronJob
 
-const { getWatchlistSymbols } = require('./tradier/watchlist')
-const { selectBestOption } = require('./tradier/selectBestOption')
+//const { getWatchlistSymbols } = require('./tradier/watchlist')
+//const { selectBestOption } = require('./tradier/selectBestOption')
 //const { getPrices } = require('./tradier/getPrices')
 //const { getOrders } = require('./tradier/getOrders')
-const { getPositions } = require('./tradier/getPositions')
+//const { getPositions } = require('./tradier/getPositions')
 //const { sellToOpen } = require('./tradier/sendOrders')
-const { getBalances } = require('./tradier/getBalances')
-
-const { _determineCoverableTickers, sellCoveredCalls } = require('./core/coveredCall')
+//const { getBalances } = require('./tradier/getBalances')
 
 // Permanent imports
+const {
+  _determineCoverableTickers,
+  sellCoveredCalls
+} = require('./core/coveredCall')
+
 const { createGTCOrders } = require('./core/gtcOrders')
 
 
 const launch = async () => {
+
+  // Manual tests
+  //const coverableTickers = await _determineCoverableTickers()
+  //console.log(coverableTickers)
+  // TODO After 9am local time, this should be empty
+
+
+  // createGTCOrders()
+  // Comment out the part where it actually buys stuff
+  // In createGTCOrders function, oldOptionsPositions should be empty after 7am local time
+
+
+
+
 
   //await createGTCOrders()
 
