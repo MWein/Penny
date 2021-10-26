@@ -10,7 +10,7 @@ describe('sellToOpen', () => {
     network.post = jest.fn()
   })
 
-  it('Calls with the correct url and body', async () => {
+  it('Calls with the correct url and body; skips throttle', async () => {
     process.env.ACCOUNTNUM = 'thisisanaccountnumber'
     network.post.mockReturnValue({ status: 'ok' })
     await sellToOpen('AAPL', 'AAAAAAPL', 2)
@@ -25,6 +25,7 @@ describe('sellToOpen', () => {
       type: 'market',
       duration: 'day',
     })
+    expect(network.post.mock.calls[0][2]).toEqual(false)
   })
 
   it('Returns failed status object if network call throws', async () => {
@@ -48,7 +49,7 @@ describe('buyToClose', () => {
     network.post = jest.fn()
   })
 
-  it('Calls with the correct url and body', async () => {
+  it('Calls with the correct url and body; skips throttle', async () => {
     process.env.ACCOUNTNUM = 'thisisanaccountnumber'
     network.post.mockReturnValue({ status: 'ok' })
     await buyToClose('AAPL', 'AAAAAAPL', 2)
@@ -64,6 +65,7 @@ describe('buyToClose', () => {
       price: 1,
       duration: 'gtc',
     })
+    expect(network.post.mock.calls[0][2]).toEqual(false)
   })
 
   it('Returns failed status object if network call throws', async () => {
