@@ -20,7 +20,9 @@ const _createFormString = body => Object.keys(body).map(key => {
 }).join('&')
 
 
-const get = async (path) => {
+const get = async (path, throttle=true) => {
+  _throttle(throttle)
+
   const url = `${process.env.BASEPATH}${path}`
 
   const response = await superagent.get(url)
@@ -31,7 +33,9 @@ const get = async (path) => {
 }
 
 
-const post = async (path, body) => {
+const post = async (path, body, throttle=true) => {
+  _throttle(throttle)
+
   const url = `${process.env.BASEPATH}${path}`
   const formString = _createFormString(body)
 
