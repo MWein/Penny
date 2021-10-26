@@ -59,7 +59,7 @@ const sellCoveredCalls = async () => {
     const best = await bestOption.selectBestOption(currentTicker.symbol, 'call', currentTicker.costPerShare)
     if (best) {
       // Send sell order for listed quantity
-      console.log('Sending order', currentTicker.symbol, best.symbol, currentTicker.quantity)
+      //console.log('Sending order', currentTicker.symbol, best.symbol, currentTicker.quantity)
       await sendOrders.sellToOpen(currentTicker.symbol, best.symbol, currentTicker.quantity)
     }
   }
