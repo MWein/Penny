@@ -15,11 +15,14 @@ const {
   sellCoveredCalls
 } = require('./core/coveredCall')
 
+// const {
+//   sellNakedPuts,
+// } = require('./core/nakedPut')
+
 const { createGTCOrders } = require('./core/gtcOrders')
 
 
 const launch = async () => {
-
   // Manual tests
   //const coverableTickers = await _determineCoverableTickers()
   //console.log(coverableTickers)
