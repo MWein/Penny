@@ -15,18 +15,14 @@ const {
   sellCoveredCalls
 } = require('./core/coveredCall')
 
-const {
-  _sellNakedPutsCycle
-} = require('./core/nakedPut')
+// const {
+//   sellNakedPuts,
+// } = require('./core/nakedPut')
 
 const { createGTCOrders } = require('./core/gtcOrders')
 
 
 const launch = async () => {
-  //const result = await _sellNakedPutsCycle([ 'SFIX', 'ZNGA', 'KMI', 'UAA', 'BB', 'TTD', 'PINS', 'ATVI', 'JD', 'IRBT' ])
-  //console.log(result)
-  return
-
   // Manual tests
   //const coverableTickers = await _determineCoverableTickers()
   //console.log(coverableTickers)
