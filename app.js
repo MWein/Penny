@@ -34,8 +34,11 @@ const launch = async () => {
   // In createGTCOrders function, oldOptionsPositions should be empty after 7am local time
 
 
-  //sellNakedPuts()
+  sellNakedPuts()
   // Should sell TTD, ATVI, JD, IRBT
+
+
+  return
 
   //await createGTCOrders()
 

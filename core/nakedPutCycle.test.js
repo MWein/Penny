@@ -7,9 +7,9 @@ const sendOrdersUtil = require('../tradier/sendOrders')
 
 
 const {
-  _getAffordableStocks,
+  _getAffordableOptions,
   _getEstimatedAllocation,
-  _getStocksUnderMaxAllocation,
+  _getOptionsUnderMaxAllocation,
   _getPutOptionPriority,
   _getOptionsToSell,
   sellNakedPutsCycle,
@@ -21,30 +21,18 @@ const {
 } = require('../utils/testHelpers')
 
 
-describe('_getAffordableStocks', () => {
-  it('Filters out stocks that are over buying power', () => {
-    process.env.MAXIMUMALLOCATION = 500000
-    const prices = [
-      { symbol: 'AAPL', price: 140 },
-      { symbol: 'MSFT', price: 20 },
-      { symbol: 'PINS', price: 30 },
+describe('_getAffordableOptions', () => {
+  it('Returns options worth less than buyingPower', () => {
+    const options = [
+      { symbol: 'AAPL', strike: 120 },
+      { symbol: 'TSLA', strike: 30 },
+      { symbol: 'IBKR', strike: 51 },
+      { symbol: 'FB', strike: 10 },
     ]
-    const result = _getAffordableStocks(prices, 3000)
+    const result = _getAffordableOptions(options, 5000)
     expect(result).toEqual([
-      { symbol: 'MSFT', price: 20 },
-    ])
-  })
-
-  it('Filters out stocks that are over maximum allocation setting', () => {
-    process.env.MAXIMUMALLOCATION = 3000
-    const prices = [
-      { symbol: 'MSFT', price: 140 },
-      { symbol: 'AAPL', price: 20 },
-      { symbol: 'PINS', price: 30 },
-    ]
-    const result = _getAffordableStocks(prices, 500000)
-    expect(result).toEqual([
-      { symbol: 'AAPL', price: 20 },
+      { symbol: 'TSLA', strike: 30 },
+      { symbol: 'FB', strike: 10 },
     ])
   })
 })
@@ -63,12 +51,12 @@ describe('_getEstimatedAllocation', () => {
     expect(result).toEqual([])
   })
 
-  it('Returns the estimated allocation for each stock based on the current price, sorted lowest to highest', () => {
+  it('Returns the estimated allocation for each stock based on the strike price, sorted lowest to highest', () => {
     const prices = [
-      { symbol: 'AAPL', price: 120 },
-      { symbol: 'TSLA', price: 100 },
-      { symbol: 'PINS', price: 501 },
-      { symbol: 'AXON', price: 12 },
+      { symbol: 'AAPL1234P321', strike: 120 },
+      { symbol: 'TSLA1234P321', strike: 100 },
+      { symbol: 'PINS1234P321', strike: 501 },
+      { symbol: 'AXON1234P321', strike: 12 },
     ]
     const putPositions = [
       generatePositionObject('AAPL', 2, 'put'),
@@ -83,26 +71,26 @@ describe('_getEstimatedAllocation', () => {
     const result = _getEstimatedAllocation(prices, putPositions, putOrders)
     expect(result).toEqual([
       {
-        symbol: 'AXON',
-        price: 12,
+        symbol: 'AXON1234P321',
+        strike: 12,
         allocation: 0,
         potentialAllocation: 1200,
       },
       {
-        symbol: 'TSLA',
-        price: 100,
+        symbol: 'TSLA1234P321',
+        strike: 100,
         allocation: 20000,
         potentialAllocation: 30000,
       },
       {
-        symbol: 'AAPL',
-        price: 120,
+        symbol: 'AAPL1234P321',
+        strike: 120,
         allocation: 36000,
         potentialAllocation: 48000,
       },
       {
-        symbol: 'PINS',
-        price: 501,
+        symbol: 'PINS1234P321',
+        strike: 501,
         allocation: 150300,
         potentialAllocation: 200400,
       },
@@ -111,7 +99,7 @@ describe('_getEstimatedAllocation', () => {
 })
 
 
-describe('_getStocksUnderMaxAllocation', () => {
+describe('_getOptionsUnderMaxAllocation', () => {
   it('Returns the tickers whose potential allocation is lower than the maximum', () => {
     process.env.MAXIMUMALLOCATION = 48000
     const stocks = [
@@ -140,7 +128,7 @@ describe('_getStocksUnderMaxAllocation', () => {
         potentialAllocation: 200400,
       },
     ]
-    const result = _getStocksUnderMaxAllocation(stocks)
+    const result = _getOptionsUnderMaxAllocation(stocks)
     expect(result).toEqual([ 'AXON', 'TSLA' ])
   })
 })
@@ -376,91 +364,55 @@ describe('sellNakedPutsCycle', () => {
     sendOrdersUtil.sellToOpen = jest.fn()
   })
 
-  it('Exits if watchlist is empty', async () => {
-    const result = await sellNakedPutsCycle()
-    expect(result).toEqual('Nothing in watchlist =(')
+  it('Exits if bestOptions list is empty', async () => {
+    const result = await sellNakedPutsCycle([], [])
+    expect(result).toEqual('No options choices =(')
   })
   
   it('Exits if theres no cash', async () => {
     balanceUtil.getBalances.mockReturnValue({
       optionBuyingPower: 0
     })
-    const result = await sellNakedPutsCycle([ 'AAPL', 'TSLA', 'PINS', 'AXON', 'MSFT' ])
+    const bestOptions = [
+      { symbol: 'AAPL', strike: 140 },
+      { symbol: 'MSFT', strike: 500 },
+    ]
+    const result = await sellNakedPutsCycle(bestOptions)
     expect(result).toEqual('No money =(')
   })
 
-  it('Gets prices for each stock in the watchlist', async () => {
-    balanceUtil.getBalances.mockReturnValue({
-      optionBuyingPower: 1000
-    })
-    priceUtil.getPrices.mockReturnValue([])
-    await sellNakedPutsCycle([ 'AAPL', 'TSLA', 'PINS', 'AXON', 'MSFT' ])
-    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'AAPL', 'TSLA', 'PINS', 'AXON', 'MSFT' ])
-  })
-
-  it('Exits if stocks too expensive for option buying power; collateral needed is 100 * option strike', async () => {
+  it('Exits if options too expensive for option buying power; collateral needed is 100 * option strike', async () => {
     process.env.MAXIMUMALLOCATION = 10000000
     balanceUtil.getBalances.mockReturnValue({
       optionBuyingPower: 1000
     })
-    priceUtil.getPrices.mockReturnValue([
-      { symbol: 'AAPL', price: 140 },
-      { symbol: 'MSFT', price: 500 },
-    ])
-    const result = await sellNakedPutsCycle([ 'AAPL', 'TSLA', 'PINS', 'AXON', 'MSFT' ])
+    const bestOptions = [
+      { symbol: 'AAPL', strike: 140 },
+      { symbol: 'MSFT', strike: 500 },
+    ]
+    const result = await sellNakedPutsCycle(bestOptions)
     expect(result).toEqual('Too broke for this =(')
   })
 
-  it('Exits if collateral needed for every stock exceeds MAXIMUMALLOCATION', async () => {
-    process.env.MAXIMUMALLOCATION = 100
-    balanceUtil.getBalances.mockReturnValue({
-      optionBuyingPower: 10000000
-    })
-    priceUtil.getPrices.mockReturnValue([
-      { symbol: 'AAPL', price: 140 },
-      { symbol: 'MSFT', price: 500 },
-    ])
-    const result = await sellNakedPutsCycle([ 'AAPL', 'TSLA', 'PINS', 'AXON', 'MSFT' ])
-    expect(result).toEqual('Too broke for this =(')
-  })
 
   it('Exits if all currently held positions have reached MAXIMUMALLOCATION', async () => {
     process.env.MAXIMUMALLOCATION = 1000000
     balanceUtil.getBalances.mockReturnValue({
       optionBuyingPower: 10000000
     })
-    priceUtil.getPrices.mockReturnValue([
-      { symbol: 'AAPL', price: 140 },
-      { symbol: 'MSFT', price: 500 },
-    ])
+    const bestOptions = [
+      { symbol: 'AAPL', strike: 140 },
+      { symbol: 'MSFT', strike: 500 },
+    ]
     positionUtil.getPositions.mockReturnValue([
       generatePositionObject('AAPL', 500, 'put'),
       generatePositionObject('MSFT', 500, 'put'),
     ])
     orderUtil.getOrders.mockReturnValue([])
-    const result = await sellNakedPutsCycle([ 'AAPL', 'MSFT' ])
+    const result = await sellNakedPutsCycle(bestOptions)
     expect(result).toEqual('Looks like everything is maxed out =(')
   })
 
-  it('For every stock that is under its max allocation, selects best position', async () => {
-    process.env.MAXIMUMALLOCATION = 1000000
-    balanceUtil.getBalances.mockReturnValue({
-      optionBuyingPower: 10000000
-    })
-    priceUtil.getPrices.mockReturnValue([
-      { symbol: 'AAPL', price: 140 },
-      { symbol: 'MSFT', price: 500 },
-    ])
-    positionUtil.getPositions.mockReturnValue([
-      generatePositionObject('AAPL', 500, 'put'),
-      generatePositionObject('MSFT', 1, 'put'),
-    ])
-    orderUtil.getOrders.mockReturnValue([])
-    bestOption.selectBestOption.mockReturnValue(null)
-    await sellNakedPutsCycle([ 'AAPL', 'MSFT' ])
-    expect(bestOption.selectBestOption).toHaveBeenCalledTimes(1)
-    expect(bestOption.selectBestOption).toHaveBeenCalledWith('MSFT', 'put')
-  })
 
   it('Creates an order for each stock under its max allocation up until buying power is exhaused', async () => {
     process.env.MAXIMUMALLOCATION = 1000000
@@ -478,36 +430,37 @@ describe('sellNakedPutsCycle', () => {
     ])
     orderUtil.getOrders.mockReturnValue([])
 
-    // Doesn't matter much what these are
-    bestOption.selectBestOption.mockReturnValueOnce({
-      symbol: 'WMT211029P00146000',
-      premium: 121,
-      strike: 120,
-      delta: 0.321088,
-      distanceTo30: 0.021087999999999996,
-      expiration: '2021-10-29',
-      weeklyRate: 121,
-    })
-    bestOption.selectBestOption.mockReturnValueOnce({
-      symbol: 'AAPL211029P00146000',
-      premium: 121,
-      strike: 1460,
-      delta: 0.321088,
-      distanceTo30: 0.021087999999999996,
-      expiration: '2021-10-29',
-      weeklyRate: 121,
-    })
-    bestOption.selectBestOption.mockReturnValueOnce({
-      symbol: 'MSFT211029P00146000',
-      premium: 121,
-      strike: 80,
-      delta: 0.321088,
-      distanceTo30: 0.021087999999999996,
-      expiration: '2021-10-29',
-      weeklyRate: 121,
-    })
+    const bestOptions = [
+      {
+        symbol: 'WMT211029P00146000',
+        premium: 121,
+        strike: 120,
+        delta: 0.321088,
+        distanceTo30: 0.021087999999999996,
+        expiration: '2021-10-29',
+        weeklyRate: 121,
+      },
+      {
+        symbol: 'AAPL211029P00146000',
+        premium: 121,
+        strike: 1460,
+        delta: 0.321088,
+        distanceTo30: 0.021087999999999996,
+        expiration: '2021-10-29',
+        weeklyRate: 121,
+      },
+      {
+        symbol: 'MSFT211029P00146000',
+        premium: 121,
+        strike: 80,
+        delta: 0.321088,
+        distanceTo30: 0.021087999999999996,
+        expiration: '2021-10-29',
+        weeklyRate: 121,
+      }
+    ]
 
-    await sellNakedPutsCycle([ 'AAPL', 'MSFT' ])
+    await sellNakedPutsCycle(bestOptions)
     expect(sendOrdersUtil.sellToOpen).toHaveBeenCalledTimes(2)
     expect(sendOrdersUtil.sellToOpen).toHaveBeenCalledWith('MSFT', 'MSFT211029P00146000', 1)
     expect(sendOrdersUtil.sellToOpen).toHaveBeenCalledWith('WMT', 'WMT211029P00146000', 1)
