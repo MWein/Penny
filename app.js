@@ -12,8 +12,8 @@ const { getBalances } = require('./tradier/getBalances')
 const { _determineCoverableTickers, sellCoveredCalls } = require('./core/coveredCall')
 
 const launch = async () => {
-  const coverableTickers = await _determineCoverableTickers()
-  console.log(coverableTickers)
+  //const coverableTickers = await _determineCoverableTickers()
+  //console.log(coverableTickers)
   // Tomorrow it should have TSLA COKE and PINS
 
   //const best = await selectBestOption('ZNGA', 'call')

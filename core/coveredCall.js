@@ -11,51 +11,27 @@ const {
 
 // Note: This function assumes that positions were split between stocks and options properly
 //       and that put options were filtered out
-const _generatePermittedPositionsArray = (optionableStocks, currentOptions, pendingOptions) => {
-  if (optionableStocks.length === 0) {
-    return []
-  }
+const _generatePermittedPositionsArray = (optionableStocks, currentOptions, pendingOptions) =>
+  optionableStocks.reduce((acc, stock) => {
+    const totalPossible = Math.floor(stock.quantity / 100)
 
-  // Make the initial map
-  const permittedCallsMap = optionableStocks.reduce((acc, stock) => ({
-    ...acc,
-    [stock.symbol]: Math.floor(stock.quantity / 100)
-  }), {})
+    const options = currentOptions.filter(opt => getUnderlying(opt.symbol) === stock.symbol)
+    const optionQuantity = options.reduce((acc, opt) => acc + Math.abs(opt.quantity), 0)
 
-  // Decrease by 1 for every call option that exists
-  currentOptions.map(opt => {
-    const underlying = getUnderlying(opt.symbol)
-    const quantity = Math.abs(opt.quantity) // Short options are negative
-    if (permittedCallsMap[underlying]) {
-      permittedCallsMap[underlying] = permittedCallsMap[underlying] - quantity
-    }
-  })
+    const optionOrders = pendingOptions.filter(opt => opt.symbol === stock.symbol)
+    const optionOrderQuantity = optionOrders.reduce((acc, ord) => acc + Math.abs(ord.quantity), 0)
 
-  // Decrease by 1 for every call option order that exists
-  pendingOptions.map(opt => {
-    const underlying = opt.symbol
-    const quantity = Math.abs(opt.quantity) // Short options are negative
-    if (permittedCallsMap[underlying]) {
-      permittedCallsMap[underlying] = permittedCallsMap[underlying] - quantity
-    }
-  })
+    const quantity = totalPossible - optionQuantity - optionOrderQuantity
 
-  // Format map into an array
-  return Object.keys(permittedCallsMap).reduce((acc, key) => {
-    const quantity = permittedCallsMap[key]
-    const stock = optionableStocks.find(x => x.symbol === key)
-    const costPerShare = Number((stock.cost_basis / stock.quantity).toFixed(2))
-    return quantity <= 0 ? acc : 
-      [
-        ...acc,
-        {
-          symbol: key,
-          quantity,
-          costPerShare,
-        }
-      ]
+    return quantity > 0 ? [
+      ...acc,
+      {
+        symbol: stock.symbol,
+        quantity,
+        costPerShare: Number((stock.cost_basis / stock.quantity).toFixed(2)),
+      }
+    ] : acc
   }, [])
-}
 
 
 const _determineCoverableTickers = async () => {
