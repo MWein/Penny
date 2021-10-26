@@ -49,7 +49,8 @@ const launch = async () => {
   }, null, true, 'America/New_York')
 
   new CronJob('0 0 10 * * 1-5', () => {
-    console.log('One for the Mornin: Sell them covered calls, bruh!')
+    console.log('Selling Covered Calls')
+    sellCoveredCalls()
   }, null, true, 'America/New_York')
 
   new CronJob('0 0 11 * * 1-5', () => {
@@ -57,7 +58,8 @@ const launch = async () => {
   }, null, true, 'America/New_York')
   
   new CronJob('0 0 12 * * 1-5', () => {
-    console.log('One for the afternooooon: Maybe sell some more covered calls')
+    console.log('Selling Covered Calls')
+    sellCoveredCalls()
   }, null, true, 'America/New_York')
 
   new CronJob('0 0 13 * * 1-5', () => {
