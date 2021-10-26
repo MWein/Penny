@@ -2,10 +2,7 @@ const position = require('../tradier/getPositions')
 const order = require('../tradier/getOrders')
 const bestOption = require('../tradier/selectBestOption')
 const sendOrders = require('../tradier/sendOrders')
-const {
-  isOption,
-  getUnderlying,
-} = require('../utils/determineOptionType')
+const { getUnderlying } = require('../utils/determineOptionType')
 
 
 // Note: This function assumes that positions were split between stocks and options properly
