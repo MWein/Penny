@@ -17,13 +17,13 @@ describe('_throttle tests', () => {
   })
 
   it('Sleeps for 1.2 seconds if in paper trading environment', async () => {
-    process.env.BASEPATH = 'https://sandbox.tradier.com/v1/'
+    process.env.BASEPATH = 'https://sandbox.example.com'
     await _throttle(true)
     expect(sleep.sleep).toHaveBeenCalledWith(1.2)
   })
 
   it('Sleeps for 0.7 seconds if in production environment', async () => {
-    process.env.BASEPATH = 'https://api.tradier.com/v1/'
+    process.env.BASEPATH = 'https://api.example.com'
     await _throttle(true)
     expect(sleep.sleep).toHaveBeenCalledWith(0.7)
   })
