@@ -7,6 +7,7 @@ const { getUnderlying } = require('../utils/determineOptionType')
 
 
 // Returns stocks whose price is under buying power and maximum allocation setting
+// Maximum allocation is redundant here since it will do it later, but this potentially save network calls
 const _getAffordableStocks = (prices, buyingPower) =>
   prices.filter(stock =>
     stock.price * 100 < process.env.MAXIMUMALLOCATION
@@ -24,13 +25,16 @@ const _getEstimatedAllocation = (prices, putPositions, putOrders) => {
 
     const existing = numPositions + numOrders
     const allocation = (stock.price * 100) * existing
+    const potentialAllocation = allocation + (stock.price * 100)
 
     return {
       ...stock,
       allocation,
+      potentialAllocation,
     }
-  })
+  }).sort((a, b) => a.potentialAllocation - b.potentialAllocation)
 }
+
 
 
 const _sellNakedPutsCycle = async (watchlist=[]) => {
@@ -50,15 +54,15 @@ const _sellNakedPutsCycle = async (watchlist=[]) => {
     return 'Too broke for this =('
   }
 
-  // Get all positions
   const positions = await positionUtil.getPositions()
   const putPositions = positionUtil.filterForPutPositions(positions)
 
   const orders = await orderUtil.getOrders()
   const putOptionOrders = orderUtil.filterForCashSecuredPutOrders(orders)
 
-  console.log(putPositions)
-  console.log(putOptionOrders)
+  const estimatedAllocation = _getEstimatedAllocation(affordableStocks, putPositions, putOptionOrders)
+
+  
 
   // Get all positions
   // Get all pending orders

@@ -56,7 +56,7 @@ describe('_getEstimatedAllocation', () => {
     expect(result).toEqual([])
   })
 
-  it('Returns the estimated allocation for each stock based on the current price', () => {
+  it('Returns the estimated allocation for each stock based on the current price, sorted lowest to highest', () => {
     const prices = [
       { symbol: 'AAPL', price: 120 },
       { symbol: 'TSLA', price: 100 },
@@ -76,24 +76,28 @@ describe('_getEstimatedAllocation', () => {
     const result = _getEstimatedAllocation(prices, putPositions, putOrders)
     expect(result).toEqual([
       {
-        symbol: 'AAPL',
-        price: 120,
-        allocation: 36000
+        symbol: 'AXON',
+        price: 12,
+        allocation: 0,
+        potentialAllocation: 1200,
       },
       {
         symbol: 'TSLA',
         price: 100,
-        allocation: 20000
+        allocation: 20000,
+        potentialAllocation: 30000,
+      },
+      {
+        symbol: 'AAPL',
+        price: 120,
+        allocation: 36000,
+        potentialAllocation: 48000,
       },
       {
         symbol: 'PINS',
         price: 501,
-        allocation: 150300
-      },
-      {
-        symbol: 'AXON',
-        price: 12,
-        allocation: 0
+        allocation: 150300,
+        potentialAllocation: 200400,
       },
     ])
   })
