@@ -88,60 +88,9 @@ describe('_generatePermittedPositionsArray', () => {
     ]
     const currentOptions = []
     const pendingOptions = [
-      {
-        id: 228749,
-        type: 'market',
-        symbol: 'AAPL',
-        side: 'sell_to_open',
-        quantity: 1.00000000,
-        status: 'pending',
-        duration: 'pre',
-        avg_fill_price: 0.00000000,
-        exec_quantity: 0.00000000,
-        last_fill_price: 0.00000000,
-        last_fill_quantity: 0.00000000,
-        remaining_quantity: 0.00000000,
-        create_date: '2018-06-06T20:16:17.342Z',
-        transaction_date: '2018-06-06T20:16:17.357Z',
-        class: 'option',
-        option_symbol: 'AAPL180720C00274000'
-      },
-      {
-        id: 228749,
-        type: 'market',
-        symbol: 'CAH',
-        side: 'sell_to_open',
-        quantity: 1.00000000,
-        status: 'pending',
-        duration: 'pre',
-        avg_fill_price: 0.00000000,
-        exec_quantity: 0.00000000,
-        last_fill_price: 0.00000000,
-        last_fill_quantity: 0.00000000,
-        remaining_quantity: 0.00000000,
-        create_date: '2018-06-06T20:16:17.342Z',
-        transaction_date: '2018-06-06T20:16:17.357Z',
-        class: 'option',
-        option_symbol: 'CAH180720C00274000'
-      },
-      {
-        id: 228749,
-        type: 'market',
-        symbol: 'CAH',
-        side: 'sell_to_open',
-        quantity: 1.00000000,
-        status: 'pending',
-        duration: 'pre',
-        avg_fill_price: 0.00000000,
-        exec_quantity: 0.00000000,
-        last_fill_price: 0.00000000,
-        last_fill_quantity: 0.00000000,
-        remaining_quantity: 0.00000000,
-        create_date: '2018-06-06T20:16:17.342Z',
-        transaction_date: '2018-06-06T20:16:17.357Z',
-        class: 'option',
-        option_symbol: 'CAH180720C00274000'
-      },
+      generateOrderObject('AAPL', 1, 'call', 'sell_to_open', 'pending'),
+      generateOrderObject('CAH', 1, 'call', 'sell_to_open', 'pending'),
+      generateOrderObject('CAH', 1, 'call', 'sell_to_open', 'pending'),
     ]
     const result = _generatePermittedPositionsArray(optionableStocks, currentOptions, pendingOptions)
     expect(result).toEqual([
@@ -164,42 +113,8 @@ describe('_generatePermittedPositionsArray', () => {
       generatePositionObject('AMZN', -1, 'call', 50.41),
     ]
     const pendingOptions = [
-      {
-        id: 228749,
-        type: 'market',
-        symbol: 'AAPL',
-        side: 'sell_to_open',
-        quantity: 1.00000000,
-        status: 'pending',
-        duration: 'pre',
-        avg_fill_price: 0.00000000,
-        exec_quantity: 0.00000000,
-        last_fill_price: 0.00000000,
-        last_fill_quantity: 0.00000000,
-        remaining_quantity: 0.00000000,
-        create_date: '2018-06-06T20:16:17.342Z',
-        transaction_date: '2018-06-06T20:16:17.357Z',
-        class: 'option',
-        option_symbol: 'AAPL180720C00274000'
-      },
-      {
-        id: 228749,
-        type: 'market',
-        symbol: 'CAH',
-        side: 'sell_to_open',
-        quantity: 2.00000000,
-        status: 'pending',
-        duration: 'pre',
-        avg_fill_price: 0.00000000,
-        exec_quantity: 0.00000000,
-        last_fill_price: 0.00000000,
-        last_fill_quantity: 0.00000000,
-        remaining_quantity: 0.00000000,
-        create_date: '2018-06-06T20:16:17.342Z',
-        transaction_date: '2018-06-06T20:16:17.357Z',
-        class: 'option',
-        option_symbol: 'CAH180720C00274000'
-      },
+      generateOrderObject('AAPL', 1, 'call', 'sell_to_open', 'pending'),
+      generateOrderObject('CAH', 2, 'call', 'sell_to_open', 'pending'),
     ]
     const result = _generatePermittedPositionsArray(optionableStocks, currentOptions, pendingOptions)
     expect(result).toEqual([])
@@ -229,42 +144,8 @@ describe('_determineCoverableTickers', () => {
       generatePositionObject('TSLA', -1, 'call', 1870.70),
     ])
     orders.getOrders.mockReturnValue([
-      {
-        id: 228749,
-        type: 'market',
-        symbol: 'TSLA',
-        side: 'sell_to_open',
-        quantity: 1.00000000,
-        status: 'pending',
-        duration: 'pre',
-        avg_fill_price: 0.00000000,
-        exec_quantity: 0.00000000,
-        last_fill_price: 0.00000000,
-        last_fill_quantity: 0.00000000,
-        remaining_quantity: 0.00000000,
-        create_date: '2018-06-06T20:16:17.342Z',
-        transaction_date: '2018-06-06T20:16:17.357Z',
-        class: 'option',
-        option_symbol: 'TSLA180720C00274000'
-      },
-      {
-        id: 228749,
-        type: 'market',
-        symbol: 'AAPL',
-        side: 'sell_to_open',
-        quantity: 1.00000000,
-        status: 'pending',
-        duration: 'pre',
-        avg_fill_price: 0.00000000,
-        exec_quantity: 0.00000000,
-        last_fill_price: 0.00000000,
-        last_fill_quantity: 0.00000000,
-        remaining_quantity: 0.00000000,
-        create_date: '2018-06-06T20:16:17.342Z',
-        transaction_date: '2018-06-06T20:16:17.357Z',
-        class: 'option',
-        option_symbol: 'AAPL180720C00274000'
-      },
+      generateOrderObject('TSLA', 1, 'call', 'sell_to_open', 'pending'),
+      generateOrderObject('AAPL', 1, 'call', 'sell_to_open', 'pending'),
     ])
 
     const result = await _determineCoverableTickers()
@@ -279,24 +160,7 @@ describe('_determineCoverableTickers', () => {
       generatePositionObject('TSLA', -1, 'call', 1870.70),
     ])
     orders.getOrders.mockReturnValue([
-      {
-        id: 228749,
-        type: 'market',
-        symbol: 'AAPL',
-        side: 'sell_to_open',
-        quantity: 1.00000000,
-        status: 'pending',
-        duration: 'pre',
-        avg_fill_price: 0.00000000,
-        exec_quantity: 0.00000000,
-        last_fill_price: 0.00000000,
-        last_fill_quantity: 0.00000000,
-        remaining_quantity: 0.00000000,
-        create_date: '2018-06-06T20:16:17.342Z',
-        transaction_date: '2018-06-06T20:16:17.357Z',
-        class: 'option',
-        option_symbol: 'AAPL180720C00274000'
-      },
+      generateOrderObject('AAPL', 1, 'call', 'sell_to_open', 'pending'),
     ])
 
     const result = await _determineCoverableTickers()
