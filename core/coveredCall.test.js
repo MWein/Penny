@@ -134,7 +134,7 @@ describe('_generatePermittedPositionsArray', () => {
     ])
   })
 
-  it('Returns array of stocks with permitted call number; no current options', () => {
+  it('Returns array of stocks with permitted call number; no current options; handles multiple options orders with the same underlying', () => {
     const optionableStocks = [
       {
         cost_basis: 207.01,
@@ -190,7 +190,25 @@ describe('_generatePermittedPositionsArray', () => {
         type: 'market',
         symbol: 'CAH',
         side: 'sell_to_open',
-        quantity: 2.00000000,
+        quantity: 1.00000000,
+        status: 'pending',
+        duration: 'pre',
+        avg_fill_price: 0.00000000,
+        exec_quantity: 0.00000000,
+        last_fill_price: 0.00000000,
+        last_fill_quantity: 0.00000000,
+        remaining_quantity: 0.00000000,
+        create_date: '2018-06-06T20:16:17.342Z',
+        transaction_date: '2018-06-06T20:16:17.357Z',
+        class: 'option',
+        option_symbol: 'CAH180720C00274000'
+      },
+      {
+        id: 228749,
+        type: 'market',
+        symbol: 'CAH',
+        side: 'sell_to_open',
+        quantity: 1.00000000,
         status: 'pending',
         duration: 'pre',
         avg_fill_price: 0.00000000,
