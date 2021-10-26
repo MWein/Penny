@@ -34,7 +34,7 @@ const _getEstimatedAllocation = (bestOptions, putPositions, putOrders) =>
 
 
 // Returns stock symbols that won't be above the maximum allocation
-const _getStocksUnderMaxAllocation = stocks =>
+const _getOptionsUnderMaxAllocation = stocks =>
   stocks.filter(stock => stock.potentialAllocation < process.env.MAXIMUMALLOCATION)
     .map(stock => stock.symbol)
 
@@ -74,7 +74,7 @@ const _getOptionsToSell = (options, optionBuyingPower) => {
 
 // One cycle of sellNakedPuts
 // Will likely run multiple times
-const sellNakedPutsCycle = async (watchlist=[], bestOptions=[]) => {
+const sellNakedPutsCycle = async bestOptions => {
   if (bestOptions.length === 0) {
     return 'No options choices =('
   }
@@ -98,9 +98,8 @@ const sellNakedPutsCycle = async (watchlist=[], bestOptions=[]) => {
   const putOptionOrders = orderUtil.filterForCashSecuredPutOrders(orders)
 
   const estimatedAllocation = _getEstimatedAllocation(affordableOptions, putPositions, putOptionOrders)
-  console.log(estimatedAllocation)
 
-  const permittedStocks = _getStocksUnderMaxAllocation(estimatedAllocation)
+  const permittedStocks = _getOptionsUnderMaxAllocation(estimatedAllocation)
   if (permittedStocks.length === 0) {
     return 'Looks like everything is maxed out =('
   }
@@ -108,7 +107,6 @@ const sellNakedPutsCycle = async (watchlist=[], bestOptions=[]) => {
   const prioritizedOptions = _getPutOptionPriority(bestOptions)
   const tickersToSell = _getOptionsToSell(prioritizedOptions, optionBuyingPower)
 
-  console.log('Selling', tickersToSell)
 
   // For-loop so they dont send all at once
   for (let x = 0; x < tickersToSell.length; x++) {
@@ -122,8 +120,9 @@ const sellNakedPutsCycle = async (watchlist=[], bestOptions=[]) => {
 
 
 module.exports = {
+  _getAffordableOptions,
   _getEstimatedAllocation,
-  _getStocksUnderMaxAllocation,
+  _getOptionsUnderMaxAllocation,
   _getPutOptionPriority,
   _getOptionsToSell,
   sellNakedPutsCycle,
