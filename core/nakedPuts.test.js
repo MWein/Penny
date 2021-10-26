@@ -1,6 +1,11 @@
 const balanceUtil = require('../tradier/getBalances')
-const watchlistUtil = require('../tradier/watchlist')
+//const watchlistUtil = require('../tradier/watchlist')
 const priceUtil = require('../tradier/getPrices')
+const positionUtil = require('../tradier/getPositions')
+const orderUtil = require('../tradier/getOrders')
+const bestOption = require('../tradier/selectBestOption')
+const sendOrdersUtil = require('../tradier/sendOrders')
+
 
 const {
   _getAffordableStocks,
@@ -143,6 +148,34 @@ describe('_getStocksUnderMaxAllocation', () => {
 
 
 describe('_getPutOptionPriority', () => {
+  it('Skips nulls if no best option was returned in a cycle', () => {
+    const bestOptions = [
+      {
+        symbol: 'AAPL211029P00146000',
+        premium: 121,
+        strike: 146,
+        delta: 0.321088,
+        distanceTo30: 0.021087999999999996,
+        expiration: '2021-10-29',
+        weeklyRate: 121,
+      },
+      null,
+    ]
+    const result = _getPutOptionPriority(bestOptions)
+    expect(result).toEqual([
+      {
+        symbol: 'AAPL211029P00146000',
+        premium: 121,
+        strike: 146,
+        delta: 0.321088,
+        distanceTo30: 0.021087999999999996,
+        expiration: '2021-10-29',
+        weeklyRate: 121,
+        percReturn: 0.008287671232876713
+      },
+    ])
+  })
+
   it('Returns a list of best options with percent return; sorted best to worst', () => {
     const bestOptions = [
       {
@@ -291,14 +324,57 @@ describe('_getOptionsToSell', () => {
       'AAPL211029P00146000'
     ])
   })
+
+  it('Returns only the best options, skips a stock if its above its buying power, but keeps the next if its below', () => {
+    const options = [
+      {
+        symbol: 'PINS211105P00047500',
+        premium: 168,
+        strike: 47.5,
+        delta: 0.305893,
+        distanceTo30: 0.005893000000000037,
+        expiration: '2021-11-05',
+        weeklyRate: 84,
+        percReturn: 0.03536842105263158
+      },
+      {
+        symbol: 'AAPL211029P00146000',
+        premium: 121,
+        strike: 1460,
+        delta: 0.321088,
+        distanceTo30: 0.021087999999999996,
+        expiration: '2021-10-29',
+        weeklyRate: 121,
+        percReturn: 0.008287671232876713
+      },
+      {
+        symbol: 'WMT211029P00149000',
+        premium: 62,
+        strike: 149,
+        delta: 0.33609,
+        distanceTo30: 0.03609000000000001,
+        expiration: '2021-10-29',
+        weeklyRate: 62,
+        percReturn: 0.004161073825503355
+      }
+    ]
+    const results = _getOptionsToSell(options, 21000)
+    expect(results).toEqual([
+      'PINS211105P00047500',
+      'WMT211029P00149000'
+    ])
+  })
 })
 
 
 describe('_sellNakedPutsCycle', () => {
   beforeEach(() => {
     balanceUtil.getBalances = jest.fn()
-    watchlistUtil.getWatchlistSymbols = jest.fn()
     priceUtil.getPrices = jest.fn()
+    positionUtil.getPositions = jest.fn()
+    orderUtil.getOrders = jest.fn()
+    bestOption.selectBestOption = jest.fn()
+    sendOrdersUtil.sellToOpen = jest.fn()
   })
 
   it('Exits if watchlist is empty', async () => {
@@ -349,4 +425,92 @@ describe('_sellNakedPutsCycle', () => {
     expect(result).toEqual('Too broke for this =(')
   })
 
+  it('Exits if all currently held positions have reached MAXIMUMALLOCATION', async () => {
+    process.env.MAXIMUMALLOCATION = 1000000
+    balanceUtil.getBalances.mockReturnValue({
+      optionBuyingPower: 10000000
+    })
+    priceUtil.getPrices.mockReturnValue([
+      { symbol: 'AAPL', price: 140 },
+      { symbol: 'MSFT', price: 500 },
+    ])
+    positionUtil.getPositions.mockReturnValue([
+      generatePositionObject('AAPL', 500, 'put'),
+      generatePositionObject('MSFT', 500, 'put'),
+    ])
+    orderUtil.getOrders.mockReturnValue([])
+    const result = await _sellNakedPutsCycle([ 'AAPL', 'MSFT' ])
+    expect(result).toEqual('Looks like everything is maxed out =(')
+  })
+
+  it('For every stock that is under its max allocation, selects best position', async () => {
+    process.env.MAXIMUMALLOCATION = 1000000
+    balanceUtil.getBalances.mockReturnValue({
+      optionBuyingPower: 10000000
+    })
+    priceUtil.getPrices.mockReturnValue([
+      { symbol: 'AAPL', price: 140 },
+      { symbol: 'MSFT', price: 500 },
+    ])
+    positionUtil.getPositions.mockReturnValue([
+      generatePositionObject('AAPL', 500, 'put'),
+      generatePositionObject('MSFT', 1, 'put'),
+    ])
+    orderUtil.getOrders.mockReturnValue([])
+    bestOption.selectBestOption.mockReturnValue(null)
+    await _sellNakedPutsCycle([ 'AAPL', 'MSFT' ])
+    expect(bestOption.selectBestOption).toHaveBeenCalledTimes(1)
+    expect(bestOption.selectBestOption).toHaveBeenCalledWith('MSFT', 'put')
+  })
+
+  it('Creates an order for each stock under its max allocation up until buying power is exhaused', async () => {
+    process.env.MAXIMUMALLOCATION = 1000000
+    balanceUtil.getBalances.mockReturnValue({
+      optionBuyingPower: 50001
+    })
+    priceUtil.getPrices.mockReturnValue([
+      { symbol: 'WMT', price: 20 },
+      { symbol: 'AAPL', price: 140 },
+      { symbol: 'MSFT', price: 500 },
+    ])
+    positionUtil.getPositions.mockReturnValue([
+      generatePositionObject('AAPL', 1, 'put'),
+      generatePositionObject('MSFT', 1, 'put'),
+    ])
+    orderUtil.getOrders.mockReturnValue([])
+
+    // Doesn't matter much what these are
+    bestOption.selectBestOption.mockReturnValueOnce({
+      symbol: 'WMT211029P00146000',
+      premium: 121,
+      strike: 120,
+      delta: 0.321088,
+      distanceTo30: 0.021087999999999996,
+      expiration: '2021-10-29',
+      weeklyRate: 121,
+    })
+    bestOption.selectBestOption.mockReturnValueOnce({
+      symbol: 'AAPL211029P00146000',
+      premium: 121,
+      strike: 1460,
+      delta: 0.321088,
+      distanceTo30: 0.021087999999999996,
+      expiration: '2021-10-29',
+      weeklyRate: 121,
+    })
+    bestOption.selectBestOption.mockReturnValueOnce({
+      symbol: 'MSFT211029P00146000',
+      premium: 121,
+      strike: 80,
+      delta: 0.321088,
+      distanceTo30: 0.021087999999999996,
+      expiration: '2021-10-29',
+      weeklyRate: 121,
+    })
+
+    await _sellNakedPutsCycle([ 'AAPL', 'MSFT' ])
+    expect(sendOrdersUtil.sellToOpen).toHaveBeenCalledTimes(2)
+    expect(sendOrdersUtil.sellToOpen).toHaveBeenCalledWith('MSFT', 'MSFT211029P00146000', 1)
+    expect(sendOrdersUtil.sellToOpen).toHaveBeenCalledWith('WMT', 'WMT211029P00146000', 1)
+  })
 })

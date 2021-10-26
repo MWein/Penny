@@ -23,8 +23,8 @@ const { createGTCOrders } = require('./core/gtcOrders')
 
 
 const launch = async () => {
-  const result = await _sellNakedPutsCycle([ 'AAPL', 'PINS', 'WMT' ])
-  console.log(result)
+  //const result = await _sellNakedPutsCycle([ 'SFIX', 'ZNGA', 'KMI', 'UAA', 'BB', 'TTD', 'PINS', 'ATVI', 'JD', 'IRBT' ])
+  //console.log(result)
   return
 
   // Manual tests
