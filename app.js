@@ -11,7 +11,14 @@ const { getBalances } = require('./tradier/getBalances')
 
 const { _determineCoverableTickers, sellCoveredCalls } = require('./core/coveredCall')
 
+// Permanent imports
+const { createGTCOrders } = require('./core/gtcOrders')
+
+
 const launch = async () => {
+
+  //await createGTCOrders()
+
   //const coverableTickers = await _determineCoverableTickers()
   //console.log(coverableTickers)
   // Tomorrow it should have TSLA COKE and PINS
@@ -36,10 +43,9 @@ const launch = async () => {
   //const watchlist = await getWatchlistSymbols()
   //console.log(watchlist)
 
-  return
-
   new CronJob('0 0 8 * * 1-5', () => {
-    console.log('Some early mornin cronin for the GTC, biotch!')
+    console.log('Creating GTC Orders')
+    createGTCOrders()
   }, null, true, 'America/New_York')
 
   new CronJob('0 0 10 * * 1-5', () => {
