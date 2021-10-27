@@ -501,8 +501,8 @@ describe('sellNakedPutsCycle', () => {
       optionBuyingPower: 50001
     })
     positionUtil.getPositions.mockReturnValue([
-      generatePositionObject('AAPL', 1, 'put'),
-      generatePositionObject('MSFT', 1, 'put'),
+      generatePositionObject('AAPL', 1, 'stock'),
+      generatePositionObject('MSFT', 1, 'stock'),
     ])
     orderUtil.getOrders.mockReturnValue([])
 
@@ -553,7 +553,7 @@ describe('sellNakedPutsCycle', () => {
       optionBuyingPower: 50001
     })
     positionUtil.getPositions.mockReturnValue([
-      generatePositionObject('AAPL', 1, 'put'),
+      generatePositionObject('AAPL', 1, 'stock'),
       generatePositionObject('MSFT', 1, 'put'),
     ])
     orderUtil.getOrders.mockReturnValue([])
@@ -591,6 +591,5 @@ describe('sellNakedPutsCycle', () => {
     await sellNakedPutsCycle(bestOptions, mockSettings)
     expect(sendOrdersUtil.sellToOpen).toHaveBeenCalledTimes(1)
     expect(sendOrdersUtil.sellToOpen).toHaveBeenCalledWith('MSFT', 'MSFT211029P00146000', 1)
-    //expect(sendOrdersUtil.sellToOpen).toHaveBeenCalledWith('WMT', 'WMT211029P00146000', 1)
   })
 })
