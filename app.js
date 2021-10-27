@@ -23,44 +23,25 @@ const { createGTCOrders } = require('./core/gtcOrders')
 
 
 const launch = async () => {
-  //createGTCOrders()
+  //sellNakedPuts()
+
+
+  // createGTCOrders()
   // Comment out the part where it actually buys stuff
   // In createGTCOrders function, oldOptionsPositions should be empty after 7am local time
+  // TODO Why were these rejected? They werent rejected the second time
 
   // TODO Check if these positions are different than the comments tomorrow
   // Quantity should be different. So should cost basis
   // Special emphasis on the IDs. Do they change? If not this is some cron job shit
   // Since the goddam history endpoint doesnt work for the sandbox
-  // const positions = await getPositions()
-  // const positionsToCheck = positions.filter(x => [ 276413, 276511, 276414 ].includes(x.id))
-  // console.log(positionsToCheck)
-  // [
-  //   {
-  //     cost_basis: -14,
-  //     date_acquired: '2021-10-26T14:00:10.473Z',
-  //     id: 276413,
-  //     quantity: -1,
-  //     symbol: 'BB211029C00011500'
-  //   },
-  //   {
-  //     cost_basis: -28,
-  //     date_acquired: '2021-10-26T17:06:59.913Z',
-  //     id: 276511,
-  //     quantity: -1,
-  //     symbol: 'BB211105P00010500'
-  //   },
-  //   {
-  //     cost_basis: -9,
-  //     date_acquired: '2021-10-26T14:00:17.368Z',
-  //     id: 276414,
-  //     quantity: -1,
-  //     symbol: 'KMI211029C00018000'
-  //   }
-  // ]
+
+  // YAY - They do change. However, the GTC orders means it'll be a little hard to track
+  // If they were bought back, expired, or were assigned.
+  // Probably going to need to use the history endpoint after some real trading occurs
 
 
-
-  new CronJob('0 0 8 * * 1-5', () => {
+  new CronJob('0 0 9 35 * 1-5', () => {
     console.log('Creating GTC Orders')
     createGTCOrders()
   }, null, true, 'America/New_York')
