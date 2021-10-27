@@ -2,7 +2,7 @@
 Settings to implement
 [X] callsEnabled
 [X] putsEnabled
-[ ] maxAllocation
+[X] maxAllocation
 [ ] reserve
 [ ] gtcAmount
 */

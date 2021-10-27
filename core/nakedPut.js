@@ -18,7 +18,7 @@ const sellNakedPuts = async () => {
 
   const prices = await priceUtil.getPrices(watchlist)
   const watchlistBelowMaxAllocation = prices
-    .filter(ticker => ticker.price * 100 < process.env.MAXIMUMALLOCATION)
+    .filter(ticker => ticker.price * 100 < settings.maxAllocation)
     .map(x => x.symbol)
 
 
@@ -27,7 +27,7 @@ const sellNakedPuts = async () => {
   for (let x = 0; x < watchlistBelowMaxAllocation.length; x++) {
     const symbol = watchlistBelowMaxAllocation[x]
     const best = await bestOption.selectBestOption(symbol, 'put')
-    if (best && best.strike * 100 < process.env.MAXIMUMALLOCATION) {
+    if (best && best.strike * 100 < settings.maxAllocation) {
       //console.log(`Best option for ${symbol}: ${best.symbol}`)
       bestOptions.push(best)
     }
@@ -39,7 +39,7 @@ const sellNakedPuts = async () => {
   // Cycle until cycle function returns something other than 'success'
   const _sellNakedPutsHelper = async () => {
     //console.log('Selling Puts')
-    const result = await nakedPutHelpers.sellNakedPutsCycle(bestOptions)
+    const result = await nakedPutHelpers.sellNakedPutsCycle(bestOptions, settings)
     //console.log(result)
     if (result === 'success') {
       await _sellNakedPutsHelper()

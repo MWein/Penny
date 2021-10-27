@@ -43,7 +43,8 @@ describe('sellNakedPuts', () => {
   })
 
   it('Retreives the best options for each ticker in the watchlist whose current prices are below the max allocation setting; does not call cycle function if all nulls', async () => {
-    process.env.MAXIMUMALLOCATION = 2001
+    const mockSettings = { ...defaultSettings, maxAllocation: 2001 }
+    settings.getSettings.mockReturnValue(mockSettings)
     watchlistUtil.getWatchlistSymbols.mockReturnValue([ 'AAPL', 'FB', 'BB', 'MSFT', 'SFIX' ])
     priceUtil.getPrices.mockReturnValue([
       { symbol: 'AAPL', price: 20 },
@@ -63,7 +64,8 @@ describe('sellNakedPuts', () => {
   })
 
   it('Retreives the best options for each ticker in the watchlist; does not call cycle function if all above max allocation', async () => {
-    process.env.MAXIMUMALLOCATION = 999
+    const mockSettings = { ...defaultSettings, maxAllocation: 999 }
+    settings.getSettings.mockReturnValue(mockSettings)
     watchlistUtil.getWatchlistSymbols.mockReturnValue([ 'AAPL', 'BB', 'SFIX' ])
     // Setting the prices super low so it calls selectBestOption on each
     priceUtil.getPrices.mockReturnValue([
@@ -81,7 +83,8 @@ describe('sellNakedPuts', () => {
   })
 
   it('Calls the cycle function at least once with only the options that are below max allocation and are not null; exits cycle function if something other than \'success\' is returned', async () => {
-    process.env.MAXIMUMALLOCATION = 1001
+    const mockSettings = { ...defaultSettings, maxAllocation: 1001 }
+    settings.getSettings.mockReturnValue(mockSettings)
     watchlistUtil.getWatchlistSymbols.mockReturnValue([ 'AAPL', 'WMT' ])
     priceUtil.getPrices.mockReturnValue([
       { symbol: 'AAPL', price: 1 },
@@ -93,11 +96,12 @@ describe('sellNakedPuts', () => {
     nakedPutHelpers.sellNakedPutsCycle.mockReturnValue('oh no')
     await sellNakedPuts()
     expect(nakedPutHelpers.sellNakedPutsCycle).toHaveBeenCalledTimes(1)
-    expect(nakedPutHelpers.sellNakedPutsCycle).toHaveBeenCalledWith([ { strike: 10 } ])
+    expect(nakedPutHelpers.sellNakedPutsCycle).toHaveBeenCalledWith([ { strike: 10 } ], mockSettings)
   })
 
   it('Calls cycle function again if success returned', async () => {
-    process.env.MAXIMUMALLOCATION = 1001
+    const mockSettings = { ...defaultSettings, maxAllocation: 1001 }
+    settings.getSettings.mockReturnValue(mockSettings)
     watchlistUtil.getWatchlistSymbols.mockReturnValue([ 'AAPL', 'WMT' ])
     priceUtil.getPrices.mockReturnValue([
       { symbol: 'AAPL', price: 1 },
@@ -112,6 +116,6 @@ describe('sellNakedPuts', () => {
     await sellNakedPuts()
     expect(watchlistUtil.getWatchlistSymbols).toHaveBeenCalledTimes(1)
     expect(nakedPutHelpers.sellNakedPutsCycle).toHaveBeenCalledTimes(3)
-    expect(nakedPutHelpers.sellNakedPutsCycle).toHaveBeenCalledWith([ { strike: 10 } ])
+    expect(nakedPutHelpers.sellNakedPutsCycle).toHaveBeenCalledWith([ { strike: 10 } ], mockSettings)
   })
 })

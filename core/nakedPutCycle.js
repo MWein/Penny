@@ -34,8 +34,8 @@ const _getEstimatedAllocation = (bestOptions, putPositions, putOrders) =>
 
 
 // Returns stock symbols that won't be above the maximum allocation
-const _getOptionsUnderMaxAllocation = stocks =>
-  stocks.filter(stock => stock.potentialAllocation < process.env.MAXIMUMALLOCATION)
+const _getOptionsUnderMaxAllocation = (stocks, maxAllocation) =>
+  stocks.filter(stock => stock.potentialAllocation < maxAllocation)
     .map(stock => stock.symbol)
 
 
@@ -74,7 +74,7 @@ const _getOptionsToSell = (options, optionBuyingPower) => {
 
 // One cycle of sellNakedPuts
 // Will likely run multiple times
-const sellNakedPutsCycle = async bestOptions => {
+const sellNakedPutsCycle = async (bestOptions, settings) => {
   if (bestOptions.length === 0) {
     return 'No options choices =('
   }
@@ -98,7 +98,7 @@ const sellNakedPutsCycle = async bestOptions => {
 
   const estimatedAllocation = _getEstimatedAllocation(affordableOptions, putPositions, putOptionOrders)
 
-  const permittedStocks = _getOptionsUnderMaxAllocation(estimatedAllocation)
+  const permittedStocks = _getOptionsUnderMaxAllocation(estimatedAllocation, settings.maxAllocation)
   if (permittedStocks.length === 0) {
     return 'Looks like everything is maxed out =('
   }
