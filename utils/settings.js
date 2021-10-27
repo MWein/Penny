@@ -1,3 +1,5 @@
+const settingSchema = require('../db_models/settingSchema')
+
 const defaultSettings = {
   callsEnabled: true,
   putsEnabled: true,
@@ -7,15 +9,30 @@ const defaultSettings = {
 }
 
 const getSettings = async () => {
-  // TODO grab all settings from database
+  try {
+    const mongoSettings = await settingSchema.find()
 
-  return defaultSettings
+    // Replace default settings if needed
+    const settings = mongoSettings.reduce((acc, setting) => (
+      {
+        ...acc,
+        [setting.key]: setting.value
+      }
+    ), defaultSettings)
+  
+    return settings
+  } catch (e) {
+    return defaultSettings
+  }
 }
 
 const getSetting = async key => {
-  // TODO Grab setting from database
-
-  return defaultSettings[key]
+  try {
+    const mongoSetting = await settingSchema.findOne({ key })
+    return mongoSetting === null ? defaultSettings[key] : mongoSetting.value
+  } catch (e) {
+    return defaultSettings[key]
+  }
 }
 
 module.exports = {
