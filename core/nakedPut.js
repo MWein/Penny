@@ -4,7 +4,7 @@ const watchlistUtil = require('../tradier/watchlist')
 const nakedPutHelpers = require('./nakedPutCycle')
 const settingsUtil = require('../utils/settings')
 
-// Broke into its own file so I can stub the cycle function
+
 const sellNakedPuts = async () => {
   const settings = await settingsUtil.getSettings()
   if (!settings.putsEnabled) {
