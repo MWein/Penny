@@ -12,9 +12,9 @@ const _getAffordableOptions = (bestOptions, buyingPower) =>
 
 // Gets the approximate allocation for each stock in the price list based on the current price and number of positions/orders already held
 // Sorts lowest to highest
-const _getEstimatedAllocation = (bestOptions, putPositions, putOrders) =>
+const _getEstimatedAllocation = (bestOptions, relevantPositions, putOrders) =>
   bestOptions.map(opt => {
-    const numPositions = putPositions.filter(pos => getUnderlying(pos.symbol) === getUnderlying(opt.symbol))
+    const numPositions = relevantPositions.filter(pos => getUnderlying(pos.symbol) === getUnderlying(opt.symbol))
       .reduce((acc, x) => acc + Math.abs(x.quantity), 0)
     const numOrders = putOrders.filter(ord => ord.symbol === getUnderlying(opt.symbol))
       .reduce((acc, x) => acc + Math.abs(x.quantity), 0)
@@ -89,12 +89,14 @@ const sellNakedPutsCycle = async (bestOptions, settings) => {
   }
 
   const positions = await positionUtil.getPositions()
+  const stockPositions = positionUtil.filterForOptionableStockPositions(positions)
   const putPositions = positionUtil.filterForPutPositions(positions)
+  const relevantPositions = [ ...stockPositions, ...putPositions ]
 
   const orders = await orderUtil.getOrders()
   const putOptionOrders = orderUtil.filterForCashSecuredPutOrders(orders)
 
-  const estimatedAllocation = _getEstimatedAllocation(affordableOptions, putPositions, putOptionOrders)
+  const estimatedAllocation = _getEstimatedAllocation(affordableOptions, relevantPositions, putOptionOrders)
 
   const permittedStocks = _getOptionsUnderMaxAllocation(estimatedAllocation, settings.maxAllocation)
   if (permittedStocks.length === 0) {

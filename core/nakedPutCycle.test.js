@@ -56,7 +56,7 @@ describe('_getEstimatedAllocation', () => {
       { symbol: 'PINS1234P321', strike: 501 },
       { symbol: 'AXON1234P321', strike: 12 },
     ]
-    const putPositions = [
+    const relevantPositions = [
       generatePositionObject('AAPL', 2, 'put'),
       generatePositionObject('AAPL', 1, 'put'),
       generatePositionObject('TSLA', -1, 'put'),
@@ -66,7 +66,7 @@ describe('_getEstimatedAllocation', () => {
       generateOrderObject('PINS', 1, 'put', 'sell_to_open'),
       generateOrderObject('TSLA', 1, 'put', 'sell_to_open'),
     ]
-    const result = _getEstimatedAllocation(prices, putPositions, putOrders)
+    const result = _getEstimatedAllocation(prices, relevantPositions, putOrders)
     expect(result).toEqual([
       {
         symbol: 'AXON1234P321',
@@ -85,6 +85,55 @@ describe('_getEstimatedAllocation', () => {
         strike: 120,
         allocation: 36000,
         potentialAllocation: 48000,
+      },
+      {
+        symbol: 'PINS1234P321',
+        strike: 501,
+        allocation: 150300,
+        potentialAllocation: 200400,
+      },
+    ])
+  })
+
+
+  it('Takes actual positions into consideration', () => {
+    const prices = [
+      { symbol: 'AAPL1234P321', strike: 120 },
+      { symbol: 'TSLA1234P321', strike: 100 },
+      { symbol: 'PINS1234P321', strike: 501 },
+      { symbol: 'AXON1234P321', strike: 12 },
+    ]
+    const relevantPositions = [
+      generatePositionObject('AAPL', 2, 'put'),
+      generatePositionObject('AAPL', 1, 'put'),
+      generatePositionObject('TSLA', -1, 'put'),
+      generatePositionObject('AXON', 1, 'stock'),
+      generatePositionObject('TSLA', 2, 'stock'),
+    ]
+    const putOrders = [
+      generateOrderObject('PINS', -2, 'put', 'sell_to_open'),
+      generateOrderObject('PINS', 1, 'put', 'sell_to_open'),
+      generateOrderObject('TSLA', 1, 'put', 'sell_to_open'),
+    ]
+    const result = _getEstimatedAllocation(prices, relevantPositions, putOrders)
+    expect(result).toEqual([
+      {
+        symbol: 'AXON1234P321',
+        strike: 12,
+        allocation: 1200,
+        potentialAllocation: 2400,
+      },
+      {
+        symbol: 'AAPL1234P321',
+        strike: 120,
+        allocation: 36000,
+        potentialAllocation: 48000,
+      },
+      {
+        symbol: 'TSLA1234P321',
+        strike: 100,
+        allocation: 40000,
+        potentialAllocation: 50000,
       },
       {
         symbol: 'PINS1234P321',
