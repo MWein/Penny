@@ -6,13 +6,19 @@ const defaultSettings = {
   gtcAmount: 1, // Limit price when making automated buy_to_close orders
 }
 
+const getSettings = async () => {
+  // TODO grab all settings from database
+
+  return defaultSettings
+}
+
 const getSetting = async key => {
   // TODO Grab setting from database
 
   return defaultSettings[key]
 }
 
-
 module.exports = {
   getSetting,
+  getSettings,
 }
