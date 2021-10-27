@@ -15,9 +15,7 @@ const {
   sellCoveredCalls
 } = require('./core/coveredCall')
 
-const {
-  sellNakedPuts,
-} = require('./core/nakedPut')
+const { sellNakedPuts } = require('./core/nakedPut')
 
 const { createGTCOrders } = require('./core/gtcOrders')
 
@@ -26,6 +24,9 @@ const launch = async () => {
   //createGTCOrders()
   // Comment out the part where it actually buys stuff
   // In createGTCOrders function, oldOptionsPositions should be empty after 7am local time
+
+  // const coverableTickers = await _determineCoverableTickers()
+  // console.log(coverableTickers)
 
 
   new CronJob('0 0 8 * * 1-5', () => {
