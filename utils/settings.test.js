@@ -1,6 +1,7 @@
 const settingSchema = require('../db_models/settingSchema')
 
 const {
+  defaultSettings,
   getSetting,
   getSettings,
 } = require('./settings')
@@ -15,13 +16,13 @@ describe('getSetting', () => {
       throw new Error('Damn')
     })
     const result = await getSetting('buyToCloseAmount')
-    expect(result).toEqual(1)
+    expect(result).toEqual(defaultSettings.buyToCloseAmount)
   })
 
   it('Returns a default setting if Mongo doesnt have it', async () => {
     settingSchema.findOne.mockReturnValue(null)
     const result = await getSetting('buyToCloseAmount')
-    expect(result).toEqual(1)
+    expect(result).toEqual(defaultSettings.buyToCloseAmount)
   })
 
   it('Returns setting from mongo', async () => {
@@ -42,13 +43,7 @@ describe('getSettings', () => {
       throw new Error('Damn')
     })
     const result = await getSettings()
-    expect(result).toEqual({
-      callsEnabled: true,
-      putsEnabled: true,
-      maxAllocation: 4000,
-      reserve: 0,
-      buyToCloseAmount: 1,
-    })
+    expect(result).toEqual(defaultSettings)
   })
 
   it('Returns defaults for whatever is not in Mongo', async () => {
@@ -64,11 +59,9 @@ describe('getSettings', () => {
     ])
     const result = await getSettings()
     expect(result).toEqual({
+      ...defaultSettings,
       callsEnabled: false,
-      putsEnabled: true,
-      maxAllocation: 4000,
       reserve: 20,
-      buyToCloseAmount: 1,
     })
   })
 

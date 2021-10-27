@@ -36,6 +36,7 @@ const getSetting = async key => {
 }
 
 module.exports = {
+  defaultSettings,
   getSetting,
   getSettings,
 }
