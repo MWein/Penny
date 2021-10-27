@@ -4,7 +4,7 @@ const watchlistUtil = require('../tradier/watchlist')
 const nakedPutHelpers = require('./nakedPutCycle')
 const settingsUtil = require('../utils/settings')
 
-// TODO Functionality that also filters out anything above the current balance
+
 const sellNakedPuts = async () => {
   const settings = await settingsUtil.getSettings()
   if (!settings.putsEnabled) {
