@@ -4,8 +4,8 @@ const CronJob = require('cron').CronJob
 //const { getWatchlistSymbols } = require('./tradier/watchlist')
 //const { selectBestOption } = require('./tradier/selectBestOption')
 //const { getPrices } = require('./tradier/getPrices')
-//const { getOrders } = require('./tradier/getOrders')
-//const { getPositions } = require('./tradier/getPositions')
+const { getOrders } = require('./tradier/getOrders')
+const { getPositions } = require('./tradier/getPositions')
 //const { sellToOpen } = require('./tradier/sendOrders')
 //const { getBalances } = require('./tradier/getBalances')
 
@@ -25,8 +25,37 @@ const launch = async () => {
   // Comment out the part where it actually buys stuff
   // In createGTCOrders function, oldOptionsPositions should be empty after 7am local time
 
-  // const coverableTickers = await _determineCoverableTickers()
-  // console.log(coverableTickers)
+  // TODO Check if these positions are different than the comments tomorrow
+  // Quantity should be different. So should cost basis
+  // Special emphasis on the IDs. Do they change? If not this is some cron job shit
+  // Since the goddam history endpoint doesnt work for the sandbox
+  // const positions = await getPositions()
+  // const positionsToCheck = positions.filter(x => [ 276413, 276511, 276414 ].includes(x.id))
+  // console.log(positionsToCheck)
+  // [
+  //   {
+  //     cost_basis: -14,
+  //     date_acquired: '2021-10-26T14:00:10.473Z',
+  //     id: 276413,
+  //     quantity: -1,
+  //     symbol: 'BB211029C00011500'
+  //   },
+  //   {
+  //     cost_basis: -28,
+  //     date_acquired: '2021-10-26T17:06:59.913Z',
+  //     id: 276511,
+  //     quantity: -1,
+  //     symbol: 'BB211105P00010500'
+  //   },
+  //   {
+  //     cost_basis: -9,
+  //     date_acquired: '2021-10-26T14:00:17.368Z',
+  //     id: 276414,
+  //     quantity: -1,
+  //     symbol: 'KMI211029C00018000'
+  //   }
+  // ]
+
 
 
   new CronJob('0 0 8 * * 1-5', () => {
