@@ -5,12 +5,10 @@ const { getUnderlying } = require('../utils/determineOptionType')
 const sendOrdersUtil = require('../tradier/sendOrders')
 
 
-
 const _getAffordableOptions = (bestOptions, buyingPower) =>
   bestOptions.filter(opt =>
     opt.strike * 100 < buyingPower
   )
-
 
 // Gets the approximate allocation for each stock in the price list based on the current price and number of positions/orders already held
 // Sorts lowest to highest
@@ -53,6 +51,7 @@ const _getOptionsToSell = (options, optionBuyingPower) => {
   const permittedOptions = options.reduce((acc, option) => {
     const collateral = option.strike * 100
     const newOptionBuyingPower = acc.optionBuyingPower - collateral
+    console.log('What the fuck?', option.symbol, collateral, newOptionBuyingPower)
     if (newOptionBuyingPower > 0) {
       return {
         symbols: [
@@ -80,7 +79,7 @@ const sellNakedPutsCycle = async (bestOptions, settings) => {
   }
 
   const balances = await balanceUtil.getBalances()
-  const optionBuyingPower = balances.optionBuyingPower
+  const optionBuyingPower = balances.optionBuyingPower - settings.reserve
   if (optionBuyingPower <= 0) { // Probably wont be below zero but ya never know
     return 'No money =('
   }
