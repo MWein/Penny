@@ -1,5 +1,6 @@
 require('dotenv').config()
 const CronJob = require('cron').CronJob
+const mongoose = require('mongoose')
 
 //const { getWatchlistSymbols } = require('./tradier/watchlist')
 //const { selectBestOption } = require('./tradier/selectBestOption')
@@ -18,6 +19,7 @@ const {
 const { sellNakedPuts } = require('./core/nakedPut')
 
 const { createGTCOrders } = require('./core/gtcOrders')
+
 
 
 const launch = async () => {
@@ -84,4 +86,13 @@ const launch = async () => {
   }, null, true, 'America/New_York')
 }
 
-launch()
+
+mongoose.connect(process.env.CONNECTION_STRING, { useNewUrlParser: true, useUnifiedTopology: true }, err => {
+  if (err) {
+    console.log('Database connection failure', err)
+    return
+  }
+
+  console.log('Database Connection Established')
+  launch()
+})
