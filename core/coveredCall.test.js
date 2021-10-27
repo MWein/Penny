@@ -2,6 +2,7 @@ const positions = require('../tradier/getPositions')
 const orders = require('../tradier/getOrders')
 const bestOption = require('../tradier/selectBestOption')
 const sendOrders = require('../tradier/sendOrders')
+const settings = require('../utils/settings')
 const {
   _generatePermittedPositionsArray,
   _determineCoverableTickers,
@@ -219,6 +220,17 @@ describe('sellCoveredCalls', () => {
     positions.getPositions = jest.fn()
     orders.getOrders = jest.fn()
     sendOrders.sellToOpen = jest.fn()
+    settings.getSetting = jest.fn().mockReturnValue(true) // Return true for callsEnabled setting
+  })
+
+  it('Does not run if callsEnabled setting is false', async () => {
+    settings.getSetting.mockReturnValue(false)
+    await sellCoveredCalls()
+    expect(settings.getSetting).toHaveBeenCalledWith('callsEnabled')
+    expect(bestOption.selectBestOption).not.toHaveBeenCalled()
+    expect(positions.getPositions).not.toHaveBeenCalled()
+    expect(orders.getOrders).not.toHaveBeenCalled()
+    expect(sendOrders.sellToOpen).not.toHaveBeenCalled()
   })
 
   it('If the opportunity array is empty, do nothing', async () => {

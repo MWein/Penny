@@ -5,12 +5,10 @@ const { getUnderlying } = require('../utils/determineOptionType')
 const sendOrdersUtil = require('../tradier/sendOrders')
 
 
-
 const _getAffordableOptions = (bestOptions, buyingPower) =>
   bestOptions.filter(opt =>
     opt.strike * 100 < buyingPower
   )
-
 
 // Gets the approximate allocation for each stock in the price list based on the current price and number of positions/orders already held
 // Sorts lowest to highest
@@ -34,8 +32,8 @@ const _getEstimatedAllocation = (bestOptions, putPositions, putOrders) =>
 
 
 // Returns stock symbols that won't be above the maximum allocation
-const _getOptionsUnderMaxAllocation = stocks =>
-  stocks.filter(stock => stock.potentialAllocation < process.env.MAXIMUMALLOCATION)
+const _getOptionsUnderMaxAllocation = (stocks, maxAllocation) =>
+  stocks.filter(stock => stock.potentialAllocation < maxAllocation)
     .map(stock => stock.symbol)
 
 
@@ -74,13 +72,13 @@ const _getOptionsToSell = (options, optionBuyingPower) => {
 
 // One cycle of sellNakedPuts
 // Will likely run multiple times
-const sellNakedPutsCycle = async bestOptions => {
+const sellNakedPutsCycle = async (bestOptions, settings) => {
   if (bestOptions.length === 0) {
     return 'No options choices =('
   }
 
   const balances = await balanceUtil.getBalances()
-  const optionBuyingPower = balances.optionBuyingPower
+  const optionBuyingPower = balances.optionBuyingPower - settings.reserve
   if (optionBuyingPower <= 0) { // Probably wont be below zero but ya never know
     return 'No money =('
   }
@@ -98,7 +96,7 @@ const sellNakedPutsCycle = async bestOptions => {
 
   const estimatedAllocation = _getEstimatedAllocation(affordableOptions, putPositions, putOptionOrders)
 
-  const permittedStocks = _getOptionsUnderMaxAllocation(estimatedAllocation)
+  const permittedStocks = _getOptionsUnderMaxAllocation(estimatedAllocation, settings.maxAllocation)
   if (permittedStocks.length === 0) {
     return 'Looks like everything is maxed out =('
   }

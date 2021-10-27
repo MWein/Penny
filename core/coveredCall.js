@@ -2,6 +2,7 @@ const position = require('../tradier/getPositions')
 const order = require('../tradier/getOrders')
 const bestOption = require('../tradier/selectBestOption')
 const sendOrders = require('../tradier/sendOrders')
+const settings = require('../utils/settings')
 const { getUnderlying } = require('../utils/determineOptionType')
 
 
@@ -46,6 +47,11 @@ const _determineCoverableTickers = async () => {
 
 
 const sellCoveredCalls = async () => {
+  const callsEnabled = await settings.getSetting('callsEnabled')
+  if (!callsEnabled) {
+    return
+  }
+
   const coverableTickers = await _determineCoverableTickers()
 
   // In a for-loop so each request isn't sent up all at once

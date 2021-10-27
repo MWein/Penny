@@ -1,8 +1,6 @@
 const balanceUtil = require('../tradier/getBalances')
-const priceUtil = require('../tradier/getPrices')
 const positionUtil = require('../tradier/getPositions')
 const orderUtil = require('../tradier/getOrders')
-const bestOption = require('../tradier/selectBestOption')
 const sendOrdersUtil = require('../tradier/sendOrders')
 
 
@@ -101,7 +99,7 @@ describe('_getEstimatedAllocation', () => {
 
 describe('_getOptionsUnderMaxAllocation', () => {
   it('Returns the tickers whose potential allocation is lower than the maximum', () => {
-    process.env.MAXIMUMALLOCATION = 48000
+    const maxAllocation = 48000
     const stocks = [
       {
         symbol: 'AXON',
@@ -128,7 +126,7 @@ describe('_getOptionsUnderMaxAllocation', () => {
         potentialAllocation: 200400,
       },
     ]
-    const result = _getOptionsUnderMaxAllocation(stocks)
+    const result = _getOptionsUnderMaxAllocation(stocks, maxAllocation)
     expect(result).toEqual([ 'AXON', 'TSLA' ])
   })
 })
@@ -355,17 +353,20 @@ describe('_getOptionsToSell', () => {
 
 
 describe('sellNakedPutsCycle', () => {
+  const defaultSettings = {
+    maxAllocation: 1000,
+    reserve: 0,
+  }
+
   beforeEach(() => {
     balanceUtil.getBalances = jest.fn()
-    priceUtil.getPrices = jest.fn()
     positionUtil.getPositions = jest.fn()
     orderUtil.getOrders = jest.fn()
-    bestOption.selectBestOption = jest.fn()
     sendOrdersUtil.sellToOpen = jest.fn()
   })
 
   it('Exits if bestOptions list is empty', async () => {
-    const result = await sellNakedPutsCycle([], [])
+    const result = await sellNakedPutsCycle([], defaultSettings)
     expect(result).toEqual('No options choices =(')
   })
   
@@ -377,12 +378,25 @@ describe('sellNakedPutsCycle', () => {
       { symbol: 'AAPL', strike: 140 },
       { symbol: 'MSFT', strike: 500 },
     ]
-    const result = await sellNakedPutsCycle(bestOptions)
+    const result = await sellNakedPutsCycle(bestOptions, defaultSettings)
+    expect(result).toEqual('No money =(')
+  })
+
+  it('Exits if theres cash, but the reserve zeros it out', async () => {
+    const mockSettings = { ...defaultSettings, reserve: 50000 }
+    balanceUtil.getBalances.mockReturnValue({
+      optionBuyingPower: 50000
+    })
+    const bestOptions = [
+      { symbol: 'AAPL', strike: 140 },
+      { symbol: 'MSFT', strike: 500 },
+    ]
+    const result = await sellNakedPutsCycle(bestOptions, mockSettings)
     expect(result).toEqual('No money =(')
   })
 
   it('Exits if options too expensive for option buying power; collateral needed is 100 * option strike', async () => {
-    process.env.MAXIMUMALLOCATION = 10000000
+    const mockSettings = { ...defaultSettings, maxAllocation: 10000000 }
     balanceUtil.getBalances.mockReturnValue({
       optionBuyingPower: 1000
     })
@@ -390,13 +404,31 @@ describe('sellNakedPutsCycle', () => {
       { symbol: 'AAPL', strike: 140 },
       { symbol: 'MSFT', strike: 500 },
     ]
-    const result = await sellNakedPutsCycle(bestOptions)
+    const result = await sellNakedPutsCycle(bestOptions, mockSettings)
     expect(result).toEqual('Too broke for this =(')
   })
 
 
-  it('Exits if all currently held positions have reached MAXIMUMALLOCATION', async () => {
-    process.env.MAXIMUMALLOCATION = 1000000
+  it('Exits if options too expensive for buying power with reserve', async () => {
+    const mockSettings = {
+      ...defaultSettings,
+      maxAllocation: 10000000,
+      reserve: 40000,
+    }
+    balanceUtil.getBalances.mockReturnValue({
+      optionBuyingPower: 50000
+    })
+    const bestOptions = [
+      { symbol: 'AAPL', strike: 140 },
+      { symbol: 'MSFT', strike: 500 },
+    ]
+    const result = await sellNakedPutsCycle(bestOptions, mockSettings)
+    expect(result).toEqual('Too broke for this =(')
+  })
+
+
+  it('Exits if all currently held positions have reached maxAllocation', async () => {
+    const mockSettings = { ...defaultSettings, maxAllocation: 1000000 }
     balanceUtil.getBalances.mockReturnValue({
       optionBuyingPower: 10000000
     })
@@ -409,21 +441,16 @@ describe('sellNakedPutsCycle', () => {
       generatePositionObject('MSFT', 500, 'put'),
     ])
     orderUtil.getOrders.mockReturnValue([])
-    const result = await sellNakedPutsCycle(bestOptions)
+    const result = await sellNakedPutsCycle(bestOptions, mockSettings)
     expect(result).toEqual('Looks like everything is maxed out =(')
   })
 
 
   it('Creates an order for each stock under its max allocation up until buying power is exhaused', async () => {
-    process.env.MAXIMUMALLOCATION = 1000000
+    const mockSettings = { ...defaultSettings, maxAllocation: 1000000 }
     balanceUtil.getBalances.mockReturnValue({
       optionBuyingPower: 50001
     })
-    priceUtil.getPrices.mockReturnValue([
-      { symbol: 'WMT', price: 20 },
-      { symbol: 'AAPL', price: 140 },
-      { symbol: 'MSFT', price: 500 },
-    ])
     positionUtil.getPositions.mockReturnValue([
       generatePositionObject('AAPL', 1, 'put'),
       generatePositionObject('MSFT', 1, 'put'),
@@ -460,9 +487,61 @@ describe('sellNakedPutsCycle', () => {
       }
     ]
 
-    await sellNakedPutsCycle(bestOptions)
+    await sellNakedPutsCycle(bestOptions, mockSettings)
     expect(sendOrdersUtil.sellToOpen).toHaveBeenCalledTimes(2)
     expect(sendOrdersUtil.sellToOpen).toHaveBeenCalledWith('MSFT', 'MSFT211029P00146000', 1)
     expect(sendOrdersUtil.sellToOpen).toHaveBeenCalledWith('WMT', 'WMT211029P00146000', 1)
+  })
+
+
+  it('Creates an order for each stock under its max allocation up until buying power is exhaused; with reserve', async () => {
+    const mockSettings = {
+      ...defaultSettings,
+      maxAllocation: 1000000,
+      reserve: 40000
+    }
+    balanceUtil.getBalances.mockReturnValue({
+      optionBuyingPower: 50001
+    })
+    positionUtil.getPositions.mockReturnValue([
+      generatePositionObject('AAPL', 1, 'put'),
+      generatePositionObject('MSFT', 1, 'put'),
+    ])
+    orderUtil.getOrders.mockReturnValue([])
+
+    const bestOptions = [
+      {
+        symbol: 'WMT211029P00146000',
+        premium: 121,
+        strike: 120,
+        delta: 0.321088,
+        distanceTo30: 0.021087999999999996,
+        expiration: '2021-10-29',
+        weeklyRate: 121,
+      },
+      {
+        symbol: 'AAPL211029P00146000',
+        premium: 121,
+        strike: 1460,
+        delta: 0.321088,
+        distanceTo30: 0.021087999999999996,
+        expiration: '2021-10-29',
+        weeklyRate: 121,
+      },
+      {
+        symbol: 'MSFT211029P00146000',
+        premium: 121,
+        strike: 80,
+        delta: 0.321088,
+        distanceTo30: 0.021087999999999996,
+        expiration: '2021-10-29',
+        weeklyRate: 121,
+      }
+    ]
+
+    await sellNakedPutsCycle(bestOptions, mockSettings)
+    expect(sendOrdersUtil.sellToOpen).toHaveBeenCalledTimes(1)
+    expect(sendOrdersUtil.sellToOpen).toHaveBeenCalledWith('MSFT', 'MSFT211029P00146000', 1)
+    //expect(sendOrdersUtil.sellToOpen).toHaveBeenCalledWith('WMT', 'WMT211029P00146000', 1)
   })
 })
