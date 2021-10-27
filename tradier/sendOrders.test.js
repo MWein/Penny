@@ -63,8 +63,8 @@ describe('buyToClose', () => {
       option_symbol: 'AAAAAAPL',
       side: 'buy_to_close',
       quantity: 2,
-      type: 'limit',
-      price: 1,
+      type: 'stop',
+      stop: 1,
       duration: 'gtc',
     })
     expect(network.post.mock.calls[0][2]).toEqual(false)
@@ -84,8 +84,8 @@ describe('buyToClose', () => {
       option_symbol: 'AAAAAAPL',
       side: 'buy_to_close',
       quantity: 2,
-      type: 'limit',
-      price: 5,
+      type: 'stop',
+      stop: 5,
       duration: 'gtc',
     })
     expect(network.post.mock.calls[0][2]).toEqual(false)
