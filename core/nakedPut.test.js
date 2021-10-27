@@ -2,22 +2,42 @@ const priceUtil = require('../tradier/getPrices')
 const bestOption = require('../tradier/selectBestOption')
 const watchlistUtil = require('../tradier/watchlist')
 const nakedPutHelpers = require('./nakedPutCycle')
+const settings = require('../utils/settings')
 
 const {
   sellNakedPuts,
 } = require('./nakedPut')
 
 describe('sellNakedPuts', () => {
+  const defaultSettings = {
+    putsEnabled: true,
+    maxAllocation: 1000,
+    reserve: 0,
+  }
+
   beforeEach(() => {
     watchlistUtil.getWatchlistSymbols = jest.fn()
     priceUtil.getPrices = jest.fn()
     nakedPutHelpers.sellNakedPutsCycle = jest.fn()
     bestOption.selectBestOption = jest.fn()
+    settings.getSettings = jest.fn().mockReturnValue(defaultSettings)
+  })
+
+  it('Does not run if putsEnabled setting is false', async () => {
+    const mockSettings = { ...defaultSettings, putsEnabled: false }
+    settings.getSettings.mockReturnValue(mockSettings)
+    await sellNakedPuts()
+    expect(settings.getSettings).toHaveBeenCalled()
+    expect(watchlistUtil.getWatchlistSymbols).not.toHaveBeenCalled()
+    expect(priceUtil.getPrices).not.toHaveBeenCalled()
+    expect(bestOption.selectBestOption).not.toHaveBeenCalled()
+    expect(nakedPutHelpers.sellNakedPutsCycle).not.toHaveBeenCalled()
   })
 
   it('Does nothing if watchlist is empty', async () => {
     watchlistUtil.getWatchlistSymbols.mockReturnValue([])
     await sellNakedPuts()
+    expect(priceUtil.getPrices).not.toHaveBeenCalled()
     expect(bestOption.selectBestOption).not.toHaveBeenCalled()
     expect(nakedPutHelpers.sellNakedPutsCycle).not.toHaveBeenCalled()
   })

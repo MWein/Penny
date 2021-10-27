@@ -1,3 +1,12 @@
+/*
+Settings to implement
+[X] callsEnabled
+[X] putsEnabled
+[ ] maxAllocation
+[ ] reserve
+[ ] gtcAmount
+*/
+
 const defaultSettings = {
   callsEnabled: true,
   putsEnabled: true,
