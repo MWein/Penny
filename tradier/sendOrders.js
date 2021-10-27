@@ -1,4 +1,5 @@
 const network = require('../utils/network')
+const settings = require('../utils/settings')
 
 const sellToOpen = async (symbol, option_symbol, quantity) => {
   const url = `accounts/${process.env.ACCOUNTNUM}/orders`
@@ -25,6 +26,8 @@ const sellToOpen = async (symbol, option_symbol, quantity) => {
 }
 
 const buyToClose = async (symbol, option_symbol, quantity) => {
+  const buyToCloseAmount = await settings.getSetting('buyToCloseAmount')
+
   const url = `accounts/${process.env.ACCOUNTNUM}/orders`
 
   const body = {
@@ -35,7 +38,7 @@ const buyToClose = async (symbol, option_symbol, quantity) => {
     side: 'buy_to_close',
     quantity,
     type: 'limit',
-    price: 1,
+    price: buyToCloseAmount,
     duration: 'gtc',
   }
 

@@ -51,7 +51,6 @@ const _getOptionsToSell = (options, optionBuyingPower) => {
   const permittedOptions = options.reduce((acc, option) => {
     const collateral = option.strike * 100
     const newOptionBuyingPower = acc.optionBuyingPower - collateral
-    console.log('What the fuck?', option.symbol, collateral, newOptionBuyingPower)
     if (newOptionBuyingPower > 0) {
       return {
         symbols: [
