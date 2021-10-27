@@ -25,6 +25,7 @@ const { createGTCOrders } = require('./core/gtcOrders')
 const launch = async () => {
   //sellNakedPuts()
 
+  //createGTCOrders()
 
   // createGTCOrders()
   // Comment out the part where it actually buys stuff
