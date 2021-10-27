@@ -85,6 +85,7 @@ describe('selectBestOption', () => {
       symbol: 'AAPL1234',
       premium: 85,
       weeklyRate: 85,
+      weeksOut: 1,
     })
   })
 
@@ -102,6 +103,7 @@ describe('selectBestOption', () => {
       symbol: 'AAPL4321',
       premium: 172,
       weeklyRate: 86,
+      weeksOut: 2
     })
   })
 })

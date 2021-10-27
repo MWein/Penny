@@ -22,7 +22,7 @@ const selectBestOption = async (symbol, type, minStrike = null, maxWeeksOut = 4)
     // Skip if best option is empty object
     if (bestOption.symbol) {
       const weeklyRate = bestOption.premium / week
-      options.push({ ...bestOption, weeklyRate })
+      options.push({ ...bestOption, weeklyRate, weeksOut: week })
     }
     week++
   }
