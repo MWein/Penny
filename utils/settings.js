@@ -1,4 +1,3 @@
-
 const defaultSettings = {
   callsEnabled: true,
   putsEnabled: true,
