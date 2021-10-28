@@ -9,6 +9,7 @@ const { getOrders } = require('./tradier/getOrders')
 const { getPositions } = require('./tradier/getPositions')
 //const { sellToOpen } = require('./tradier/sendOrders')
 //const { getBalances } = require('./tradier/getBalances')
+//const { isMarketOpen } = require('./tradier/market')
 
 // Permanent imports
 const {

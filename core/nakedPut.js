@@ -3,11 +3,17 @@ const bestOption = require('../tradier/selectBestOption')
 const watchlistUtil = require('../tradier/watchlist')
 const nakedPutHelpers = require('./nakedPutCycle')
 const settingsUtil = require('../utils/settings')
+const market = require('../tradier/market')
 
 
 const sellNakedPuts = async () => {
   const settings = await settingsUtil.getSettings()
   if (!settings.putsEnabled) {
+    return
+  }
+
+  const open = await market.isMarketOpen()
+  if (!open) {
     return
   }
 

@@ -3,6 +3,7 @@ const order = require('../tradier/getOrders')
 const bestOption = require('../tradier/selectBestOption')
 const sendOrders = require('../tradier/sendOrders')
 const settings = require('../utils/settings')
+const market = require('../tradier/market')
 const { getUnderlying } = require('../utils/determineOptionType')
 
 
@@ -49,6 +50,11 @@ const _determineCoverableTickers = async () => {
 const sellCoveredCalls = async () => {
   const callsEnabled = await settings.getSetting('callsEnabled')
   if (!callsEnabled) {
+    return
+  }
+
+  const open = await market.isMarketOpen()
+  if (!open) {
     return
   }
 

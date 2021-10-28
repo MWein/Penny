@@ -3,6 +3,7 @@ const bestOption = require('../tradier/selectBestOption')
 const watchlistUtil = require('../tradier/watchlist')
 const nakedPutHelpers = require('./nakedPutCycle')
 const settings = require('../utils/settings')
+const market = require('../tradier/market')
 
 const {
   sellNakedPuts,
@@ -21,11 +22,22 @@ describe('sellNakedPuts', () => {
     nakedPutHelpers.sellNakedPutsCycle = jest.fn()
     bestOption.selectBestOption = jest.fn()
     settings.getSettings = jest.fn().mockReturnValue(defaultSettings)
+    market.isMarketOpen = jest.fn().mockReturnValue(true)
   })
 
   it('Does not run if putsEnabled setting is false', async () => {
     const mockSettings = { ...defaultSettings, putsEnabled: false }
     settings.getSettings.mockReturnValue(mockSettings)
+    await sellNakedPuts()
+    expect(settings.getSettings).toHaveBeenCalled()
+    expect(watchlistUtil.getWatchlistSymbols).not.toHaveBeenCalled()
+    expect(priceUtil.getPrices).not.toHaveBeenCalled()
+    expect(bestOption.selectBestOption).not.toHaveBeenCalled()
+    expect(nakedPutHelpers.sellNakedPutsCycle).not.toHaveBeenCalled()
+  })
+
+  it('Does not run if market is closed', async () => {
+    market.isMarketOpen.mockReturnValue(false)
     await sellNakedPuts()
     expect(settings.getSettings).toHaveBeenCalled()
     expect(watchlistUtil.getWatchlistSymbols).not.toHaveBeenCalled()

@@ -3,6 +3,7 @@ const orders = require('../tradier/getOrders')
 const bestOption = require('../tradier/selectBestOption')
 const sendOrders = require('../tradier/sendOrders')
 const settings = require('../utils/settings')
+const market = require('../tradier/market')
 const {
   _generatePermittedPositionsArray,
   _determineCoverableTickers,
@@ -221,10 +222,21 @@ describe('sellCoveredCalls', () => {
     orders.getOrders = jest.fn()
     sendOrders.sellToOpen = jest.fn()
     settings.getSetting = jest.fn().mockReturnValue(true) // Return true for callsEnabled setting
+    market.isMarketOpen = jest.fn().mockReturnValue(true)
   })
 
   it('Does not run if callsEnabled setting is false', async () => {
     settings.getSetting.mockReturnValue(false)
+    await sellCoveredCalls()
+    expect(settings.getSetting).toHaveBeenCalledWith('callsEnabled')
+    expect(bestOption.selectBestOption).not.toHaveBeenCalled()
+    expect(positions.getPositions).not.toHaveBeenCalled()
+    expect(orders.getOrders).not.toHaveBeenCalled()
+    expect(sendOrders.sellToOpen).not.toHaveBeenCalled()
+  })
+
+  it('Does not run if market is closed', async () => {
+    market.isMarketOpen.mockReturnValue(false)
     await sellCoveredCalls()
     expect(settings.getSetting).toHaveBeenCalledWith('callsEnabled')
     expect(bestOption.selectBestOption).not.toHaveBeenCalled()
