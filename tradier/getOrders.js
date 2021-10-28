@@ -7,7 +7,7 @@ const {
 const filterForCoveredCallOrders = orders =>
   orders.filter(ord =>
     ord.class === 'option'
-    && [ 'open', 'partially_filled', 'pending', 'calculated', 'accepted_for_bidding', 'held' ].includes(ord.status)
+    && ![ 'filled', 'partially_filled' ].includes(ord.status)
     && ord.side === 'sell_to_open'
     && determineOptionTypeFromSymbol(ord.option_symbol) === 'call'
   )
@@ -16,7 +16,7 @@ const filterForCoveredCallOrders = orders =>
 const filterForCashSecuredPutOrders = orders =>
   orders.filter(ord =>
     ord.class === 'option'
-    && [ 'open', 'partially_filled', 'pending', 'calculated', 'accepted_for_bidding', 'held' ].includes(ord.status)
+    && ![ 'filled', 'partially_filled' ].includes(ord.status)
     && ord.side === 'sell_to_open'
     && determineOptionTypeFromSymbol(ord.option_symbol) === 'put'
   )
@@ -25,7 +25,7 @@ const filterForCashSecuredPutOrders = orders =>
 const filterForOptionBuyToCloseOrders = orders =>
   orders.filter(ord =>
     ord.class === 'option'
-    && [ 'open', 'partially_filled', 'pending', 'calculated', 'accepted_for_bidding', 'held' ].includes(ord.status)
+    && ![ 'filled', 'partially_filled' ].includes(ord.status)
     && ord.side === 'buy_to_close'
     && isOption(ord.option_symbol)
   )
