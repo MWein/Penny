@@ -23,7 +23,7 @@ const { createGTCOrders } = require('./core/gtcOrders')
 
 
 
-const launch = async () => {
+const launchCrons = async () => {
   //sellNakedPuts()
 
   //createGTCOrders()
@@ -43,39 +43,45 @@ const launch = async () => {
   // Probably going to need to use the history endpoint after some real trading occurs
 
 
-  new CronJob('0 0 9 35 * 1-6', () => {
+  new CronJob('0 0 10 * * 1-6', () => {
     console.log('Creating GTC Orders')
     createGTCOrders()
   }, null, true, 'America/New_York')
 
-  new CronJob('0 0 10 * * 1-5', () => {
+  new CronJob('0 0 11 * * 1-5', () => {
     console.log('Selling Covered Calls')
     sellCoveredCalls()
   }, null, true, 'America/New_York')
 
-  new CronJob('0 0 11 * * 1-5', () => {
+  new CronJob('0 0 12 * * 1-5', () => {
     console.log('Selling Naked Puts')
     sellNakedPuts()
   }, null, true, 'America/New_York')
   
-  new CronJob('0 0 12 * * 1-5', () => {
+  new CronJob('0 0 13 * * 1-5', () => {
     console.log('Selling Covered Calls')
     sellCoveredCalls()
   }, null, true, 'America/New_York')
 
-  new CronJob('0 0 13 * * 1-5', () => {
+  new CronJob('0 0 14 * * 1-5', () => {
     console.log('Selling Naked Puts')
     sellNakedPuts()
   }, null, true, 'America/New_York')
 }
 
 
-mongoose.connect(process.env.CONNECTION_STRING, { useNewUrlParser: true, useUnifiedTopology: true }, err => {
-  if (err) {
-    console.log('Database connection failure', err)
-    return
-  }
+// Recursively continuously try until the damn thing decides to work
+const connectToDB = () => {
+  mongoose.connect(process.env.CONNECTION_STRING, { useNewUrlParser: true, useUnifiedTopology: true }, err => {
+    if (err) {
+      console.log('Database Connection Failure - Trying Again')
+      connectToDB()
+      return
+    }
+  
+    console.log('Database Connection Established')
+    launchCrons()
+  })
+}
 
-  console.log('Database Connection Established')
-  launch()
-})
+connectToDB()
