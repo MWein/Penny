@@ -42,7 +42,7 @@ const launch = async () => {
   // Probably going to need to use the history endpoint after some real trading occurs
 
 
-  new CronJob('0 0 9 35 * 1-5', () => {
+  new CronJob('0 0 9 35 * 1-6', () => {
     console.log('Creating GTC Orders')
     createGTCOrders()
   }, null, true, 'America/New_York')
