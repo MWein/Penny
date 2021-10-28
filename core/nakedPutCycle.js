@@ -1,7 +1,7 @@
 const balanceUtil = require('../tradier/getBalances')
 const positionUtil = require('../tradier/getPositions')
 const orderUtil = require('../tradier/getOrders')
-const { getUnderlying } = require('../utils/determineOptionType')
+const { getUnderlying, isOption } = require('../utils/determineOptionType')
 const sendOrdersUtil = require('../tradier/sendOrders')
 
 
@@ -15,7 +15,8 @@ const _getAffordableOptions = (bestOptions, buyingPower) =>
 const _getEstimatedAllocation = (bestOptions, relevantPositions, putOrders) =>
   bestOptions.map(opt => {
     const numPositions = relevantPositions.filter(pos => getUnderlying(pos.symbol) === getUnderlying(opt.symbol))
-      .reduce((acc, x) => acc + Math.abs(x.quantity), 0)
+      .reduce((acc, x) => acc + (isOption(x.symbol) ? Math.abs(x.quantity) : Math.floor(x.quantity / 100)), 0)
+
     const numOrders = putOrders.filter(ord => ord.symbol === getUnderlying(opt.symbol))
       .reduce((acc, x) => acc + Math.abs(x.quantity), 0)
 
@@ -93,12 +94,17 @@ const sellNakedPutsCycle = async (bestOptions, settings) => {
   const putPositions = positionUtil.filterForPutPositions(positions)
   const relevantPositions = [ ...stockPositions, ...putPositions ]
 
+  console.log(relevantPositions)
+
   const orders = await orderUtil.getOrders()
   const putOptionOrders = orderUtil.filterForCashSecuredPutOrders(orders)
+  console.log('PUT ORDERS', putOptionOrders)
 
   const estimatedAllocation = _getEstimatedAllocation(affordableOptions, relevantPositions, putOptionOrders)
+  console.log(estimatedAllocation)
 
   const permittedStocks = _getOptionsUnderMaxAllocation(estimatedAllocation, settings.maxAllocation)
+
   if (permittedStocks.length === 0) {
     return 'Looks like everything is maxed out =('
   }

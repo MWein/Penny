@@ -5,7 +5,7 @@ const mongoose = require('mongoose')
 //const { getWatchlistSymbols } = require('./tradier/watchlist')
 //const { selectBestOption } = require('./tradier/selectBestOption')
 //const { getPrices } = require('./tradier/getPrices')
-const { getOrders } = require('./tradier/getOrders')
+const ordersUtil = require('./tradier/getOrders')
 const { getPositions } = require('./tradier/getPositions')
 //const { sellToOpen } = require('./tradier/sendOrders')
 //const { getBalances } = require('./tradier/getBalances')
@@ -24,7 +24,9 @@ const { createGTCOrders } = require('./core/gtcOrders')
 
 
 const launchCrons = async () => {
-  //sellNakedPuts()
+  // const orders = await ordersUtil.getOrders()
+  // const puts = ordersUtil.filterForCashSecuredPutOrders(orders)
+  // console.log(puts)
 
   //createGTCOrders()
 
