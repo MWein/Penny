@@ -53,7 +53,7 @@ const sellNakedPuts = async () => {
     if (result === 'success') {
       await _sellNakedPutsHelper()
       // Wait a little while so the orders take
-      await sleepUtil.sleep(10)
+      //await sleepUtil.sleep(10)
     }
   }
   await _sellNakedPutsHelper()

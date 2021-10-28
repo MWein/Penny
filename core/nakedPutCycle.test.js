@@ -107,8 +107,8 @@ describe('_getEstimatedAllocation', () => {
       generatePositionObject('AAPL', 2, 'put'),
       generatePositionObject('AAPL', 1, 'put'),
       generatePositionObject('TSLA', -1, 'put'),
-      generatePositionObject('AXON', 1, 'stock'),
-      generatePositionObject('TSLA', 2, 'stock'),
+      generatePositionObject('AXON', 100, 'stock'),
+      generatePositionObject('TSLA', 200, 'stock'),
     ]
     const putOrders = [
       generateOrderObject('PINS', -2, 'put', 'sell_to_open'),
@@ -147,7 +147,7 @@ describe('_getEstimatedAllocation', () => {
 
 
 describe('_getOptionsUnderMaxAllocation', () => {
-  it('Returns the tickers whose potential allocation is lower than the maximum', () => {
+  it('Returns the options whose potential allocation is lower than the maximum', () => {
     const maxAllocation = 48000
     const stocks = [
       {
@@ -176,7 +176,20 @@ describe('_getOptionsUnderMaxAllocation', () => {
       },
     ]
     const result = _getOptionsUnderMaxAllocation(stocks, maxAllocation)
-    expect(result).toEqual([ 'AXON', 'TSLA' ])
+    expect(result).toEqual([
+      {
+        symbol: 'AXON',
+        price: 12,
+        allocation: 0,
+        potentialAllocation: 1200,
+      },
+      {
+        symbol: 'TSLA',
+        price: 100,
+        allocation: 20000,
+        potentialAllocation: 30000,
+      },
+    ])
   })
 })
 

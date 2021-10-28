@@ -115,7 +115,6 @@ const sellNakedPutsCycle = async (bestOptions, settings) => {
 
   console.log('Selling', tickersToSell)
 
-  return
   // For-loop so they dont send all at once
   for (let x = 0; x < tickersToSell.length; x++) {
     const optionSymbol = tickersToSell[x]

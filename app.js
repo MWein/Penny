@@ -24,6 +24,9 @@ const { createGTCOrders } = require('./core/gtcOrders')
 
 
 const launchCrons = async () => {
+  // sellNakedPuts()
+  // return
+
   // const orders = await ordersUtil.getOrders()
   // const puts = ordersUtil.filterForCashSecuredPutOrders(orders)
   // console.log(puts)
