@@ -33,9 +33,8 @@ const _getEstimatedAllocation = (bestOptions, relevantPositions, putOrders) =>
 
 
 // Returns stock symbols that won't be above the maximum allocation
-const _getOptionsUnderMaxAllocation = (stocks, maxAllocation) =>
-  stocks.filter(stock => stock.potentialAllocation < maxAllocation)
-    .map(stock => stock.symbol)
+const _getOptionsUnderMaxAllocation = (options, maxAllocation) =>
+  options.filter(option => option.potentialAllocation < maxAllocation)
 
 
 // Return a list of best options sorted by highest return for the money
@@ -103,16 +102,20 @@ const sellNakedPutsCycle = async (bestOptions, settings) => {
   const estimatedAllocation = _getEstimatedAllocation(affordableOptions, relevantPositions, putOptionOrders)
   console.log(estimatedAllocation)
 
-  const permittedStocks = _getOptionsUnderMaxAllocation(estimatedAllocation, settings.maxAllocation)
+  const permittedOptions = _getOptionsUnderMaxAllocation(estimatedAllocation, settings.maxAllocation)
 
-  if (permittedStocks.length === 0) {
+  console.log(permittedOptions)
+
+  if (permittedOptions.length === 0) {
     return 'Looks like everything is maxed out =('
   }
 
-  const prioritizedOptions = _getPutOptionPriority(bestOptions)
+  const prioritizedOptions = _getPutOptionPriority(permittedOptions)
   const tickersToSell = _getOptionsToSell(prioritizedOptions, optionBuyingPower)
 
+  console.log('Selling', tickersToSell)
 
+  return
   // For-loop so they dont send all at once
   for (let x = 0; x < tickersToSell.length; x++) {
     const optionSymbol = tickersToSell[x]
