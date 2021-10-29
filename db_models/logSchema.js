@@ -9,7 +9,7 @@ const LogSchema = mongoose.Schema({
   type: {
     type: String,
     required: true,
-    enum: [ 'info', 'checkin', 'error' ],
+    enum: [ 'info', 'ping', 'error' ],
     default: 'info',
   },
   message: {
