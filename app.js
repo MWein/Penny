@@ -20,10 +20,16 @@ const {
 const { sellNakedPuts } = require('./core/nakedPut')
 
 const { createGTCOrders } = require('./core/gtcOrders')
-
+const { log } = require('./utils/log')
 
 
 const launchCrons = async () => {
+  log({
+    type: 'checkin',
+    message: 'Starting Crons'
+  })
+
+
   // sellNakedPuts()
   // return
 
@@ -77,14 +83,23 @@ const launchCrons = async () => {
 
 // Recursively continuously try until the damn thing decides to work
 const connectToDB = () => {
+  log('Connecting to Database')
+
   mongoose.connect(process.env.CONNECTION_STRING, { useNewUrlParser: true, useUnifiedTopology: true }, err => {
     if (err) {
       console.log('Database Connection Failure - Trying Again')
+
+      log('Database Connection Failure - Trying Again')
+
       connectToDB()
       return
     }
   
     console.log('Database Connection Established')
+    log({
+      message: 'Connection Established'
+    })
+
     launchCrons()
   })
 }
