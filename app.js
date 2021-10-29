@@ -24,10 +24,6 @@ const { log, clearOldLogs } = require('./utils/log')
 
 
 const launchCrons = async () => {
-  clearOldLogs()
-  return
-
-
   log('Starting Crons')
 
 
@@ -61,6 +57,11 @@ const launchCrons = async () => {
   new CronJob('0 0 14 * * 1-5', () => {
     log('Selling Naked Puts')
     sellNakedPuts()
+  }, null, true, 'America/New_York')
+
+  new CronJob('0 0 20 * * *', () => {
+    log('Clearing Old Logs')
+    clearOldLogs()
   }, null, true, 'America/New_York')
 }
 
