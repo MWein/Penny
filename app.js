@@ -27,30 +27,6 @@ const launchCrons = async () => {
   log('Starting Crons')
 
 
-  // sellNakedPuts()
-  // return
-
-  // const orders = await ordersUtil.getOrders()
-  // const puts = ordersUtil.filterForCashSecuredPutOrders(orders)
-  // console.log(puts)
-
-  //createGTCOrders()
-
-  // createGTCOrders()
-  // Comment out the part where it actually buys stuff
-  // In createGTCOrders function, oldOptionsPositions should be empty after 7am local time
-  // TODO Why were these rejected? They werent rejected the second time
-
-  // TODO Check if these positions are different than the comments tomorrow
-  // Quantity should be different. So should cost basis
-  // Special emphasis on the IDs. Do they change? If not this is some cron job shit
-  // Since the goddam history endpoint doesnt work for the sandbox
-
-  // YAY - They do change. However, the GTC orders means it'll be a little hard to track
-  // If they were bought back, expired, or were assigned.
-  // Probably going to need to use the history endpoint after some real trading occurs
-
-
   new CronJob('0 0 * * * *', () => {
     log({
       type: 'ping',
