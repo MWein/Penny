@@ -4,6 +4,7 @@ const watchlistUtil = require('../tradier/watchlist')
 const nakedPutHelpers = require('./nakedPutCycle')
 const settings = require('../utils/settings')
 const market = require('../tradier/market')
+const logUtil = require('../utils/log')
 
 const {
   sellNakedPuts,
@@ -23,12 +24,14 @@ describe('sellNakedPuts', () => {
     bestOption.selectBestOption = jest.fn()
     settings.getSettings = jest.fn().mockReturnValue(defaultSettings)
     market.isMarketOpen = jest.fn().mockReturnValue(true)
+    logUtil.log = jest.fn()
   })
 
   it('Does not run if putsEnabled setting is false', async () => {
     const mockSettings = { ...defaultSettings, putsEnabled: false }
     settings.getSettings.mockReturnValue(mockSettings)
     await sellNakedPuts()
+    expect(logUtil.log).toHaveBeenCalledWith('Puts Disabled')
     expect(settings.getSettings).toHaveBeenCalled()
     expect(watchlistUtil.getWatchlistSymbols).not.toHaveBeenCalled()
     expect(priceUtil.getPrices).not.toHaveBeenCalled()
@@ -39,6 +42,7 @@ describe('sellNakedPuts', () => {
   it('Does not run if market is closed', async () => {
     market.isMarketOpen.mockReturnValue(false)
     await sellNakedPuts()
+    expect(logUtil.log).toHaveBeenCalledWith('Market Closed')
     expect(settings.getSettings).toHaveBeenCalled()
     expect(watchlistUtil.getWatchlistSymbols).not.toHaveBeenCalled()
     expect(priceUtil.getPrices).not.toHaveBeenCalled()
@@ -49,6 +53,7 @@ describe('sellNakedPuts', () => {
   it('Does nothing if watchlist is empty', async () => {
     watchlistUtil.getWatchlistSymbols.mockReturnValue([])
     await sellNakedPuts()
+    expect(logUtil.log).toHaveBeenCalledWith('Watchlist Empty')
     expect(priceUtil.getPrices).not.toHaveBeenCalled()
     expect(bestOption.selectBestOption).not.toHaveBeenCalled()
     expect(nakedPutHelpers.sellNakedPutsCycle).not.toHaveBeenCalled()
@@ -87,6 +92,7 @@ describe('sellNakedPuts', () => {
     ])
     bestOption.selectBestOption.mockReturnValue({ strike: 10 })
     await sellNakedPuts()
+    expect(logUtil.log).toHaveBeenCalledWith('No Put Opportunities')
     expect(bestOption.selectBestOption).toHaveBeenCalledTimes(3)
     expect(bestOption.selectBestOption).toHaveBeenCalledWith('AAPL', 'put')
     expect(bestOption.selectBestOption).toHaveBeenCalledWith('BB', 'put')
@@ -109,6 +115,7 @@ describe('sellNakedPuts', () => {
     await sellNakedPuts()
     expect(nakedPutHelpers.sellNakedPutsCycle).toHaveBeenCalledTimes(1)
     expect(nakedPutHelpers.sellNakedPutsCycle).toHaveBeenCalledWith([ { strike: 10 } ], mockSettings)
+    expect(logUtil.log).toHaveBeenCalledWith('Done')
   })
 
   it('Calls cycle function again if success returned', async () => {
@@ -129,5 +136,6 @@ describe('sellNakedPuts', () => {
     expect(watchlistUtil.getWatchlistSymbols).toHaveBeenCalledTimes(1)
     expect(nakedPutHelpers.sellNakedPutsCycle).toHaveBeenCalledTimes(3)
     expect(nakedPutHelpers.sellNakedPutsCycle).toHaveBeenCalledWith([ { strike: 10 } ], mockSettings)
+    expect(logUtil.log).toHaveBeenCalledWith('Done')
   })
 })

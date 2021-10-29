@@ -1,6 +1,7 @@
 const position = require('../tradier/getPositions')
 const order = require('../tradier/getOrders')
 const sendOrders = require('../tradier/sendOrders')
+const logUtil = require('../utils/log')
 
 const {
   _getOldOptionsPositions,
@@ -88,11 +89,13 @@ describe('gtcOrders', () => {
     position.getPositions = jest.fn()
     order.getOrders = jest.fn()
     sendOrders.buyToClose = jest.fn()
+    logUtil.log = jest.fn()
   })
 
   it('If there are no positions, do nothing', async () => {
     position.getPositions.mockReturnValue([])
     await createGTCOrders()
+    expect(logUtil.log).toHaveBeenCalledWith('No Positions to Close')
     expect(position.getPositions).toHaveBeenCalled()
     expect(order.getOrders).not.toHaveBeenCalled()
   })

@@ -4,21 +4,24 @@ const watchlistUtil = require('../tradier/watchlist')
 const nakedPutHelpers = require('./nakedPutCycle')
 const settingsUtil = require('../utils/settings')
 const market = require('../tradier/market')
-
+const logUtil = require('../utils/log')
 
 const sellNakedPuts = async () => {
   const settings = await settingsUtil.getSettings()
   if (!settings.putsEnabled) {
+    logUtil.log('Puts Disabled')
     return
   }
 
   const open = await market.isMarketOpen()
   if (!open) {
+    logUtil.log('Market Closed')
     return
   }
 
   const watchlist = await watchlistUtil.getWatchlistSymbols()
   if (watchlist.length === 0) {
+    logUtil.log('Watchlist Empty')
     return
   }
 
@@ -38,6 +41,7 @@ const sellNakedPuts = async () => {
     }
   }
   if (bestOptions.length === 0) {
+    logUtil.log('No Put Opportunities')
     return
   }
 
@@ -49,6 +53,7 @@ const sellNakedPuts = async () => {
     }
   }
   await _sellNakedPutsHelper()
+  logUtil.log('Done')
 }
 
 

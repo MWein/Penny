@@ -5,6 +5,7 @@ const sendOrders = require('../tradier/sendOrders')
 const settings = require('../utils/settings')
 const market = require('../tradier/market')
 const { getUnderlying } = require('../utils/determineOptionType')
+const logUtil = require('../utils/log')
 
 
 // Note: This function assumes that positions were split between stocks and options properly
@@ -50,26 +51,31 @@ const _determineCoverableTickers = async () => {
 const sellCoveredCalls = async () => {
   const callsEnabled = await settings.getSetting('callsEnabled')
   if (!callsEnabled) {
+    logUtil.log('Calls Disabled')
     return
   }
 
   const open = await market.isMarketOpen()
   if (!open) {
+    logUtil.log('Market Closed')
     return
   }
 
   const coverableTickers = await _determineCoverableTickers()
+  if (coverableTickers.length === 0) {
+    logUtil.log('No Covered Call Opportunities')
+  }
 
   // In a for-loop so each request isn't sent up all at once
   for (let x = 0; x < coverableTickers.length; x++) {
     const currentTicker = coverableTickers[x]
     const best = await bestOption.selectBestOption(currentTicker.symbol, 'call', currentTicker.costPerShare)
     if (best) {
-      // Send sell order for listed quantity
-      //console.log('Sending order', currentTicker.symbol, best.symbol, currentTicker.quantity)
       await sendOrders.sellToOpen(currentTicker.symbol, best.symbol, currentTicker.quantity)
     }
   }
+
+  logUtil.log('Done')
 }
 
 module.exports = {

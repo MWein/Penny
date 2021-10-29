@@ -1,5 +1,6 @@
 const network = require('../utils/network')
 const settings = require('../utils/settings')
+const logUtil = require('../utils/log')
 
 const sellToOpen = async (symbol, option_symbol, quantity) => {
   const url = `accounts/${process.env.ACCOUNTNUM}/orders`
@@ -17,8 +18,13 @@ const sellToOpen = async (symbol, option_symbol, quantity) => {
 
   try {
     const result = await network.post(url, body, false)
+    logUtil.log(`Sell-to-open ${quantity} ${option_symbol}`)
     return result
   } catch (e) {
+    logUtil.log({
+      type: 'error',
+      message: `Sell-to-open ${quantity} ${option_symbol} Failed`,
+    })
     return {
       status: 'not ok'
     }
@@ -44,8 +50,13 @@ const buyToClose = async (symbol, option_symbol, quantity) => {
 
   try {
     const result = await network.post(url, body, false)
+    logUtil.log(`Buy-to-close ${quantity} ${option_symbol}`)
     return result
   } catch (e) {
+    logUtil.log({
+      type: 'error',
+      message: `Buy-to-close ${quantity} ${option_symbol} Failed`,
+    })
     return {
       status: 'not ok'
     }
