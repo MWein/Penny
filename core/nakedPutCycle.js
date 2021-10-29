@@ -93,18 +93,11 @@ const sellNakedPutsCycle = async (bestOptions, settings) => {
   const putPositions = positionUtil.filterForPutPositions(positions)
   const relevantPositions = [ ...stockPositions, ...putPositions ]
 
-  console.log(relevantPositions)
-
   const orders = await orderUtil.getOrders()
   const putOptionOrders = orderUtil.filterForCashSecuredPutOrders(orders)
-  console.log('PUT ORDERS', putOptionOrders)
 
   const estimatedAllocation = _getEstimatedAllocation(affordableOptions, relevantPositions, putOptionOrders)
-  console.log(estimatedAllocation)
-
   const permittedOptions = _getOptionsUnderMaxAllocation(estimatedAllocation, settings.maxAllocation)
-
-  console.log(permittedOptions)
 
   if (permittedOptions.length === 0) {
     return 'Looks like everything is maxed out =('
@@ -112,8 +105,6 @@ const sellNakedPutsCycle = async (bestOptions, settings) => {
 
   const prioritizedOptions = _getPutOptionPriority(permittedOptions)
   const tickersToSell = _getOptionsToSell(prioritizedOptions, optionBuyingPower)
-
-  console.log('Selling', tickersToSell)
 
   // For-loop so they dont send all at once
   for (let x = 0; x < tickersToSell.length; x++) {
