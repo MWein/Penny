@@ -34,13 +34,20 @@ describe('_logWithObject', () => {
   })
 
   it('On success, saves and console logs the message', async () => {
-    await _logWithObject({ type: 'checkin', message: 'something' })
+    await _logWithObject({ type: 'error', message: 'something' })
     expect(saveFunc).toHaveBeenCalledTimes(1)
-    expect(logSchema).toHaveBeenCalledWith({ type: 'checkin', message: 'something' })
-    expect(console.log).toHaveBeenCalledWith('checkin', ':', 'something')
+    expect(logSchema).toHaveBeenCalledWith({ type: 'error', message: 'something' })
+    expect(console.log).toHaveBeenCalledWith('error', ':', 'something')
   })
 
-  it('On success, saves and console logs the message; console log says \'info\' if type is not provided', async () => {
+  it('Does not console log if type is \'ping\'', async () => {
+    await _logWithObject({ type: 'ping', message: 'something' })
+    expect(saveFunc).toHaveBeenCalledTimes(1)
+    expect(logSchema).toHaveBeenCalledWith({ type: 'ping', message: 'something' })
+    expect(console.log).not.toHaveBeenCalled()
+  })
+
+  it('Console log says \'info\' if type is not provided', async () => {
     await _logWithObject({ message: 'something' })
     expect(saveFunc).toHaveBeenCalledTimes(1)
     expect(logSchema).toHaveBeenCalledWith({ message: 'something' })

@@ -6,7 +6,9 @@ const _logWithObject = async logData => {
   try {
     const newLog = new logSchema(logData)
     await newLog.save()
-    console.log(logData.type || 'info', ':', logData.message)
+    if (logData.type !== 'ping') {
+      console.log(logData.type || 'info', ':', logData.message)
+    }
   } catch (e) {
     console.log('Error reaching database')
   }
