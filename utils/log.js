@@ -27,12 +27,8 @@ const _logWithMessage = async message => {
 
 
 const log = async logData => {
-  console.log(typeof logData)
-  if (typeof logData === 'string') {
-    await _logWithMessage(logData)
-  } else {
-    await _logWithObject(logData)
-  }
+  const logFunc = typeof logData === 'string' ? _logWithMessage : _logWithObject
+  await logFunc(logData)
 }
 
 
