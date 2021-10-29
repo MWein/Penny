@@ -1,5 +1,6 @@
 const network = require('../utils/network')
 const settings = require('../utils/settings')
+const logUtil = require('../utils/log')
 const {
   sellToOpen,
   buyToClose,
@@ -9,6 +10,7 @@ const {
 describe('sellToOpen', () => {
   beforeEach(() => {
     network.post = jest.fn()
+    logUtil.log = jest.fn()
   })
 
   it('Calls with the correct url and body; skips throttle', async () => {
@@ -35,12 +37,16 @@ describe('sellToOpen', () => {
     })
     const result = await sellToOpen('AAPL', 'AAAAAPL', 1)
     expect(result).toEqual({ status: 'not ok' })
+    expect(logUtil.log).toHaveBeenCalledTimes(1)
+    expect(logUtil.log).toHaveBeenCalledWith({ type: 'error', message: 'Sell-to-open 1 AAAAAPL Failed' })
   })
 
   it('On success, returns whatever the endpoint returned', async () => {
     network.post.mockReturnValue({ status: 'ok', orderId: 'something' })
     const result = await sellToOpen('AAPL', 'AAAAAPL', 1)
     expect(result).toEqual({ status: 'ok', orderId: 'something' })
+    expect(logUtil.log).toHaveBeenCalledTimes(1)
+    expect(logUtil.log).toHaveBeenCalledWith('Sell-to-open 1 AAAAAPL')
   })
 })
 
@@ -49,6 +55,7 @@ describe('buyToClose', () => {
   beforeEach(() => {
     network.post = jest.fn()
     settings.getSetting = jest.fn().mockReturnValue(1) // buyToCloseAmount
+    logUtil.log = jest.fn()
   })
 
   it('Calls with the correct url and body; skips throttle', async () => {
@@ -98,11 +105,15 @@ describe('buyToClose', () => {
     })
     const result = await buyToClose('AAPL', 'AAAAAPL', 1)
     expect(result).toEqual({ status: 'not ok' })
+    expect(logUtil.log).toHaveBeenCalledTimes(1)
+    expect(logUtil.log).toHaveBeenCalledWith({ type: 'error', message: 'Buy-to-close 1 AAAAAPL Failed' })
   })
 
   it('On success, returns whatever the endpoint returned', async () => {
     network.post.mockReturnValue({ status: 'ok', orderId: 'something' })
     const result = await buyToClose('AAPL', 'AAAAAPL', 1)
     expect(result).toEqual({ status: 'ok', orderId: 'something' })
+    expect(logUtil.log).toHaveBeenCalledTimes(1)
+    expect(logUtil.log).toHaveBeenCalledWith('Buy-to-close 1 AAAAAPL')
   })
 })

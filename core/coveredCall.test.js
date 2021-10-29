@@ -4,6 +4,7 @@ const bestOption = require('../tradier/selectBestOption')
 const sendOrders = require('../tradier/sendOrders')
 const settings = require('../utils/settings')
 const market = require('../tradier/market')
+const logUtil = require('../utils/log')
 const {
   _generatePermittedPositionsArray,
   _determineCoverableTickers,
@@ -223,12 +224,14 @@ describe('sellCoveredCalls', () => {
     sendOrders.sellToOpen = jest.fn()
     settings.getSetting = jest.fn().mockReturnValue(true) // Return true for callsEnabled setting
     market.isMarketOpen = jest.fn().mockReturnValue(true)
+    logUtil.log = jest.fn()
   })
 
   it('Does not run if callsEnabled setting is false', async () => {
     settings.getSetting.mockReturnValue(false)
     await sellCoveredCalls()
     expect(settings.getSetting).toHaveBeenCalledWith('callsEnabled')
+    expect(logUtil.log).toHaveBeenCalledWith('Calls Disabled')
     expect(bestOption.selectBestOption).not.toHaveBeenCalled()
     expect(positions.getPositions).not.toHaveBeenCalled()
     expect(orders.getOrders).not.toHaveBeenCalled()
@@ -239,6 +242,7 @@ describe('sellCoveredCalls', () => {
     market.isMarketOpen.mockReturnValue(false)
     await sellCoveredCalls()
     expect(settings.getSetting).toHaveBeenCalledWith('callsEnabled')
+    expect(logUtil.log).toHaveBeenCalledWith('Market Closed')
     expect(bestOption.selectBestOption).not.toHaveBeenCalled()
     expect(positions.getPositions).not.toHaveBeenCalled()
     expect(orders.getOrders).not.toHaveBeenCalled()
@@ -251,6 +255,7 @@ describe('sellCoveredCalls', () => {
       generatePositionObject('TSLA', 5, 'stock', 1870.70),
     ])
     await sellCoveredCalls()
+    expect(logUtil.log).toHaveBeenCalledWith('No Covered Call Opportunities')
     expect(bestOption.selectBestOption).not.toHaveBeenCalled()
   })
 
@@ -276,6 +281,8 @@ describe('sellCoveredCalls', () => {
     expect(sendOrders.sellToOpen).toHaveBeenCalledTimes(2)
     expect(sendOrders.sellToOpen).toHaveBeenCalledWith('AAPL', 'AAPL1234C3214', 1)
     expect(sendOrders.sellToOpen).toHaveBeenCalledWith('TSLA', 'TSLA1234C3214', 2)
+
+    expect(logUtil.log).toHaveBeenCalledWith('Done')
   })
 
   it('Skips a sell order if bestOption returns a null', async () => {
@@ -290,5 +297,7 @@ describe('sellCoveredCalls', () => {
     expect(bestOption.selectBestOption).toHaveBeenCalledTimes(1)
     expect(bestOption.selectBestOption).toHaveBeenCalledWith('AAPL', 'call', 2.07)
     expect(sendOrders.sellToOpen).not.toHaveBeenCalled()
+
+    expect(logUtil.log).toHaveBeenCalledWith('Done')
   })
 })

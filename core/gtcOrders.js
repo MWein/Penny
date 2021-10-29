@@ -1,6 +1,7 @@
 const position = require('../tradier/getPositions')
 const order = require('../tradier/getOrders')
 const sendOrders = require('../tradier/sendOrders')
+const logUtil = require('../utils/log')
 const {
   isOption,
   getUnderlying,
@@ -29,6 +30,7 @@ const _getOldOptionsPositions = (positions, orders) => {
 const createGTCOrders = async () => {
   const allPositions = await position.getPositions()
   if (allPositions.length === 0) {
+    logUtil.log('No Positions to Close')
     return
   }
   const allOrders = await order.getOrders()
