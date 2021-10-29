@@ -34,8 +34,21 @@ const log = async logData => {
 }
 
 
+const clearOldLogs = async () => {
+  try {
+    const DELETEOLDERTHANDAYS = 90
+    const today = new Date()
+    const priorDate = new Date().setDate(today.getDate() - DELETEOLDERTHANDAYS)
+    await logSchema.deleteMany({ date: { $lte: priorDate } })
+  } catch (e) {
+    console.log('Error reaching database')
+  }
+}
+
+
 module.exports = {
   _logWithObject,
   _logWithMessage,
-  log
+  log,
+  clearOldLogs,
 }

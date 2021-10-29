@@ -4,7 +4,8 @@ jest.mock('../db_models/logSchema')
 const {
   _logWithObject,
   _logWithMessage,
-  log
+  log,
+  clearOldLogs
 } = require('./log')
 
 
@@ -118,5 +119,40 @@ describe('log', () => {
     expect(saveFunc).toHaveBeenCalledTimes(1)
     expect(logSchema).toHaveBeenCalledWith({ message: 'something' })
     expect(console.log).toHaveBeenCalledWith('info', ':', 'something')
+  })
+})
+
+
+describe('clearOldLogs', () => {
+  const originalConsoleLog = console.log
+
+  beforeEach(() => {
+    console.log = jest.fn()
+    logSchema.deleteMany = jest.fn()
+  })
+
+  afterEach(() => {
+    console.log = originalConsoleLog
+    jest.useRealTimers()
+  })
+
+  it('Console logs on failure', async () => {
+    logSchema.deleteMany.mockImplementation(() => {
+      throw new Error('Shit')
+    })
+    await clearOldLogs()
+    expect(console.log).toHaveBeenCalledWith('Error reaching database')
+  })
+
+  it('Calls clear logs query 90 days ago', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2019-05-29').getTime())
+    await clearOldLogs()
+    expect(logSchema.deleteMany).toHaveBeenCalledWith({ date: { $lte: 1551315600000}})
+  })
+
+  it('Calls clear logs query 90 days ago - again', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2021-10-12').getTime())
+    await clearOldLogs()
+    expect(logSchema.deleteMany).toHaveBeenCalledWith({ date: { $lte: 1626220800000}})
   })
 })

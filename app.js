@@ -20,10 +20,14 @@ const {
 const { sellNakedPuts } = require('./core/nakedPut')
 
 const { createGTCOrders } = require('./core/gtcOrders')
-const { log } = require('./utils/log')
+const { log, clearOldLogs } = require('./utils/log')
 
 
 const launchCrons = async () => {
+  clearOldLogs()
+  return
+
+
   log('Starting Crons')
 
 
