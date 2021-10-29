@@ -24,10 +24,7 @@ const { log } = require('./utils/log')
 
 
 const launchCrons = async () => {
-  log({
-    type: 'checkin',
-    message: 'Starting Crons'
-  })
+  log('Starting Crons')
 
 
   // sellNakedPuts()
@@ -54,28 +51,35 @@ const launchCrons = async () => {
   // Probably going to need to use the history endpoint after some real trading occurs
 
 
+  new CronJob('0 0 * * * *', () => {
+    log({
+      type: 'ping',
+      message: 'Checking In'
+    })
+  }, null, true, 'America/New_York')
+
   new CronJob('0 0 10 * * 1-6', () => {
-    console.log('Creating GTC Orders')
+    log('Creating GTC Orders')
     createGTCOrders()
   }, null, true, 'America/New_York')
 
   new CronJob('0 0 11 * * 1-5', () => {
-    console.log('Selling Covered Calls')
+    log('Selling Covered Calls')
     sellCoveredCalls()
   }, null, true, 'America/New_York')
 
   new CronJob('0 0 12 * * 1-5', () => {
-    console.log('Selling Naked Puts')
+    log('Selling Naked Puts')
     sellNakedPuts()
   }, null, true, 'America/New_York')
   
   new CronJob('0 0 13 * * 1-5', () => {
-    console.log('Selling Covered Calls')
+    log('Selling Covered Calls')
     sellCoveredCalls()
   }, null, true, 'America/New_York')
 
   new CronJob('0 0 14 * * 1-5', () => {
-    console.log('Selling Naked Puts')
+    log('Selling Naked Puts')
     sellNakedPuts()
   }, null, true, 'America/New_York')
 }
