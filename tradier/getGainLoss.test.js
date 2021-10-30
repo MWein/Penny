@@ -9,13 +9,22 @@ describe('getGainLoss', () => {
     network.get = jest.fn()
   })
 
-  it('Creates the URL using the account number env', async () => {
+  it('Creates the URL using the account number env; page number is 1 if not provided', async () => {
     process.env.ACCOUNTNUM = 'somethingsomthing'
     network.get.mockReturnValue({
       gainloss: 'null'
     })
     await getGainLoss()
-    expect(network.get).toHaveBeenCalledWith('accounts/somethingsomthing/gainloss')
+    expect(network.get).toHaveBeenCalledWith('accounts/somethingsomthing/gainloss?page=1')
+  })
+
+  it('Creates the URL using the account number env and page number if provided', async () => {
+    process.env.ACCOUNTNUM = 'somethingsomthing'
+    network.get.mockReturnValue({
+      gainloss: 'null'
+    })
+    await getGainLoss(3)
+    expect(network.get).toHaveBeenCalledWith('accounts/somethingsomthing/gainloss?page=3')
   })
 
   it('Returns empty array if Tradier returns null', async () => {
