@@ -15,7 +15,7 @@ describe('getGainLoss', () => {
       gainloss: 'null'
     })
     await getGainLoss()
-    expect(network.get).toHaveBeenCalledWith('accounts/somethingsomthing/gainloss?page=1')
+    expect(network.get).toHaveBeenCalledWith('accounts/somethingsomthing/gainloss?page=1&limit=10')
   })
 
   it('Creates the URL using the account number env and page number if provided', async () => {
@@ -24,7 +24,7 @@ describe('getGainLoss', () => {
       gainloss: 'null'
     })
     await getGainLoss(3)
-    expect(network.get).toHaveBeenCalledWith('accounts/somethingsomthing/gainloss?page=3')
+    expect(network.get).toHaveBeenCalledWith('accounts/somethingsomthing/gainloss?page=3&limit=10')
   })
 
   it('Returns empty array if Tradier returns null', async () => {

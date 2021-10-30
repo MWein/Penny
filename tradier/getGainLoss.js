@@ -1,7 +1,7 @@
 const network = require('../utils/network')
 
 const getGainLoss = async (pageNum = 1) => {
-  const url = `accounts/${process.env.ACCOUNTNUM}/gainloss?page=${pageNum}`
+  const url = `accounts/${process.env.ACCOUNTNUM}/gainloss?page=${pageNum}&limit=10`
   const response = await network.get(url)
   if (response.gainloss === 'null') {
     return []
