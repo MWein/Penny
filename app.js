@@ -69,7 +69,8 @@ const launchCrons = async () => {
     sellNakedPuts()
   }, null, true, 'America/New_York')
 
-  new CronJob('0 13 22 * * *', () => {
+  // Run every day at 4:10 NY time
+  new CronJob('0 10 16 * * *', () => {
     housekeeping()
   }, null, true, 'America/New_York')
 }
@@ -77,7 +78,7 @@ const launchCrons = async () => {
 
 // Recursively continuously try until the damn thing decides to work
 const connectToDB = () => {
-  log('Connecting to Database')
+  console.log('Connecting to Database')
 
   mongoose.connect(process.env.CONNECTION_STRING, { useNewUrlParser: true, useUnifiedTopology: true }, err => {
     if (err) {
