@@ -35,4 +35,4 @@ const GainLossSchema = mongoose.Schema({
   },
 })
 
-module.exports = mongoose.model('history', GainLossSchema)
+module.exports = mongoose.model('closedTrade', GainLossSchema)
