@@ -10,6 +10,9 @@ const { getPositions } = require('./tradier/getPositions')
 //const { sellToOpen } = require('./tradier/sendOrders')
 //const { getBalances } = require('./tradier/getBalances')
 //const { isMarketOpen } = require('./tradier/market')
+const { getGainLoss } = require('./tradier/getGainLoss')
+
+const { updateGainLossCollection } = require('./utils/updateGainLoss')
 
 // Permanent imports
 const {
@@ -23,9 +26,16 @@ const { createGTCOrders } = require('./core/gtcOrders')
 const { log, clearOldLogs } = require('./utils/log')
 
 
+const housekeeping = async () => {
+  log('Clearing Old Logs')
+  await clearOldLogs()
+  log('Updating Gain Loss Collection')
+  await updateGainLossCollection()
+}
+
+
 const launchCrons = async () => {
   log('Starting Crons')
-
 
   new CronJob('0 0 * * * *', () => {
     log({
@@ -59,9 +69,8 @@ const launchCrons = async () => {
     sellNakedPuts()
   }, null, true, 'America/New_York')
 
-  new CronJob('0 0 20 * * *', () => {
-    log('Clearing Old Logs')
-    clearOldLogs()
+  new CronJob('0 13 22 * * *', () => {
+    housekeeping()
   }, null, true, 'America/New_York')
 }
 
@@ -72,15 +81,13 @@ const connectToDB = () => {
 
   mongoose.connect(process.env.CONNECTION_STRING, { useNewUrlParser: true, useUnifiedTopology: true }, err => {
     if (err) {
+      // Not much choice in logging to a database we can't connect to
       console.log('Database Connection Failure - Trying Again')
-
-      log('Database Connection Failure - Trying Again')
 
       connectToDB()
       return
     }
-  
-    console.log('Database Connection Established')
+
     log({
       message: 'Connection Established'
     })
