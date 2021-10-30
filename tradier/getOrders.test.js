@@ -68,8 +68,6 @@ describe('getOrders', () => {
     expect(orders).toEqual([])
   })
 
-  generateOrderObject('AAPL', 50, 'stock', 'buy', 'open', 228175)
-
   it('Returns list of orders, single order', async () => {
     const response = {
       orders: {

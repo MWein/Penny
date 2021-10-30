@@ -28,6 +28,10 @@ const get = async (path, throttle=true) => {
   const response = await superagent.get(url)
     .set('Authorization', `Bearer ${process.env.APIKEY}`)
     .set('Accept', 'application/json')
+    .timeout({
+      response: 5000
+    })
+    .retry(5)
 
   return response.body
 }
@@ -43,6 +47,10 @@ const post = async (path, body, throttle=true) => {
     .set('Authorization', `Bearer ${process.env.APIKEY}`)
     .set('Accept', 'application/json')
     .send(formString)
+    .timeout({
+      response: 10000
+    })
+    .retry(5)
 
   return response.body
 }

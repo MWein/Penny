@@ -62,6 +62,8 @@ describe('_createFormString', () => {
 describe('get', () => {
   let set1
   let set2
+  let timeout
+  let retry
 
   beforeEach(() => {
     sleepUtil.sleep = jest.fn()
@@ -69,9 +71,19 @@ describe('get', () => {
     process.env.BASEPATH = 'https://sandbox.example.com/'
     process.env.APIKEY = 'somekey'
 
+    // Retry
+    retry = jest.fn().mockReturnValue({
+      body: 'someresponse'
+    })
+
+    // Timeout
+    timeout = jest.fn().mockReturnValue({
+      retry,
+    })
+
     // Last set thats called
     set2 = jest.fn().mockReturnValue({
-      body: 'someresponse'
+      timeout,
     })
 
     // First set thats called. Authorization
@@ -133,6 +145,8 @@ describe('post', () => {
   let set1
   let set2
   let send1
+  let retry
+  let timeout
 
   beforeEach(() => {
     sleepUtil.sleep = jest.fn()
@@ -140,9 +154,19 @@ describe('post', () => {
     process.env.BASEPATH = 'https://sandbox.example.com/'
     process.env.APIKEY = 'somekey'
 
+    // Retry
+    retry = jest.fn().mockReturnValue({
+      body: 'someresponse'
+    })
+
+    // Timeout
+    timeout = jest.fn().mockReturnValue({
+      retry,
+    })
+
     // Send
     send1 = jest.fn().mockReturnValue({
-      body: 'someresponse'
+      timeout,
     })
 
     // Last set thats called
