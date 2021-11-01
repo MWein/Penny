@@ -43,8 +43,8 @@ const buyToClose = async (symbol, option_symbol, quantity) => {
     option_symbol,
     side: 'buy_to_close',
     quantity,
-    type: 'stop',
-    stop: buyToCloseAmount,
+    type: 'limit',
+    price: buyToCloseAmount,
     duration: 'gtc',
   }
 
