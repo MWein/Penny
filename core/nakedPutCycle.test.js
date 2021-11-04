@@ -330,7 +330,7 @@ describe('_getPutOptionPriority', () => {
         distanceTo30: 0.005893000000000037,
         expiration: '2021-11-05',
         weeklyRate: 84,
-        percReturn: 0.03536842105263158
+        percReturn: 0.01768421052631579
       },
       {
         symbol: 'AAPL211029P00146000',

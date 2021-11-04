@@ -43,7 +43,7 @@ const _getOptionsUnderMaxAllocation = (options, maxAllocation, maxPositions) =>
 const _getPutOptionPriority = bestOptions =>
   bestOptions.filter(option => option).map(option => ({
     ...option,
-    percReturn: option.premium / (option.strike * 100)
+    percReturn: option.weeklyRate / (option.strike * 100)
   })).sort((a, b) => b.percReturn - a.percReturn)
 
 
