@@ -28,13 +28,15 @@ const _getEstimatedAllocation = (bestOptions, relevantPositions, putOrders) =>
       ...opt,
       allocation,
       potentialAllocation,
+      numPositions: existing,
     }
   }).sort((a, b) => a.potentialAllocation - b.potentialAllocation)
 
 
 // Returns stock symbols that won't be above the maximum allocation
-const _getOptionsUnderMaxAllocation = (options, maxAllocation) =>
+const _getOptionsUnderMaxAllocation = (options, maxAllocation, maxPositions) =>
   options.filter(option => option.potentialAllocation < maxAllocation)
+    .filter(option => option.numPositions < maxPositions)
 
 
 // Return a list of best options sorted by highest return for the money
@@ -97,7 +99,7 @@ const sellNakedPutsCycle = async (bestOptions, settings) => {
   const putOptionOrders = orderUtil.filterForCashSecuredPutOrders(orders)
 
   const estimatedAllocation = _getEstimatedAllocation(affordableOptions, relevantPositions, putOptionOrders)
-  const permittedOptions = _getOptionsUnderMaxAllocation(estimatedAllocation, settings.maxAllocation)
+  const permittedOptions = _getOptionsUnderMaxAllocation(estimatedAllocation, settings.maxAllocation, settings.maxPositions)
 
   if (permittedOptions.length === 0) {
     return 'Looks like everything is maxed out =('

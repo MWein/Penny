@@ -73,24 +73,28 @@ describe('_getEstimatedAllocation', () => {
         strike: 12,
         allocation: 0,
         potentialAllocation: 1200,
+        numPositions: 0,
       },
       {
         symbol: 'TSLA1234P321',
         strike: 100,
         allocation: 20000,
         potentialAllocation: 30000,
+        numPositions: 2
       },
       {
         symbol: 'AAPL1234P321',
         strike: 120,
         allocation: 36000,
         potentialAllocation: 48000,
+        numPositions: 3,
       },
       {
         symbol: 'PINS1234P321',
         strike: 501,
         allocation: 150300,
         potentialAllocation: 200400,
+        numPositions: 3
       },
     ])
   })
@@ -122,24 +126,28 @@ describe('_getEstimatedAllocation', () => {
         strike: 12,
         allocation: 1200,
         potentialAllocation: 2400,
+        numPositions: 1,
       },
       {
         symbol: 'AAPL1234P321',
         strike: 120,
         allocation: 36000,
         potentialAllocation: 48000,
+        numPositions: 3,
       },
       {
         symbol: 'TSLA1234P321',
         strike: 100,
         allocation: 40000,
         potentialAllocation: 50000,
+        numPositions: 4
       },
       {
         symbol: 'PINS1234P321',
         strike: 501,
         allocation: 150300,
         potentialAllocation: 200400,
+        numPositions: 3,
       },
     ])
   })
@@ -149,45 +157,104 @@ describe('_getEstimatedAllocation', () => {
 describe('_getOptionsUnderMaxAllocation', () => {
   it('Returns the options whose potential allocation is lower than the maximum', () => {
     const maxAllocation = 48000
+    const maxPositions = 5
     const stocks = [
       {
         symbol: 'AXON',
         price: 12,
         allocation: 0,
         potentialAllocation: 1200,
+        numPositions: 0,
       },
       {
         symbol: 'TSLA',
         price: 100,
         allocation: 20000,
         potentialAllocation: 30000,
+        numPositions: 0,
       },
       {
         symbol: 'AAPL',
         price: 120,
         allocation: 36000,
         potentialAllocation: 48000,
+        numPositions: 0,
       },
       {
         symbol: 'PINS',
         price: 501,
         allocation: 150300,
         potentialAllocation: 200400,
+        numPositions: 0,
       },
     ]
-    const result = _getOptionsUnderMaxAllocation(stocks, maxAllocation)
+    const result = _getOptionsUnderMaxAllocation(stocks, maxAllocation, maxPositions)
     expect(result).toEqual([
       {
         symbol: 'AXON',
         price: 12,
         allocation: 0,
         potentialAllocation: 1200,
+        numPositions: 0,
       },
       {
         symbol: 'TSLA',
         price: 100,
         allocation: 20000,
         potentialAllocation: 30000,
+        numPositions: 0,
+      },
+    ])
+  })
+
+  it('Returns the options whose number of positions is lower than the maximum', () => {
+    const maxAllocation = 10000000
+    const maxPositions = 5
+    const stocks = [
+      {
+        symbol: 'AXON',
+        price: 12,
+        allocation: 0,
+        potentialAllocation: 1200,
+        numPositions: 4,
+      },
+      {
+        symbol: 'TSLA',
+        price: 100,
+        allocation: 20000,
+        potentialAllocation: 30000,
+        numPositions: 5,
+      },
+      {
+        symbol: 'AAPL',
+        price: 120,
+        allocation: 36000,
+        potentialAllocation: 48000,
+        numPositions: 7,
+      },
+      {
+        symbol: 'PINS',
+        price: 501,
+        allocation: 150300,
+        potentialAllocation: 200400,
+        numPositions: 2,
+      },
+    ]
+    const result = _getOptionsUnderMaxAllocation(stocks, maxAllocation, maxPositions)
+    expect(result).toEqual([
+      {
+        symbol: 'AXON',
+        price: 12,
+        allocation: 0,
+        potentialAllocation: 1200,
+        numPositions: 4,
+      },
+      {
+        symbol: 'PINS',
+        price: 501,
+        allocation: 150300,
+        potentialAllocation: 200400,
+        numPositions: 2,
       },
     ])
   })
@@ -417,6 +484,7 @@ describe('_getOptionsToSell', () => {
 describe('sellNakedPutsCycle', () => {
   const defaultSettings = {
     maxAllocation: 1000,
+    maxPositions: 5,
     reserve: 0,
   }
 

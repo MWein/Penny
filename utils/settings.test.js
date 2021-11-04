@@ -87,12 +87,17 @@ describe('getSettings', () => {
         key: 'buyToCloseAmount',
         value: 80,
       },
+      {
+        key: 'maxPositions',
+        value: 6,
+      }
     ])
     const result = await getSettings()
     expect(result).toEqual({
       callsEnabled: false,
       putsEnabled: false,
       maxAllocation: 40000,
+      maxPositions: 6,
       reserve: 20,
       buyToCloseAmount: 80,
     })
