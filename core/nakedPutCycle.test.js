@@ -358,7 +358,7 @@ describe('_getPutOptionPriority', () => {
 
 
 describe('_getOptionsToSell', () => {
-  it('Returns all if the buying power is greater than the sum of the options', () => {
+  it('Returns all if the buying power is greater than the sum of the options; only returns the first 2 in the list', () => {
     const options = [
       {
         symbol: 'PINS211105P00047500',
@@ -395,11 +395,11 @@ describe('_getOptionsToSell', () => {
     expect(results).toEqual([
       'PINS211105P00047500',
       'AAPL211029P00146000',
-      'WMT211029P00149000'
+      //'WMT211029P00149000' Filtered out since the function now only returns 2 stonks
     ])
   })
 
-  it('Returns only the best options, cuts off when buying power is exhaused', () => {
+  it('Returns only the best options, cuts off when buying power is exhaused; only returns the first 2', () => {
     const options = [
       {
         symbol: 'PINS211105P00047500',
@@ -422,6 +422,16 @@ describe('_getOptionsToSell', () => {
         percReturn: 0.008287671232876713
       },
       {
+        symbol: 'TSLA211029P00146000',
+        premium: 121,
+        strike: 82,
+        delta: 0.321088,
+        distanceTo30: 0.021087999999999996,
+        expiration: '2021-10-29',
+        weeklyRate: 121,
+        percReturn: 0.008287671232876713
+      },
+      {
         symbol: 'WMT211029P00149000',
         premium: 62,
         strike: 149,
@@ -432,10 +442,11 @@ describe('_getOptionsToSell', () => {
         percReturn: 0.004161073825503355
       }
     ]
-    const results = _getOptionsToSell(options, 21000)
+    const results = _getOptionsToSell(options, 28000)
     expect(results).toEqual([
       'PINS211105P00047500',
-      'AAPL211029P00146000'
+      'AAPL211029P00146000',
+      //'TSLA211029P00146000' Filtered out since the function now only returns 2 stonks
     ])
   })
 

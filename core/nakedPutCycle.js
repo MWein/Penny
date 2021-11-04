@@ -49,8 +49,13 @@ const _getPutOptionPriority = bestOptions =>
 
 
 // Returns a list of the options to sell, cutting off when buying power is exhausted
+// Also just returns the first 2 in the list
 const _getOptionsToSell = (options, optionBuyingPower) => {
   const permittedOptions = options.reduce((acc, option) => {
+    if (acc.symbols.length >= 2) {
+      return acc
+    }
+
     const collateral = option.strike * 100
     const newOptionBuyingPower = acc.optionBuyingPower - collateral
     if (newOptionBuyingPower > 0) {
