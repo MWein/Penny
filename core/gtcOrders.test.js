@@ -81,6 +81,34 @@ describe('_getOldOptionsPositions', () => {
       },
     ])
   })
+
+  it('Returns the number of positions not covered if the quantity doesnt match', () => {
+    jest.useFakeTimers().setSystemTime(new Date('2021-10-12').getTime())
+    const positions = [
+      generatePositionObject('AAPL', 4, 'call', 207.01, '2021-10-11T14:41:11.405Z'),
+      generatePositionObject('AMZN', 2, 'call', 1870.70, '2018-08-08T14:42:00.774Z'),
+      generatePositionObject('CAH', 3, 'call', 50.41, '2021-10-09T17:05:44.674Z'),
+    ]
+    const orders = [
+      generateOrderObject('AAPL', 1, 'call', 'buy_to_close', 'pending'),
+      generateOrderObject('AMZN', 1, 'call', 'sell_to_open', 'pending'),
+    ]
+    const results = _getOldOptionsPositions(positions, orders)
+    expect(results).toEqual([
+      {
+        symbol: 'AAPL1234C3214',
+        quantity: 3
+      },
+      {
+        symbol: 'AMZN1234C3214',
+        quantity: 2
+      },
+      {
+        symbol: 'CAH1234C3214',
+        quantity: 3
+      },
+    ])
+  })
 })
 
 

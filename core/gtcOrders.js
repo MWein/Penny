@@ -12,18 +12,21 @@ const _getOldOptionsPositions = (positions, orders) => {
   const date = new Date().toISOString().slice(0, 10)
   const gtcOrders = order.filterForOptionBuyToCloseOrders(orders)
 
-  const oldPositions = positions.filter(pos =>
-    !(
-      !isOption(pos.symbol) // Is not an option
-      || pos.date_acquired.slice(0, 10) === date // Aquired today
-      || gtcOrders.find(ord => ord.option_symbol === pos.symbol) // Already has a GTC order
-    )
-  ).map(pos => ({
-    symbol: pos.symbol,
-    quantity: Math.abs(pos.quantity)
-  }))
+  const nonDTROptionPositions = positions.filter(pos => isOption(pos.symbol) && pos.date_acquired.slice(0, 10) !== date)
 
-  return oldPositions
+  const unBuyToClosedPostions = nonDTROptionPositions.map(pos => {
+    const numGtcPositions = gtcOrders.filter(ord => ord.option_symbol === pos.symbol)
+      .reduce((acc, ord) => acc + ord.quantity, 0)
+
+    const uncoveredPositions = Math.abs(pos.quantity) - numGtcPositions
+
+    return {
+      symbol: pos.symbol,
+      quantity: uncoveredPositions
+    }
+  }).filter(x => x.quantity > 0)
+
+  return unBuyToClosedPostions
 }
 
 
