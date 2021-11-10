@@ -1,10 +1,10 @@
-const { getPositions } = require('../tradier/getPositions')
+const positionsUtil = require('../tradier/getPositions')
 const { isOption } = require('./determineOptionType')
 const PositionHistorySchema = require('../db_models/positionHistorySchema')
 
 
 const savePositionsCron = async () => {
-  const positions = await getPositions()
+  const positions = await positionsUtil.getPositions()
   const optionPositions = positions.filter(x => isOption(x.symbol))
     .map(x => ({
       id: x.id,
