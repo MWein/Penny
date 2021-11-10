@@ -7,6 +7,7 @@ const { updateGainLossCollection } = require('./utils/updateGainLoss')
 const { sellNakedPuts } = require('./core/nakedPut')
 const { createGTCOrders } = require('./core/gtcOrders')
 const { log, clearOldLogs } = require('./utils/log')
+const { savePositionsCron } = require('./utils/savePositionsCron')
 
 
 const housekeeping = async () => {
@@ -14,8 +15,9 @@ const housekeeping = async () => {
   await clearOldLogs()
   log('Updating Gain Loss Collection')
   await updateGainLossCollection()
+  log('Updating Positions Table')
+  await savePositionsCron()
 }
-
 
 const launchCrons = async () => {
   log('Starting Crons')
