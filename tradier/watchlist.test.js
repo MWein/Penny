@@ -1,6 +1,8 @@
 const network = require('../utils/network')
+const logUtil = require('../utils/log')
 const {
-  getWatchlistSymbols
+  getWatchlistSymbols,
+  replaceWatchlist,
 } = require('./watchlist')
 
 describe('getWatchlistSymbols', () => {
@@ -38,5 +40,34 @@ describe('getWatchlistSymbols', () => {
     })
     const watchlist = await getWatchlistSymbols()
     expect(watchlist).toEqual([ 'AAPL', 'TSLA' ])
+  })
+})
+
+
+describe('replaceWatchlist', () => {
+  beforeEach(() => {
+    network.put = jest.fn()
+    logUtil.log = jest.fn()
+  })
+
+  it('If given an empty array, does nothing', async () => {
+    await replaceWatchlist([])
+    expect(network.put).not.toHaveBeenCalled()
+  })
+
+  it('On error, logs', async () => {
+    network.put.mockImplementationOnce(() => {
+      throw new Error('Shit')
+    })
+    await replaceWatchlist([ 'AAPL', 'TSLA' ])
+    expect(logUtil.log).toHaveBeenCalledWith({
+      type: 'error',
+      message: 'Error updating the watchlist'
+    })
+  })
+
+  it('Success', async () => {
+    await replaceWatchlist([ 'AAPL', 'TSLA' ])
+    expect(logUtil.log).not.toHaveBeenCalled()
   })
 })
