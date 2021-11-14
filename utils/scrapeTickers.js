@@ -25,7 +25,7 @@ const scrapeTickers = async (tries = 0) => {
     const scrapedTickers = await page.evaluate(() =>
       Array.from(
         // eslint-disable-next-line no-undef
-        document.querySelectorAll(process.env.SCRAPE_QUERYID),
+        document.querySelectorAll('.ticker'),
         (element) => element.textContent
       )
     )
@@ -33,9 +33,9 @@ const scrapeTickers = async (tries = 0) => {
     console.log('Closing browser')
     await browser.close()
 
-    const cleanedTickers = scrapedTickers.map(x => x.trim())
-    return cleanedTickers
+    return scrapedTickers.map(x => x.trim())
   } catch (e) {
+    console.log(e)
     console.log('Something went wrong, trying again')
     await browser.close()
     const result = await scrapeTickers(tries + 1)
