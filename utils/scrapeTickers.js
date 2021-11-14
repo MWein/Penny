@@ -24,6 +24,7 @@ const scrapeTickers = async (tries = 0) => {
     console.log('Scraping tickers')
     const scrapedTickers = await page.evaluate(() =>
       Array.from(
+        // eslint-disable-next-line no-undef
         document.querySelectorAll(process.env.SCRAPE_QUERYID),
         (element) => element.textContent
       )
