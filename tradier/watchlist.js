@@ -16,6 +16,20 @@ const getWatchlistSymbols = async () => {
   }
 }
 
+
+const replaceWatchlist = async tickers => {
+  try {
+    await network.put('watchlists/default', {
+      name: 'default',
+      symbols: tickers.join(',')
+    })
+  } catch (e) {
+    console.log(e)
+  }
+}
+
+
 module.exports = {
-  getWatchlistSymbols
+  getWatchlistSymbols,
+  replaceWatchlist,
 }
