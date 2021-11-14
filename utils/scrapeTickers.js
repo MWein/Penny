@@ -2,6 +2,7 @@ const puppeteer = require('puppeteer')
 
 const scrapeTickers = async (tries = 0) => {
   if (tries > 5) {
+    console.log('Too many failed attempts')
     return []
   }
 
