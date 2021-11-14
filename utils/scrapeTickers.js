@@ -1,5 +1,5 @@
 const puppeteer = require('puppeteer')
-const { log } = require('./utils/log')
+const { log } = require('./log')
 
 
 const scrapeTickers = async (tries = 0) => {
@@ -40,6 +40,7 @@ const scrapeTickers = async (tries = 0) => {
 
     return scrapedTickers.map(x => x.trim())
   } catch (e) {
+    console.log(e)
     log({
       type: 'error',
       message: 'Something went wrong, trying again'
