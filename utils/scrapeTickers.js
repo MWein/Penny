@@ -1,6 +1,10 @@
 const puppeteer = require('puppeteer')
 
-const scrapeTickers = async () => {
+const scrapeTickers = async (tries = 0) => {
+  if (tries > 5) {
+    return []
+  }
+
   const browser = await puppeteer.launch({ headless: false, args: ['--no-sandbox', '--disable-setuid-sandbox']})
   const page = await browser.newPage()
 
@@ -32,7 +36,7 @@ const scrapeTickers = async () => {
   } catch (e) {
     console.log('Something went wrong, trying again')
     await browser.close()
-    const result = await scrapeTickers()
+    const result = await scrapeTickers(tries + 1)
     return result
   }
 }
