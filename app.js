@@ -63,6 +63,7 @@ const launchCrons = async () => {
 
   // Run every sunday at 8pm NY time
   new CronJob('0 0 20 * * 0', () => {
+    log('Updating Watchlist')
     updateWatchlist()
   }, null, true, 'America/New_York')
 }
