@@ -61,8 +61,8 @@ const launchCrons = async () => {
     housekeeping()
   }, null, true, 'America/New_York')
 
-  // Run every sunday at 9pm NY time
-  new CronJob('0 0 21 * * 0', () => {
+  // Run every sunday at 8pm NY time
+  new CronJob('0 0 20 * * 0', () => {
     updateWatchlist()
   }, null, true, 'America/New_York')
 }
