@@ -66,4 +66,73 @@ describe('scrapeTickers', () => {
   })
 
 
+  // Needs jsdom environment to run this test, which fucks everything else up
+  // it('Happy path', async () => {
+  //   process.env = {
+  //     ...process.env,
+  //     SCRAPE_TARGETPAGE: 'example.com',
+  //     SCRAPE_FIELD1: 'hello',
+  //     SCRAPE_FIELD2: 'goodbye',
+  //     SCRAPE_VALUE1: 'something',
+  //     SCRAPE_VALUE2: 'somethingelse',
+  //     SCRAPE_BUTTONID: 'button',
+  //   }
+
+  //   document.body.innerHTML =
+  //   '<div>' +
+  //   '  <span id="username" />' +
+  //   '  <button id="button" />' +
+  //   '</div>'
+
+
+  //   const tickers = await scrapeTickers()
+
+  //   expect(puppeteer.launch).toHaveBeenCalled()
+  //   expect(newPage).toHaveBeenCalled()
+  //   expect(logUtil.log).toHaveBeenCalledWith('Navigating to login page')
+  //   expect(goto).toHaveBeenCalledWith('example.com')
+  //   expect(logUtil.log).toHaveBeenCalledWith('Entering creds')
+  //   expect(type).toHaveBeenCalledWith('hello', 'something')
+  //   expect(type).toHaveBeenCalledWith('goodbye', 'somethingelse')
+  //   expect(logUtil.log).toHaveBeenCalledWith('Clicking login button')
+  //   expect(click).toHaveBeenCalledWith('button')
+  //   expect(waitForNavigation).toHaveBeenCalled()
+  //   expect(logUtil.log).toHaveBeenCalledWith('Scraping tickers')
+  //   expect(logUtil.log).toHaveBeenCalledWith('Closing browser')
+  //   expect(close).toHaveBeenCalled()
+
+  //   expect(tickers).toEqual([])
+  // })
+
+
+  // Alternate happy path test to cover at least some of the file
+  it('Happy path', async () => {
+    process.env = {
+      ...process.env,
+      SCRAPE_TARGETPAGE: 'example.com',
+      SCRAPE_FIELD1: 'hello',
+      SCRAPE_FIELD2: 'goodbye',
+      SCRAPE_VALUE1: 'something',
+      SCRAPE_VALUE2: 'somethingelse',
+      SCRAPE_BUTTONID: 'button',
+    }
+
+    const tickers = await scrapeTickers()
+
+    expect(puppeteer.launch).toHaveBeenCalled()
+    expect(newPage).toHaveBeenCalled()
+    expect(logUtil.log).toHaveBeenCalledWith('Navigating to login page')
+    expect(goto).toHaveBeenCalledWith('example.com')
+    expect(logUtil.log).toHaveBeenCalledWith('Entering creds')
+    expect(type).toHaveBeenCalledWith('hello', 'something')
+    expect(type).toHaveBeenCalledWith('goodbye', 'somethingelse')
+    expect(logUtil.log).toHaveBeenCalledWith('Clicking login button')
+    expect(click).toHaveBeenCalledWith('button')
+    expect(waitForNavigation).toHaveBeenCalled()
+    expect(logUtil.log).toHaveBeenCalledWith('Scraping tickers')
+    expect(logUtil.log).toHaveBeenCalledWith('Closing browser')
+    expect(close).toHaveBeenCalled()
+
+    expect(tickers).toEqual([])
+  })
 })

@@ -25,6 +25,8 @@ const scrapeTickers = async (tries = 0) => {
 
     logUtil.log('Clicking login button')
     await page.click(process.env.SCRAPE_BUTTONID)
+
+    logUtil.log('Waiting for page to load')
     await page.waitForNavigation()
 
     logUtil.log('Scraping tickers')
