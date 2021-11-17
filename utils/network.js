@@ -55,9 +55,29 @@ const post = async (path, body, throttle=true) => {
   return response.body
 }
 
+
+const put = async (path, body, throttle=true) => {
+  await _throttle(throttle)
+
+  const url = `${process.env.BASEPATH}${path}`
+  const formString = _createFormString(body)
+
+  const response = await superagent.put(url)
+    .set('Authorization', `Bearer ${process.env.APIKEY}`)
+    .set('Accept', 'application/json')
+    .send(formString)
+    .timeout({
+      response: 10000
+    })
+    .retry(5)
+
+  return response.body
+}
+
 module.exports = {
   _throttle,
   _createFormString,
   get,
   post,
+  put,
 }

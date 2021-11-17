@@ -8,6 +8,7 @@ const { sellNakedPuts } = require('./core/nakedPut')
 const { createGTCOrders } = require('./core/gtcOrders')
 const { log, clearOldLogs } = require('./utils/log')
 const { savePositionsCron } = require('./utils/savePositionsCron')
+const { updateWatchlist } = require('./utils/updateWatchlist')
 
 
 const housekeeping = async () => {
@@ -58,6 +59,12 @@ const launchCrons = async () => {
   // 10 mins after market close
   new CronJob('0 10 16 * * *', () => {
     housekeeping()
+  }, null, true, 'America/New_York')
+
+  // Run every sunday at 8pm NY time
+  new CronJob('0 0 20 * * 0', () => {
+    log('Updating Watchlist')
+    updateWatchlist()
   }, null, true, 'America/New_York')
 }
 

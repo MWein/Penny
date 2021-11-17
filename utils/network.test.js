@@ -4,6 +4,7 @@ const {
   _createFormString,
   get,
   post,
+  put,
 } = require('./network')
 const sleepUtil = require('./sleep')
 
@@ -226,6 +227,99 @@ describe('post', () => {
 
     try {
       await post('somepath', { some: 'body' })
+      expect(1).toEqual(2) // Force failure if nothing is thrown
+    } catch (e) {
+      expect(e).toEqual(new Error('Ope'))
+    }
+  })
+})
+
+
+describe('put', () => {
+  let set1
+  let set2
+  let send1
+  let retry
+  let timeout
+
+  beforeEach(() => {
+    sleepUtil.sleep = jest.fn()
+
+    process.env.BASEPATH = 'https://sandbox.example.com/'
+    process.env.APIKEY = 'somekey'
+
+    // Retry
+    retry = jest.fn().mockReturnValue({
+      body: 'someresponse'
+    })
+
+    // Timeout
+    timeout = jest.fn().mockReturnValue({
+      retry,
+    })
+
+    // Send
+    send1 = jest.fn().mockReturnValue({
+      timeout,
+    })
+
+    // Last set thats called
+    set2 = jest.fn().mockReturnValue({
+      send: send1
+    })
+
+    // First set thats called. Authorization
+    set1 = jest.fn().mockReturnValue({
+      set: set2
+    })
+
+    superagent.put = jest.fn().mockReturnValue({
+      set: set1
+    })
+  })
+
+  it('Returns the response body', async () => {
+    const response = await put('somepath', { some: 'body' })
+    expect(response).toEqual('someresponse')
+  })
+
+  it('By default, throttles', async () => {
+    await put('somepath', { some: 'body' })
+    expect(sleepUtil.sleep).toHaveBeenCalled()
+  })
+
+  it('Skips throttle if throttle param is false', async () => {
+    await put('somepath', { some: 'body' }, false)
+    expect(sleepUtil.sleep).not.toHaveBeenCalled()
+  })
+
+  it('Creates url out of BASEPATH and path', async () => {
+    await put('somepath', { some: 'body' })
+    expect(superagent.put).toHaveBeenCalledWith('https://sandbox.example.com/somepath')
+  })
+
+  it('Sets authorization header using APIKEY in the proper format', async () => {
+    await put('somepath', { some: 'body' })
+    expect(set1).toHaveBeenCalledWith('Authorization', 'Bearer somekey')
+  })
+
+  it('Sets accept header', async () => {
+    await put('somepath', { some: 'body' })
+    expect(set2).toHaveBeenCalledWith('Accept', 'application/json')
+  })
+
+  it('Sends formstring', async () => {
+    await put('somepath', { some: 'body' })
+    expect(send1).toHaveBeenCalledWith('some=body')
+  })
+
+  it('On failure, throws', async () => {
+    superagent.put.mockImplementation(() => {
+      throw new Error('Ope')
+    })
+
+    try {
+      await put('somepath', { some: 'body' })
       expect(1).toEqual(2) // Force failure if nothing is thrown
     } catch (e) {
       expect(e).toEqual(new Error('Ope'))
