@@ -5,10 +5,14 @@ const getBalances = async () => {
   const response = await network.get(url)
   const balancesObj = response.balances
 
+  // Nonprod is a margin account, prod is cash
+  // Check if cash exists first
+  const buyingPowerObj = balancesObj.cash || balancesObj.margin
+
   return {
     equity: balancesObj.total_equity,
     totalCash: balancesObj.total_cash,
-    optionBuyingPower: balancesObj.margin.option_buying_power,
+    optionBuyingPower: buyingPowerObj.option_buying_power,
   }
 }
 
