@@ -26,7 +26,7 @@ describe('getBalances', () => {
         total_equity: 1000,
         total_cash: 100000,
         cash: {
-          option_buying_power: 800
+          cash_available: 800
         }
       }
     })
