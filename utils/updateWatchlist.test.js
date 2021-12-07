@@ -16,32 +16,53 @@ describe('updateWatchlist', () => {
 
   it('Does nothing if the scraper doesnt return any tickers', async () => {
     scraperUtil.scrapeTickers.mockReturnValue([])
+    settingsUtil.getSetting.mockReturnValue([]) // both custom and banned tickers
     await updateWatchlist()
     expect(scraperUtil.scrapeTickers).toHaveBeenCalledTimes(1)
     expect(getPricesUtil.getPrices).not.toHaveBeenCalled()
-    expect(settingsUtil.getSetting).not.toHaveBeenCalled()
+    expect(settingsUtil.getSetting).toHaveBeenCalledTimes(2)
+    expect(settingsUtil.getSetting).toHaveBeenCalledWith('customTickers')
+    expect(settingsUtil.getSetting).toHaveBeenCalledWith('bannedTickers')
   })
 
-  it('Gets prices for each ticker returned', async () => {
+  it('Gets prices for each ticker returned, including custom tickers', async () => {
     scraperUtil.scrapeTickers.mockReturnValue([ 'AAPL', 'SFIX', 'TSLA' ])
+    settingsUtil.getSetting.mockReturnValueOnce([ 'AAL' ]) // custom tickers
+    settingsUtil.getSetting.mockReturnValueOnce([]) // banned tickers
     getPricesUtil.getPrices.mockReturnValue([
       { symbol: 'AAPL', price: 20 }
     ])
-    settingsUtil.getSetting.mockReturnValue(5)
+    settingsUtil.getSetting.mockReturnValueOnce(5)
     await updateWatchlist()
     expect(scraperUtil.scrapeTickers).toHaveBeenCalledTimes(1)
     expect(settingsUtil.getSetting).toHaveBeenCalledWith('maxAllocation')
-    expect(getPricesUtil.getPrices).toHaveBeenCalledWith([ 'AAPL', 'SFIX', 'TSLA' ])
+    expect(getPricesUtil.getPrices).toHaveBeenCalledWith([ 'AAPL', 'SFIX', 'TSLA', 'AAL' ])
+  })
+
+  it('Gets prices for each ticker returned, excluding banned tickers', async () => {
+    scraperUtil.scrapeTickers.mockReturnValue([ 'AAPL', 'SFIX', 'TSLA' ])
+    settingsUtil.getSetting.mockReturnValueOnce([ 'AAL' ]) // custom tickers
+    settingsUtil.getSetting.mockReturnValueOnce([ 'SFIX', 'TSLA' ]) // banned tickers
+    getPricesUtil.getPrices.mockReturnValue([
+      { symbol: 'AAPL', price: 20 }
+    ])
+    settingsUtil.getSetting.mockReturnValueOnce(5)
+    await updateWatchlist()
+    expect(scraperUtil.scrapeTickers).toHaveBeenCalledTimes(1)
+    expect(settingsUtil.getSetting).toHaveBeenCalledWith('maxAllocation')
+    expect(getPricesUtil.getPrices).toHaveBeenCalledWith([ 'AAPL', 'AAL' ])
   })
 
   it('Updates the watchlist with each ticker (all prices under max allocation)', async () => {
     scraperUtil.scrapeTickers.mockReturnValue([ 'AAPL', 'SFIX', 'TSLA' ])
+    settingsUtil.getSetting.mockReturnValueOnce([]) // custom tickers
+    settingsUtil.getSetting.mockReturnValueOnce([]) // banned tickers
     getPricesUtil.getPrices.mockReturnValue([
       { symbol: 'AAPL', price: 100 },
       { symbol: 'SFIX', price: 20 },
       { symbol: 'TSLA', price: 56 },
     ])
-    settingsUtil.getSetting.mockReturnValue(50000)
+    settingsUtil.getSetting.mockReturnValueOnce(50000)
     await updateWatchlist()
     expect(scraperUtil.scrapeTickers).toHaveBeenCalledTimes(1)
     expect(settingsUtil.getSetting).toHaveBeenCalledWith('maxAllocation')
@@ -51,6 +72,8 @@ describe('updateWatchlist', () => {
 
   it('Filters out tickers that are above max allocation', async () => {
     scraperUtil.scrapeTickers.mockReturnValue([ 'AAPL', 'SFIX', 'TSLA' ])
+    settingsUtil.getSetting.mockReturnValueOnce([]) // custom tickers
+    settingsUtil.getSetting.mockReturnValueOnce([]) // banned tickers
     getPricesUtil.getPrices.mockReturnValue([
       { symbol: 'AAPL', price: 100 },
       { symbol: 'SFIX', price: 20 },
