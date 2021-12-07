@@ -63,10 +63,10 @@ const launchCrons = async () => {
 
 
 
-  // Run every night at 9pm NY time in nonprod
+  // Run every night at 10pm NY time in nonprod
   // Every Sunday 8pm NY time in prod
-  if (process.env.BASEPATH.includes('paper')) {
-    new CronJob('0 0 21 * * 1-5', () => {
+  if (process.env.BASEPATH.includes('sandbox')) {
+    new CronJob('0 0 22 * * 1-5', () => {
       log('Updating Watchlist')
       updateWatchlist()
     }, null, true, 'America/New_York')
