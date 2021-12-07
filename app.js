@@ -61,11 +61,21 @@ const launchCrons = async () => {
     housekeeping()
   }, null, true, 'America/New_York')
 
-  // Run every sunday at 8pm NY time
-  new CronJob('0 0 20 * * 0', () => {
-    log('Updating Watchlist')
-    updateWatchlist()
-  }, null, true, 'America/New_York')
+
+
+  // Run every night at 9pm NY time in nonprod
+  // Every Sunday 8pm NY time in prod
+  if (process.env.BASEPATH.includes('paper')) {
+    new CronJob('0 0 21 * * 1-5', () => {
+      log('Updating Watchlist')
+      updateWatchlist()
+    }, null, true, 'America/New_York')
+  } else {
+    new CronJob('0 0 20 * * 0', () => {
+      log('Updating Watchlist')
+      updateWatchlist()
+    }, null, true, 'America/New_York')
+  }
 }
 
 
