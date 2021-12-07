@@ -7,8 +7,10 @@ const watchlistUtil = require('../tradier/watchlist')
 const updateWatchlist = async () => {
   const tickers = await scraperUtil.scrapeTickers()
   const customTickers = await settingsUtil.getSetting('customTickers')
+  const bannedTickers = await settingsUtil.getSetting('bannedTickers')
 
   const allTickers = [ new Set(...tickers, ...customTickers) ]
+    .filter(ticker => !bannedTickers.includes(ticker))
 
   if (allTickers.length === 0) {
     return
