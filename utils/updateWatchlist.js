@@ -6,7 +6,11 @@ const watchlistUtil = require('../tradier/watchlist')
 
 const updateWatchlist = async () => {
   const tickers = await scraperUtil.scrapeTickers()
-  if (tickers.length === 0) {
+  const customTickers = await settingsUtil.getSetting('customTickers')
+
+  const allTickers = [ new Set(...tickers, ...customTickers) ]
+
+  if (allTickers.length === 0) {
     return
   }
 
@@ -15,7 +19,7 @@ const updateWatchlist = async () => {
     prices,
   ] = await Promise.all([
     settingsUtil.getSetting('maxAllocation'),
-    getPricesUtil.getPrices(tickers),
+    getPricesUtil.getPrices(allTickers),
   ])
 
   const tickersBelowMaxAllocation = prices.filter(ticker => (ticker.price * 100) < maxAllocation)
