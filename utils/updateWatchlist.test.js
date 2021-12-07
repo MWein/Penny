@@ -2,12 +2,14 @@ const getPricesUtil = require('../tradier/getPrices')
 const scraperUtil = require('./scrapeTickers')
 const settingsUtil = require('./settings')
 const watchlistUtil = require('../tradier/watchlist')
+const logUtil = require('./log')
 
 const { updateWatchlist } = require('./updateWatchlist')
 
 
 describe('updateWatchlist', () => {
   beforeEach(() => {
+    logUtil.log = jest.fn()
     scraperUtil.scrapeTickers = jest.fn()
     getPricesUtil.getPrices = jest.fn()
     settingsUtil.getSetting = jest.fn()
@@ -85,5 +87,18 @@ describe('updateWatchlist', () => {
     expect(settingsUtil.getSetting).toHaveBeenCalledWith('maxAllocation')
     expect(getPricesUtil.getPrices).toHaveBeenCalledWith([ 'AAPL', 'SFIX', 'TSLA' ])
     expect(watchlistUtil.replaceWatchlist).toHaveBeenCalledWith([ 'SFIX', 'TSLA' ])
+  })
+
+  it('Fails gracefully and logs if error occurs', async() => {
+    scraperUtil.scrapeTickers.mockReturnValue([ 'AAPL', 'SFIX', 'TSLA' ])
+    settingsUtil.getSetting.mockReturnValueOnce(5) // custom tickers, not iterable to invoke an error
+    settingsUtil.getSetting.mockReturnValueOnce([]) // banned tickers
+
+    await updateWatchlist()
+
+    expect(logUtil.log).toHaveBeenCalledWith({
+      type: 'error',
+      message: 'updateWatchlist function error'
+    })
   })
 })
