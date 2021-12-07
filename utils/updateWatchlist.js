@@ -2,6 +2,7 @@ const getPricesUtil = require('../tradier/getPrices')
 const scraperUtil = require('./scrapeTickers')
 const settingsUtil = require('./settings')
 const watchlistUtil = require('../tradier/watchlist')
+const uniq = require('lodash/uniq')
 
 
 const updateWatchlist = async () => {
@@ -9,7 +10,7 @@ const updateWatchlist = async () => {
   const customTickers = await settingsUtil.getSetting('customTickers')
   const bannedTickers = await settingsUtil.getSetting('bannedTickers')
 
-  const allTickers = [ new Set(...tickers, ...customTickers) ]
+  const allTickers = uniq([ ...tickers, ...customTickers ])
     .filter(ticker => !bannedTickers.includes(ticker))
 
   if (allTickers.length === 0) {
