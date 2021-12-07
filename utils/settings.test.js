@@ -90,7 +90,15 @@ describe('getSettings', () => {
       {
         key: 'maxPositions',
         value: 6,
-      }
+      },
+      {
+        key: 'customTickers',
+        value: [ 'GOOG', 'MSFT' ],
+      },
+      {
+        key: 'bannedTickers',
+        value: [ 'AAL', 'SFIX' ],
+      },
     ])
     const result = await getSettings()
     expect(result).toEqual({
@@ -100,6 +108,8 @@ describe('getSettings', () => {
       maxPositions: 6,
       reserve: 20,
       buyToCloseAmount: 80,
+      customTickers: [ 'GOOG', 'MSFT' ],
+      bannedTickers: [ 'AAL', 'SFIX' ],
     })
   })
 })
