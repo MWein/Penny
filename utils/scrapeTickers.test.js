@@ -40,7 +40,7 @@ describe('scrapeTickers', () => {
     expect(puppeteer.launch).not.toHaveBeenCalled()
     expect(logUtil.log).toHaveBeenCalledWith({
       type: 'error',
-      message: 'Too many failed scrape attempts. Aborting.'
+      message: 'WATCHLIST: Failure'
     })
   })
 
@@ -61,7 +61,7 @@ describe('scrapeTickers', () => {
     })
     expect(logUtil.log).toHaveBeenCalledWith({
       type: 'error',
-      message: 'Too many failed scrape attempts. Aborting.'
+      message: 'WATCHLIST: Failure'
     })
   })
 
@@ -132,6 +132,7 @@ describe('scrapeTickers', () => {
     expect(logUtil.log).toHaveBeenCalledWith('Scraping tickers')
     expect(logUtil.log).toHaveBeenCalledWith('Closing browser')
     expect(close).toHaveBeenCalled()
+    expect(logUtil.log).toHaveBeenCalledWith('WATCHLIST: Success')
 
     expect(tickers).toEqual([])
   })

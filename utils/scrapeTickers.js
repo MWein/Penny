@@ -6,7 +6,7 @@ const scrapeTickers = async (tries = 0) => {
   if (tries >= 5) {
     logUtil.log({
       type: 'error',
-      message: 'Too many failed scrape attempts. Aborting.'
+      message: 'WATCHLIST: Failure'
     })
     return []
   }
@@ -40,6 +40,8 @@ const scrapeTickers = async (tries = 0) => {
 
     logUtil.log('Closing browser')
     await browser.close()
+
+    logUtil.log('WATCHLIST: Success')
 
     return scrapedTickers.map(x => x.trim())
   } catch (e) {
