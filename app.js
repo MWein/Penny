@@ -20,6 +20,15 @@ const housekeeping = async () => {
   await savePositionsCron()
 }
 
+
+const sellOptions = async () => {
+  log('Selling Covered Calls')
+  await sellCoveredCalls()
+  log('Selling Naked Puts')
+  await sellNakedPuts()
+}
+
+
 const launchCrons = async () => {
   log('Starting Crons')
 
@@ -30,37 +39,22 @@ const launchCrons = async () => {
     })
   }, null, true, 'America/New_York')
 
-  new CronJob('0 0 10 * * 1-6', () => {
+  new CronJob('0 31 09 * * 1-6', () => {
     log('Creating GTC Orders')
     createGTCOrders()
   }, null, true, 'America/New_York')
 
-  new CronJob('0 0 11 * * 1-5', () => {
-    log('Selling Covered Calls')
-    sellCoveredCalls()
-  }, null, true, 'America/New_York')
 
-  new CronJob('0 0 12 * * 1-5', () => {
-    log('Selling Naked Puts')
-    sellNakedPuts()
-  }, null, true, 'America/New_York')
-  
-  new CronJob('0 0 13 * * 1-5', () => {
-    log('Selling Covered Calls')
-    sellCoveredCalls()
-  }, null, true, 'America/New_York')
+  new CronJob('0 0 10 * * 1-5', sellOptions, null, true, 'America/New_York')
+  new CronJob('0 0 12 * * 1-5', sellOptions, null, true, 'America/New_York')
+  new CronJob('0 0 14 * * 1-5', sellOptions, null, true, 'America/New_York')
 
-  new CronJob('0 0 14 * * 1-5', () => {
-    log('Selling Naked Puts')
-    sellNakedPuts()
-  }, null, true, 'America/New_York')
 
   // Run every day at 4:10 NY time
   // 10 mins after market close
   new CronJob('0 10 16 * * *', () => {
     housekeeping()
   }, null, true, 'America/New_York')
-
 
 
   // Run every night at 10pm NY time in nonprod
