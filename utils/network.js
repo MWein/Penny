@@ -74,10 +74,30 @@ const put = async (path, body, throttle=true) => {
   return response.body
 }
 
+
+const deleteReq = async (path, throttle=true) => {
+  await _throttle(throttle)
+
+  const url = `${process.env.BASEPATH}${path}`
+  console.log(url)
+
+  const response = await superagent.delete(url)
+    .set('Authorization', `Bearer ${process.env.APIKEY}`)
+    .set('Accept', 'application/json')
+    .timeout({
+      response: 5000
+    })
+    .retry(5)
+
+  return response.body
+}
+
+
 module.exports = {
   _throttle,
   _createFormString,
   get,
   post,
   put,
+  deleteReq,
 }
