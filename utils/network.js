@@ -79,8 +79,6 @@ const deleteReq = async (path, throttle=true) => {
   await _throttle(throttle)
 
   const url = `${process.env.BASEPATH}${path}`
-  console.log(url)
-
   const response = await superagent.delete(url)
     .set('Authorization', `Bearer ${process.env.APIKEY}`)
     .set('Accept', 'application/json')

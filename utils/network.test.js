@@ -5,6 +5,7 @@ const {
   get,
   post,
   put,
+  deleteReq,
 } = require('./network')
 const sleepUtil = require('./sleep')
 
@@ -320,6 +321,88 @@ describe('put', () => {
 
     try {
       await put('somepath', { some: 'body' })
+      expect(1).toEqual(2) // Force failure if nothing is thrown
+    } catch (e) {
+      expect(e).toEqual(new Error('Ope'))
+    }
+  })
+})
+
+
+describe('deleteReq', () => {
+  let set1
+  let set2
+  let timeout
+  let retry
+
+  beforeEach(() => {
+    sleepUtil.sleep = jest.fn()
+
+    process.env.BASEPATH = 'https://sandbox.example.com/'
+    process.env.APIKEY = 'somekey'
+
+    // Retry
+    retry = jest.fn().mockReturnValue({
+      body: 'someresponse'
+    })
+
+    // Timeout
+    timeout = jest.fn().mockReturnValue({
+      retry,
+    })
+
+    // Last set thats called
+    set2 = jest.fn().mockReturnValue({
+      timeout,
+    })
+
+    // First set thats called. Authorization
+    set1 = jest.fn().mockReturnValue({
+      set: set2
+    })
+
+    superagent.delete = jest.fn().mockReturnValue({
+      set: set1
+    })
+  })
+
+  it('Returns the response body', async () => {
+    const response = await deleteReq('somepath')
+    expect(response).toEqual('someresponse')
+  })
+
+  it('By default, throttles', async () => {
+    await deleteReq('somepath')
+    expect(sleepUtil.sleep).toHaveBeenCalled()
+  })
+
+  it('Skips throttle if throttle param is false', async () => {
+    await deleteReq('somepath', false)
+    expect(sleepUtil.sleep).not.toHaveBeenCalled()
+  })
+
+  it('Creates url out of BASEPATH and path', async () => {
+    await deleteReq('somepath')
+    expect(superagent.delete).toHaveBeenCalledWith('https://sandbox.example.com/somepath')
+  })
+
+  it('Sets authorization header using APIKEY in the proper format', async () => {
+    await deleteReq('somepath')
+    expect(set1).toHaveBeenCalledWith('Authorization', 'Bearer somekey')
+  })
+
+  it('Sets accept header', async () => {
+    await deleteReq('somepath')
+    expect(set2).toHaveBeenCalledWith('Accept', 'application/json')
+  })
+
+  it('On failure, throws', async () => {
+    superagent.delete.mockImplementation(() => {
+      throw new Error('Ope')
+    })
+
+    try {
+      await deleteReq('somepath')
       expect(1).toEqual(2) // Force failure if nothing is thrown
     } catch (e) {
       expect(e).toEqual(new Error('Ope'))
