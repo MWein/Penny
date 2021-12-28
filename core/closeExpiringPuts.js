@@ -2,13 +2,10 @@ const {
   getPositions,
   filterForPutPositions,
 } = require('../tradier/getPositions')
-const { getPrices } = require('../tradier/getPrices')
-const { getQuotes } = require('../tradier/getQuotes')
-const { getOrders } = require('../tradier/getOrders')
-const {
-  buyToCloseMarket,
-  cancelOrders
-} = require('../tradier/sendOrders')
+const pricesUtil = require('../tradier/getPrices')
+const quotesUtil = require('../tradier/getQuotes')
+const ordersUtil = require('../tradier/getOrders')
+const sendOrdersUtil = require('../tradier/sendOrders')
 const { getUnderlying } = require('../utils/determineOptionType')
 
 
@@ -16,8 +13,8 @@ const _getPutsExpiringToday = async () => {
   const positions = await getPositions()
   const putPositions = filterForPutPositions(positions)
   const symbols = putPositions.map(x => x.symbol)
-  const quotes = await getQuotes(symbols)
-  const prices = await getPrices(symbols)
+  const quotes = await quotesUtil.getQuotes(symbols)
+  const prices = await pricesUtil.getPrices(symbols)
 
   const putPositionsWithExpirations = putPositions.map(pos => {
     const expiration = quotes.find(quote => quote.symbol === pos.symbol)?.expiration_date || 'none'
@@ -43,10 +40,10 @@ const _filterForPutsAtProfit = puts =>
 
 
 const _closeExistingBTCOrders = async symbols => {
-  const orders = await getOrders()
+  const orders = await ordersUtil.getOrders()
   const applicableOrders = orders.filter(x => x.side === 'buy_to_close' && symbols.includes(x.option_symbol))
   const doomedIds = applicableOrders.map(x => x.id)
-  await cancelOrders(doomedIds)
+  await sendOrdersUtil.cancelOrders(doomedIds)
 }
 
 
@@ -64,7 +61,7 @@ const closeExpiringPuts = async () => {
   for (let x = 0; x < profitablePuts.length; x++) {
     const putToClose = profitablePuts[x]
     const symbol = getUnderlying(putToClose.symbol)
-    await buyToCloseMarket(symbol, putToClose.symbol, putToClose.quantity * -1)
+    await sendOrdersUtil.buyToCloseMarket(symbol, putToClose.symbol, putToClose.quantity * -1)
   }
 }
 
