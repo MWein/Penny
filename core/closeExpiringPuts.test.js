@@ -12,6 +12,11 @@ const {
   closeExpiringPuts
 } = require('./closeExpiringPuts')
 
+const {
+  generateOrderObject,
+  generatePositionObject,
+} = require('../utils/testHelpers')
+
 
 // describe('_getPutsExpiringToday', () => {
 
@@ -73,9 +78,25 @@ describe('_filterForPutsAtProfit', () => {
 })
 
 
-// describe('_closeExistingBTCOrders', () => {
-  
-// })
+describe('_closeExistingBTCOrders', () => {
+  beforeEach(() => {
+    ordersUtil.getOrders = jest.fn()
+    sendOrdersUtil.cancelOrders = jest.fn()
+  })
+
+  it('Gets all of the orders and closes the ones with the parameter symbols', async () => {
+    ordersUtil.getOrders.mockReturnValue([
+      generateOrderObject('ZNGA', 2, 'put', 'buy_to_close', 'open', 1234),
+      generateOrderObject('BB', 2, 'put', 'sell_to_open', 'open', 4321),
+      generateOrderObject('AAPL', 2, 'put', 'buy_to_close', 'open', 147),
+      generateOrderObject('TSLA', 2, 'put', 'buy_to_close', 'open', 963),
+    ])
+
+    await _closeExistingBTCOrders(['ZNGA1234P3214', 'BB1234P3214', 'TSLA1234P3214'])
+
+    expect(sendOrdersUtil.cancelOrders).toHaveBeenCalledWith([ 1234, 963 ])
+  })
+})
 
 
 // describe('closeExpiringPuts', () => {
