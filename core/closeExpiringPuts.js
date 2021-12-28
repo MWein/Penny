@@ -1,7 +1,4 @@
-const {
-  getPositions,
-  filterForPutPositions,
-} = require('../tradier/getPositions')
+const positionsUtil = require('../tradier/getPositions')
 const pricesUtil = require('../tradier/getPrices')
 const quotesUtil = require('../tradier/getQuotes')
 const ordersUtil = require('../tradier/getOrders')
@@ -10,8 +7,8 @@ const { getUnderlying } = require('../utils/determineOptionType')
 
 
 const _getPutsExpiringToday = async () => {
-  const positions = await getPositions()
-  const putPositions = filterForPutPositions(positions)
+  const positions = await positionsUtil.getPositions()
+  const putPositions = positionsUtil.filterForPutPositions(positions)
   const symbols = putPositions.map(x => x.symbol)
   const quotes = await quotesUtil.getQuotes(symbols)
   const prices = await pricesUtil.getPrices(symbols)
