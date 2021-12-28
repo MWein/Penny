@@ -66,5 +66,6 @@ const closeExpiringPuts = async () => {
 module.exports = {
   _getPutsExpiringToday,
   _filterForPutsAtProfit,
+  _closeExistingBTCOrders,
   closeExpiringPuts
 }

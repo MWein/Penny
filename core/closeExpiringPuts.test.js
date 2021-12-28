@@ -8,6 +8,7 @@ const { getUnderlying } = require('../utils/determineOptionType')
 const {
   _getPutsExpiringToday,
   _filterForPutsAtProfit,
+  _closeExistingBTCOrders,
   closeExpiringPuts
 } = require('./closeExpiringPuts')
 
