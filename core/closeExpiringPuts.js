@@ -24,7 +24,7 @@ const _getPutsExpiringToday = async () => {
       ...pos,
       expiration,
     }
-  })
+  }).filter(x => x.expiration !== 'none')
 
   const today = new Date().toISOString().split('T')[0]
   const putsExpiringToday = putPositionsWithExpirations.filter(put => put.expiration === today)
@@ -37,12 +37,12 @@ const _getPutsExpiringToday = async () => {
   const prices = await pricesUtil.getPrices(expiringSymbols)
 
   const positionsExpiringTodayWithPrices = putsExpiringToday.map(pos => {
-    const price = prices.find(quote => quote.symbol === pos.symbol)?.price || -1
+    const price = prices.find(quote => quote.symbol === pos.symbol)?.price || 'none'
     return {
       ...pos,
       price
     }
-  })
+  }).filter(x => x.price !== 'none')
 
   return positionsExpiringTodayWithPrices
 }
@@ -50,7 +50,7 @@ const _getPutsExpiringToday = async () => {
 
 const _filterForPutsAtProfit = puts =>
   puts.filter(put =>
-    (put.cost_basis * -1) / (put.quantity * -1) > put.price * 100)
+    Math.abs(put.cost_basis) / Math.abs(put.quantity) > put.price * 100)
 
 
 const _closeExistingBTCOrders = async symbols => {
@@ -80,7 +80,7 @@ const closeExpiringPuts = async () => {
   for (let x = 0; x < profitablePuts.length; x++) {
     const putToClose = profitablePuts[x]
     const symbol = getUnderlying(putToClose.symbol)
-    await sendOrdersUtil.buyToCloseMarket(symbol, putToClose.symbol, putToClose.quantity * -1)
+    await sendOrdersUtil.buyToCloseMarket(symbol, putToClose.symbol, Math.abs(putToClose.quantity))
   }
 }
 

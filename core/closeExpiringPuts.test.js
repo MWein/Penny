@@ -21,7 +21,6 @@ const {
 describe('_getPutsExpiringToday', () => {
   beforeEach(() => {
     jest.useFakeTimers().setSystemTime(new Date('2021-10-12').getTime())
-
     positionsUtil.getPositions = jest.fn()
     quotesUtil.getQuotes = jest.fn()
     pricesUtil.getPrices = jest.fn()
@@ -72,6 +71,90 @@ describe('_getPutsExpiringToday', () => {
     expect(quotesUtil.getQuotes).toHaveBeenCalledWith([ 'TSLA1234P3214', 'ASAN1234P3214' ])
     expect(pricesUtil.getPrices).not.toHaveBeenCalled()
   })
+
+
+  it('Does not return an item if quotes doesnt return it', async () => {
+    const mockPositions = [
+      generatePositionObject('TSLA', 3, 'put', 100, '2021-01-01', 1234),
+      generatePositionObject('ASAN', 3, 'put', 100, '2021-01-01', 1234),
+    ]
+    positionsUtil.getPositions.mockReturnValue(mockPositions)
+    quotesUtil.getQuotes.mockReturnValue([
+      {
+        symbol: 'ASAN1234P3214',
+        expiration_date: '2021-10-12'
+      },
+    ])
+    pricesUtil.getPrices.mockReturnValue([
+      {
+        symbol: 'TSLA1234P3214',
+        price: 100
+      },
+      {
+        symbol: 'ASAN1234P3214',
+        price: 100
+      },
+    ])
+
+    const result = await _getPutsExpiringToday()
+
+    expect(result).toEqual([
+      {
+        symbol: 'ASAN1234P3214',
+        cost_basis: 100,
+        date_acquired: '2021-01-01',
+        expiration: '2021-10-12',
+        id: 1234,
+        price: 100,
+        quantity: 3,
+      }
+    ])
+
+    expect(quotesUtil.getQuotes).toHaveBeenCalledWith([ 'TSLA1234P3214', 'ASAN1234P3214' ])
+    expect(pricesUtil.getPrices).toHaveBeenCalledWith([ 'ASAN1234P3214' ])
+  })
+
+  it('Does not return an item if prices doesnt return it', async () => {
+    const mockPositions = [
+      generatePositionObject('TSLA', 3, 'put', 100, '2021-01-01', 1234),
+      generatePositionObject('ASAN', 3, 'put', 100, '2021-01-01', 1234),
+    ]
+    positionsUtil.getPositions.mockReturnValue(mockPositions)
+    quotesUtil.getQuotes.mockReturnValue([
+      {
+        symbol: 'TSLA1234P3214',
+        expiration_date: '2021-10-12'
+      },
+      {
+        symbol: 'ASAN1234P3214',
+        expiration_date: '2021-10-12'
+      },
+    ])
+    pricesUtil.getPrices.mockReturnValue([
+      {
+        symbol: 'ASAN1234P3214',
+        price: 100
+      },
+    ])
+
+    const result = await _getPutsExpiringToday()
+
+    expect(result).toEqual([
+      {
+        symbol: 'ASAN1234P3214',
+        cost_basis: 100,
+        date_acquired: '2021-01-01',
+        expiration: '2021-10-12',
+        id: 1234,
+        price: 100,
+        quantity: 3,
+      }
+    ])
+
+    expect(quotesUtil.getQuotes).toHaveBeenCalledWith([ 'TSLA1234P3214', 'ASAN1234P3214' ])
+    expect(pricesUtil.getPrices).toHaveBeenCalledWith([ 'TSLA1234P3214', 'ASAN1234P3214' ])
+  })
+
 
   it('Filters for puts expiring today, should only call quotes for puts, and prices for expiring puts', async () => {
     const mockPositions = [
@@ -198,6 +281,61 @@ describe('_closeExistingBTCOrders', () => {
 })
 
 
-// describe('closeExpiringPuts', () => {
-  
-// })
+describe('closeExpiringPuts', () => {
+  beforeEach(() => {
+    jest.useFakeTimers().setSystemTime(new Date('2021-10-12').getTime())
+    positionsUtil.getPositions = jest.fn()
+    quotesUtil.getQuotes = jest.fn()
+    pricesUtil.getPrices = jest.fn()
+    ordersUtil.getOrders = jest.fn()
+    sendOrdersUtil.cancelOrders = jest.fn()
+    sendOrdersUtil.buyToCloseMarket = jest.fn()
+    logUtil.log = jest.fn()
+  })
+
+
+  it('Logs initial action and if there are no expiring puts', async () => {
+    positionsUtil.getPositions.mockReturnValue([])
+    await closeExpiringPuts()
+    expect(logUtil.log).toHaveBeenCalledTimes(2)
+    expect(logUtil.log).toHaveBeenCalledWith('Closing profitable puts expiring today')
+    expect(logUtil.log).toHaveBeenCalledWith('No profitable puts expiring today')
+  })
+
+  it('Cancels orders for expiring puts, creates new market orders', async () => {
+    positionsUtil.getPositions.mockReturnValue([
+      generatePositionObject('TSLA', 3, 'put', -200, '2021-01-01', 1234),
+      generatePositionObject('ASAN', 3, 'put', -200, '2021-01-01', 4321),
+    ])
+    ordersUtil.getOrders.mockReturnValue([
+      generateOrderObject('TSLA', 3, 'put', 'buy_to_close', 'open', 741),
+      generateOrderObject('ASAN', 3, 'put', 'buy_to_close', 'open', 369),
+    ])
+    quotesUtil.getQuotes.mockReturnValue([
+      {
+        symbol: 'TSLA1234P3214',
+        expiration_date: '2021-10-12'
+      },
+      {
+        symbol: 'ASAN1234P3214',
+        expiration_date: '2021-10-12'
+      },
+    ])
+    pricesUtil.getPrices.mockReturnValue([
+      {
+        symbol: 'TSLA1234P3214',
+        price: 0.05
+      },
+      {
+        symbol: 'ASAN1234P3214',
+        price: 0.05
+      },
+    ])
+    await closeExpiringPuts()
+    expect(logUtil.log).toHaveBeenCalledWith('Cancelling current BTC orders')
+    expect(sendOrdersUtil.cancelOrders).toHaveBeenCalledWith([ 741, 369 ])
+    expect(sendOrdersUtil.buyToCloseMarket).toHaveBeenCalledTimes(2)
+    expect(sendOrdersUtil.buyToCloseMarket).toHaveBeenCalledWith('TSLA', 'TSLA1234P3214', 3)
+    expect(sendOrdersUtil.buyToCloseMarket).toHaveBeenCalledWith('ASAN', 'ASAN1234P3214', 3)
+  })
+})
