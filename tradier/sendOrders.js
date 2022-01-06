@@ -1,5 +1,4 @@
 const network = require('../utils/network')
-const settings = require('../utils/settings')
 const logUtil = require('../utils/log')
 
 const sellToOpen = async (symbol, option_symbol, quantity) => {
@@ -31,9 +30,7 @@ const sellToOpen = async (symbol, option_symbol, quantity) => {
   }
 }
 
-const buyToClose = async (symbol, option_symbol, quantity) => {
-  const buyToCloseAmount = await settings.getSetting('buyToCloseAmount')
-
+const buyToClose = async (symbol, option_symbol, quantity, buyToCloseAmount) => {
   const url = `accounts/${process.env.ACCOUNTNUM}/orders`
 
   const body = {
