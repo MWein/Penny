@@ -4,6 +4,7 @@ const quotesUtil = require('../tradier/getQuotes')
 const ordersUtil = require('../tradier/getOrders')
 const sendOrdersUtil = require('../tradier/sendOrders')
 const { getUnderlying } = require('../utils/determineOptionType')
+const logUtil = require('../utils/log')
 
 
 const _getPutsExpiringToday = async () => {
@@ -46,15 +47,18 @@ const _closeExistingBTCOrders = async symbols => {
 
 
 const closeExpiringPuts = async () => {
+  logUtil.log('Closing profitable puts expiring today')
   const putsExpiringToday = await _getPutsExpiringToday()
   const profitablePuts = _filterForPutsAtProfit(putsExpiringToday)
 
   if (profitablePuts.length === 0) {
+    logUtil.log('No profitable puts expiring today')
     return
   }
 
   const profitableSymbols = profitablePuts.map(x => x.symbol)
 
+  logUtil.log('Cancelling current BTC orders')
   await _closeExistingBTCOrders(profitableSymbols)
 
   for (let x = 0; x < profitablePuts.length; x++) {
