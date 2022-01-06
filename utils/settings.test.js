@@ -88,6 +88,10 @@ describe('getSettings', () => {
         value: 80,
       },
       {
+        key: 'profitTarget',
+        value: 0.70
+      },
+      {
         key: 'maxPositions',
         value: 6,
       },
@@ -108,6 +112,7 @@ describe('getSettings', () => {
       maxPositions: 6,
       reserve: 20,
       buyToCloseAmount: 80,
+      profitTarget: 0.70,
       customTickers: [ 'GOOG', 'MSFT' ],
       bannedTickers: [ 'AAL', 'SFIX' ],
     })
