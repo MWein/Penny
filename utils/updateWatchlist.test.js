@@ -16,6 +16,16 @@ describe('updateWatchlist', () => {
     watchlistUtil.replaceWatchlist = jest.fn()
   })
 
+  it('Logs an error if the scraper returned nothing', async () => {
+    scraperUtil.scrapeTickers.mockReturnValue([])
+    settingsUtil.getSetting.mockReturnValue([]) // both custom and banned tickers
+    await updateWatchlist()
+    expect(logUtil.log).toHaveBeenCalledWith({
+      type: 'error',
+      message: 'Ticker scraper may have failed'
+    })
+  })
+
   it('Does nothing if the scraper doesnt return any tickers', async () => {
     scraperUtil.scrapeTickers.mockReturnValue([])
     settingsUtil.getSetting.mockReturnValue([]) // both custom and banned tickers
