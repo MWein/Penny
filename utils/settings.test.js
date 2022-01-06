@@ -15,19 +15,19 @@ describe('getSetting', () => {
     settingSchema.findOne.mockImplementation(() => {
       throw new Error('Damn')
     })
-    const result = await getSetting('buyToCloseAmount')
-    expect(result).toEqual(defaultSettings.buyToCloseAmount)
+    const result = await getSetting('reserve')
+    expect(result).toEqual(defaultSettings.reserve)
   })
 
   it('Returns a default setting if Mongo doesnt have it', async () => {
     settingSchema.findOne.mockReturnValue(null)
-    const result = await getSetting('buyToCloseAmount')
-    expect(result).toEqual(defaultSettings.buyToCloseAmount)
+    const result = await getSetting('reserve')
+    expect(result).toEqual(defaultSettings.reserve)
   })
 
   it('Returns setting from mongo', async () => {
-    settingSchema.findOne.mockReturnValue({ key: 'buyToCloseAmount', value: 20 })
-    const result = await getSetting('buyToCloseAmount')
+    settingSchema.findOne.mockReturnValue({ key: 'reserve', value: 20 })
+    const result = await getSetting('reserve')
     expect(result).toEqual(20)
   })
 })
@@ -84,10 +84,6 @@ describe('getSettings', () => {
         value: 20,
       },
       {
-        key: 'buyToCloseAmount',
-        value: 80,
-      },
-      {
         key: 'profitTarget',
         value: 0.70
       },
@@ -111,7 +107,6 @@ describe('getSettings', () => {
       maxAllocation: 40000,
       maxPositions: 6,
       reserve: 20,
-      buyToCloseAmount: 80,
       profitTarget: 0.70,
       customTickers: [ 'GOOG', 'MSFT' ],
       bannedTickers: [ 'AAL', 'SFIX' ],
