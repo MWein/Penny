@@ -1,6 +1,7 @@
 const position = require('../tradier/getPositions')
 const order = require('../tradier/getOrders')
 const sendOrders = require('../tradier/sendOrders')
+const settings = require('../utils/settings')
 const logUtil = require('../utils/log')
 
 const {
@@ -24,7 +25,7 @@ describe('_getOldOptionsPositions', () => {
     jest.useFakeTimers().setSystemTime(new Date('2021-10-12').getTime())
     const positions = [
       generatePositionObject('AAPL', -1, 'call', 207.01),
-      generatePositionObject('AMZN', 2, 'put', 1870.70),
+      generatePositionObject('AMZN', -2, 'put', 1870.71),
       generatePositionObject('CAH', 203, 'stock', 50.41),
     ]
     const orders = []
@@ -32,11 +33,13 @@ describe('_getOldOptionsPositions', () => {
     expect(results).toEqual([
       {
         symbol: 'AAPL1234C3214',
-        quantity: 1
+        quantity: 1,
+        costBasisPerPosition: 207.01,
       },
       {
         symbol: 'AMZN1234P3214',
-        quantity: 2
+        quantity: 2,
+        costBasisPerPosition: 935.36
       },
     ])
   })
@@ -53,7 +56,8 @@ describe('_getOldOptionsPositions', () => {
     expect(results).toEqual([
       {
         symbol: 'AMZN1234C3214',
-        quantity: 2
+        quantity: 2,
+        costBasisPerPosition: 935.35
       }
     ])
   })
@@ -73,11 +77,13 @@ describe('_getOldOptionsPositions', () => {
     expect(results).toEqual([
       {
         symbol: 'AMZN1234C3214',
-        quantity: 2
+        quantity: 2,
+        costBasisPerPosition: 935.35,
       },
       {
         symbol: 'CAH1234C3214',
-        quantity: 3
+        quantity: 3,
+        costBasisPerPosition: 16.80,
       },
     ])
   })
@@ -97,15 +103,18 @@ describe('_getOldOptionsPositions', () => {
     expect(results).toEqual([
       {
         symbol: 'AAPL1234C3214',
-        quantity: 3
+        quantity: 3,
+        costBasisPerPosition: 51.75
       },
       {
         symbol: 'AMZN1234C3214',
-        quantity: 2
+        quantity: 2,
+        costBasisPerPosition: 935.35
       },
       {
         symbol: 'CAH1234C3214',
-        quantity: 3
+        quantity: 3,
+        costBasisPerPosition: 16.80
       },
     ])
   })
@@ -118,6 +127,7 @@ describe('gtcOrders', () => {
     order.getOrders = jest.fn()
     sendOrders.buyToClose = jest.fn()
     logUtil.log = jest.fn()
+    settings.getSetting = jest.fn()
   })
 
   it('If there are no positions, do nothing', async () => {
@@ -136,11 +146,13 @@ describe('gtcOrders', () => {
       generatePositionObject('CAH', 3, 'call', 50.41, '2021-10-09T17:05:44.674Z'),
     ])
     order.getOrders.mockReturnValue([])
+    settings.getSetting.mockReturnValue(0.75)
     await createGTCOrders()
     expect(position.getPositions).toHaveBeenCalled()
     expect(order.getOrders).toHaveBeenCalled()
+    expect(settings.getSetting).toHaveBeenCalledWith('profitTarget')
     expect(sendOrders.buyToClose).toHaveBeenCalledTimes(2)
-    expect(sendOrders.buyToClose).toHaveBeenCalledWith('AMZN', 'AMZN1234C3214', 2)
-    expect(sendOrders.buyToClose).toHaveBeenCalledWith('CAH', 'CAH1234C3214', 3)
+    expect(sendOrders.buyToClose).toHaveBeenCalledWith('AMZN', 'AMZN1234C3214', 2, 2.34)
+    expect(sendOrders.buyToClose).toHaveBeenCalledWith('CAH', 'CAH1234C3214', 3, 0.04)
   })
 })

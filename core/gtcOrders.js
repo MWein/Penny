@@ -1,6 +1,7 @@
 const position = require('../tradier/getPositions')
 const order = require('../tradier/getOrders')
 const sendOrders = require('../tradier/sendOrders')
+const settings = require('../utils/settings')
 const logUtil = require('../utils/log')
 const {
   isOption,
@@ -19,10 +20,12 @@ const _getOldOptionsPositions = (positions, orders) => {
       .reduce((acc, ord) => acc + ord.quantity, 0)
 
     const uncoveredPositions = Math.abs(pos.quantity) - numGtcPositions
+    const costBasisPerPosition = Number((Math.abs(pos.cost_basis) / Math.abs(pos.quantity)).toFixed(2))
 
     return {
       symbol: pos.symbol,
-      quantity: uncoveredPositions
+      quantity: uncoveredPositions,
+      costBasisPerPosition
     }
   }).filter(x => x.quantity > 0)
 
@@ -39,11 +42,15 @@ const createGTCOrders = async () => {
   const allOrders = await order.getOrders()
   const oldOptionsPositions = _getOldOptionsPositions(allPositions, allOrders)
 
+  const profitTarget = await settings.getSetting('profitTarget')
+  const buyToClosePerc = 1 - profitTarget
+
   // For-loop so we don't send every one of them at once, not that there will be that many
   for (let x = 0; x < oldOptionsPositions.length; x++) {
     const oldOption = oldOptionsPositions[x]
     const symbol = getUnderlying(oldOption.symbol)
-    await sendOrders.buyToClose(symbol, oldOption.symbol, oldOption.quantity)
+    const buyToCloseAmount = Number(((oldOption.costBasisPerPosition * buyToClosePerc) / 100).toFixed(2))
+    await sendOrders.buyToClose(symbol, oldOption.symbol, oldOption.quantity, buyToCloseAmount)
   }
 }
 
