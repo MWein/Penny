@@ -24,8 +24,8 @@ const _getPutsExpiringToday = async () => {
     }
   })
 
-  // TODO filter for puts expiring today
-  const putsExpiringToday = putPositionsWithExpirations
+  const today = new Date().toISOString().split('T')[0]
+  const putsExpiringToday = putPositionsWithExpirations.filter(put => put.expiration === today)
 
   return putsExpiringToday
 }
@@ -44,6 +44,7 @@ const _closeExistingBTCOrders = async symbols => {
 }
 
 
+
 const closeExpiringPuts = async () => {
   const putsExpiringToday = await _getPutsExpiringToday()
   const profitablePuts = _filterForPutsAtProfit(putsExpiringToday)
@@ -53,6 +54,7 @@ const closeExpiringPuts = async () => {
   }
 
   const profitableSymbols = profitablePuts.map(x => x.symbol)
+
   await _closeExistingBTCOrders(profitableSymbols)
 
   for (let x = 0; x < profitablePuts.length; x++) {
