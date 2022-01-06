@@ -10,25 +10,41 @@ const logUtil = require('../utils/log')
 const _getPutsExpiringToday = async () => {
   const positions = await positionsUtil.getPositions()
   const putPositions = positionsUtil.filterForPutPositions(positions)
+
+  if (putPositions.length === 0) {
+    return []
+  }
+
   const symbols = putPositions.map(x => x.symbol)
   const quotes = await quotesUtil.getQuotes(symbols)
-  const prices = await pricesUtil.getPrices(symbols)
 
   const putPositionsWithExpirations = putPositions.map(pos => {
     const expiration = quotes.find(quote => quote.symbol === pos.symbol)?.expiration_date || 'none'
-    const price = prices.find(quote => quote.symbol === pos.symbol)?.price || -1
-
     return {
       ...pos,
       expiration,
-      price: price
     }
   })
 
   const today = new Date().toISOString().split('T')[0]
   const putsExpiringToday = putPositionsWithExpirations.filter(put => put.expiration === today)
 
-  return putsExpiringToday
+  if (putsExpiringToday.length === 0) {
+    return []
+  }
+
+  const expiringSymbols = putsExpiringToday.map(x => x.symbol)
+  const prices = await pricesUtil.getPrices(expiringSymbols)
+
+  const positionsExpiringTodayWithPrices = putsExpiringToday.map(pos => {
+    const price = prices.find(quote => quote.symbol === pos.symbol)?.price || -1
+    return {
+      ...pos,
+      price
+    }
+  })
+
+  return positionsExpiringTodayWithPrices
 }
 
 
