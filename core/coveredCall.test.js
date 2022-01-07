@@ -5,9 +5,11 @@ const sendOrders = require('../tradier/sendOrders')
 const settings = require('../utils/settings')
 const market = require('../tradier/market')
 const logUtil = require('../utils/log')
+const costBasisUtil = require('../utils/determineCostBasis')
 const {
   _generatePermittedPositionsArray,
   _determineCoverableTickers,
+  _correctCostPerShare,
   sellCoveredCalls,
 } = require('./coveredCall')
 
@@ -216,6 +218,37 @@ describe('_determineCoverableTickers', () => {
 })
 
 
+describe('_correctCostPerShare', () => {
+  beforeEach(() => {
+    costBasisUtil.determineCostBasisPerShare = jest.fn()
+  })
+
+  it('If the costPerShare is not 0, returns the original position object', async () => {
+    const mockPosition = {
+      symbol: 'AAPL',
+      costPerShare: 20,
+    }
+    const newPosition = await _correctCostPerShare(mockPosition)
+    expect(newPosition).toEqual(mockPosition)
+    expect(costBasisUtil.determineCostBasisPerShare).not.toHaveBeenCalled()
+  })
+
+  it('If the costPerShare is 0, calls costBasisUtil function', async () => {
+    costBasisUtil.determineCostBasisPerShare.mockReturnValue(35)
+    const mockPosition = {
+      symbol: 'AAPL',
+      costPerShare: 0,
+    }
+    const newPosition = await _correctCostPerShare(mockPosition)
+    expect(newPosition).toEqual({
+      symbol: 'AAPL',
+      costPerShare: 35,
+    })
+    expect(costBasisUtil.determineCostBasisPerShare).toHaveBeenCalledWith('AAPL')
+  })
+})
+
+
 describe('sellCoveredCalls', () => {
   beforeEach(() => {
     bestOption.selectBestOption = jest.fn()
@@ -225,6 +258,7 @@ describe('sellCoveredCalls', () => {
     settings.getSetting = jest.fn().mockReturnValue(true) // Return true for callsEnabled setting
     market.isMarketOpen = jest.fn().mockReturnValue(true)
     logUtil.log = jest.fn()
+    costBasisUtil.determineCostBasisPerShare = jest.fn()
   })
 
   it('Does not run if callsEnabled setting is false', async () => {
