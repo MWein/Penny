@@ -6,6 +6,7 @@ const settings = require('../utils/settings')
 const market = require('../tradier/market')
 const { getUnderlying } = require('../utils/determineOptionType')
 const logUtil = require('../utils/log')
+const costBasisUtil = require('../utils/determineCostBasis')
 
 
 // Note: This function assumes that positions were split between stocks and options properly
@@ -48,6 +49,18 @@ const _determineCoverableTickers = async () => {
 }
 
 
+const _correctCostPerShare = async position => {
+  if (position.costPerShare === 0) {
+    const costPerShare = await costBasisUtil.determineCostBasisPerShare(position.symbol)
+    return {
+      ...position,
+      costPerShare
+    }
+  }
+  return position
+}
+
+
 const sellCoveredCalls = async () => {
   const callsEnabled = await settings.getSetting('callsEnabled')
   if (!callsEnabled) {
@@ -68,10 +81,15 @@ const sellCoveredCalls = async () => {
 
   // In a for-loop so each request isn't sent up all at once
   for (let x = 0; x < coverableTickers.length; x++) {
-    const currentTicker = coverableTickers[x]
-    const best = await bestOption.selectBestOption(currentTicker.symbol, 'call', currentTicker.costPerShare)
+    const currentPosition = coverableTickers[x]
+
+    // Get cost basis for anything with a $0 as costPerShare to compensate for that stupid bug
+    // Tradier shows cost basis of $0 for anything that was aquired via assignment
+    const correctedPosition = await _correctCostPerShare(currentPosition)
+
+    const best = await bestOption.selectBestOption(correctedPosition.symbol, 'call', correctedPosition.costPerShare)
     if (best) {
-      await sendOrders.sellToOpen(currentTicker.symbol, best.symbol, currentTicker.quantity)
+      await sendOrders.sellToOpen(correctedPosition.symbol, best.symbol, correctedPosition.quantity)
     }
   }
 
@@ -81,5 +99,6 @@ const sellCoveredCalls = async () => {
 module.exports = {
   _generatePermittedPositionsArray,
   _determineCoverableTickers,
+  _correctCostPerShare,
   sellCoveredCalls,
 }
