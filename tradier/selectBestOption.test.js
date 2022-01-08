@@ -1,24 +1,47 @@
 const {
-  _selectOptionWithBestWeeklyRate,
+  _selectOptionWithBestWeeklyPerc,
   selectBestOption,
 } = require('./selectBestOption')
 const selectBest = require('./selectBestOptionForDay')
 
 
-describe('_selectOptionWithBestWeeklyRate', () => {
+describe('_selectOptionWithBestWeeklyPerc', () => {
   it('Returns null if given an empty array', () => {
-    const bestOption = _selectOptionWithBestWeeklyRate([])
+    const bestOption = _selectOptionWithBestWeeklyPerc([])
     expect(bestOption).toEqual(null)
   })
 
-  it('Selects the option with the highest weekly rate', () => {
+  it('Selects the options with the highest perc return, but only in the first 2 weeks if its below 3%', () => {
     const chain = [
-      { weeklyRate: 75 },
-      { weeklyRate: 55 },
-      { weeklyRate: 25 },
+      { weeksOut: 1, weeklyPercReturn: 1 },
+      { weeksOut: 2, weeklyPercReturn: 1.1 },
+      { weeksOut: 3, weeklyPercReturn: 2 },
+      { weeksOut: 4, weeklyPercReturn: 2.5 },
     ]
-    const bestOption = _selectOptionWithBestWeeklyRate(chain)
-    expect(bestOption).toEqual({ weeklyRate: 75 })
+    const bestOption = _selectOptionWithBestWeeklyPerc(chain)
+    expect(bestOption).toEqual({ weeksOut: 2, weeklyPercReturn: 1.1 })
+  })
+
+  it('Selects the options with the highest perc return, after 2 weeks if above 3%', () => {
+    const chain = [
+      { weeksOut: 1, weeklyPercReturn: 1 },
+      { weeksOut: 2, weeklyPercReturn: 1.1 },
+      { weeksOut: 3, weeklyPercReturn: 2 },
+      { weeksOut: 4, weeklyPercReturn: 3 },
+    ]
+    const bestOption = _selectOptionWithBestWeeklyPerc(chain)
+    expect(bestOption).toEqual({ weeksOut: 4, weeklyPercReturn: 3 })
+  })
+
+  it('Returns null if none of the options have a weekly perc rate of 1% or better', () => {
+    const chain = [
+      { weeksOut: 1, weeklyPercReturn: 0.1 },
+      { weeksOut: 2, weeklyPercReturn: 0.11 },
+      { weeksOut: 3, weeklyPercReturn: 0.2 },
+      { weeksOut: 4, weeklyPercReturn: 0.9 },
+    ]
+    const bestOption = _selectOptionWithBestWeeklyPerc(chain)
+    expect(bestOption).toEqual(null)
   })
 })
 
@@ -74,17 +97,21 @@ describe('selectBestOption', () => {
   it('Returns the option with the highest weekly rate. First one', async () => {
     selectBest.selectBestStrikeForDay.mockReturnValueOnce({
       symbol: 'AAPL1234',
-      premium: 85, // Weekly rate = 85
+      strike: 42,
+      premium: 85, // Weekly rate = 85, weekly perc = 2%
     })
     selectBest.selectBestStrikeForDay.mockReturnValueOnce({
       symbol: 'AAPL4321',
-      premium: 85, // Weekly rate = 42.5
+      strike: 42,
+      premium: 85, // Weekly rate = 42.5, weekly perc = 1%
     })
     const bestOption = await selectBestOption('AAPL', 'call', 30, 2)
     expect(bestOption).toEqual({
       symbol: 'AAPL1234',
+      strike: 42,
       premium: 85,
       weeklyRate: 85,
+      weeklyPercReturn: 2.024,
       weeksOut: 1,
     })
   })
@@ -92,17 +119,21 @@ describe('selectBestOption', () => {
   it('Returns the option with the highest weekly rate. Second one', async () => {
     selectBest.selectBestStrikeForDay.mockReturnValueOnce({
       symbol: 'AAPL1234',
-      premium: 85, // Weekly rate = 85
+      strike: 42,
+      premium: 85, // Weekly rate = 85, weekly perc = 2.023%
     })
     selectBest.selectBestStrikeForDay.mockReturnValueOnce({
       symbol: 'AAPL4321',
-      premium: 172, // Weekly rate = 86
+      strike: 42,
+      premium: 172, // Weekly rate = 86, weekly perc = 2.048%
     })
     const bestOption = await selectBestOption('AAPL', 'call', 30, 2)
     expect(bestOption).toEqual({
       symbol: 'AAPL4321',
+      strike: 42,
       premium: 172,
       weeklyRate: 86,
+      weeklyPercReturn: 2.048,
       weeksOut: 2
     })
   })
