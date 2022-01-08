@@ -2,6 +2,8 @@ const {
   determineOptionTypeFromSymbol,
   isOption,
   getUnderlying,
+  getExpiration,
+  getStrike,
 } = require('./determineOptionType')
 
 describe('determineOptionTypeFromSymbol', () => {
@@ -65,5 +67,49 @@ describe('getUnderlying', () => {
   })
   it('Extracts TSLA', () => {
     expect(getUnderlying('TSLA211029P00885000')).toEqual('TSLA')
+  })
+})
+
+
+describe('getExpiration', () => {
+  it('Returns null if given non-option symbol', () => {
+    expect(getExpiration('AAPL')).toEqual(null)
+  })
+  it('NVTA211217P00015000', () => {
+    expect(getExpiration('NVTA211217P00015000')).toEqual('2021-12-17')
+  })
+  it('BB211203C00010500', () => {
+    expect(getExpiration('BB211203C00010500')).toEqual('2021-12-03')
+  })
+  it('SFIX220107C00019000', () => {
+    expect(getExpiration('SFIX220107C00019000')).toEqual('2022-01-07')
+  })
+  it('SOFI220107P00015500', () => {
+    expect(getExpiration('SOFI220107P00015500')).toEqual('2022-01-07')
+  })
+  it('TSLA220114C01260000', () => {
+    expect(getExpiration('TSLA220114C01260000')).toEqual('2022-01-14')
+  })
+})
+
+
+describe('getStrike', () => {
+  it('Returns null if given non-option symbol', () => {
+    expect(getStrike('AAPL')).toEqual(null)
+  })
+  it('NVTA211217P00015000', () => {
+    expect(getStrike('NVTA211217P00015000')).toEqual(15)
+  })
+  it('BB211203C00010500', () => {
+    expect(getStrike('BB211203C00010500')).toEqual(10.5)
+  })
+  it('SFIX220107C00019000', () => {
+    expect(getStrike('SFIX220107C00019000')).toEqual(19)
+  })
+  it('SOFI220107P00015500', () => {
+    expect(getStrike('SOFI220107P00015500')).toEqual(15.5)
+  })
+  it('TSLA220114C00550000', () => {
+    expect(getStrike('TSLA220114C01260000')).toEqual(1260)
   })
 })
