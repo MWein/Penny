@@ -7,8 +7,8 @@ const _selectOptionWithBestWeeklyPerc = options => {
     return null
   }
 
-  const best = options.reduce((acc, option) => {
-    if (option.weeksOut <= 2) {
+  const best = options.reduce((acc, option, index) => {
+    if (index <= 1) {
       return option.weeklyPercReturn > acc.weeklyPercReturn ? option : acc
     }
   
@@ -37,6 +37,7 @@ const selectBestOption = async (symbol, type, minStrike = null, maxWeeksOut = 4)
     if (bestOption.symbol) {
       const weeklyRate = (bestOption.premium / week)
       const weeklyPercReturn = Number(((weeklyRate / (bestOption.strike * 100)) * 100).toFixed(3))
+      //console.log(bestOption.symbol, weeklyPercReturn)
       options.push({ ...bestOption, weeklyRate, weeklyPercReturn, weeksOut: week })
     }
     week++
