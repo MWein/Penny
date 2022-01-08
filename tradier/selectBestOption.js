@@ -2,11 +2,6 @@ const nextStrikeDates = require('../utils/nextStrikeDates')
 const selectBest = require('./selectBestOptionForDay')
 
 
-const _selectOptionWithBestWeeklyRate = options => options.length > 0 ? options.reduce((acc, option) =>
-  option.weeklyRate > acc.weeklyRate ? option : acc, options[0]
-) : null
-
-
 const _selectOptionWithBestWeeklyPerc = options => {
   if (options.length === 0) {
     return null
@@ -14,12 +9,12 @@ const _selectOptionWithBestWeeklyPerc = options => {
 
   const best = options.reduce((acc, option) => {
     if (option.weeksOut <= 2) {
-      option.weeklyPercReturn > acc.weeklyPercReturn ? option : acc, options[0]
+      return option.weeklyPercReturn > acc.weeklyPercReturn ? option : acc
     }
   
     // Only consider options more than 2 weeks out if the percent return is 3% or better
-    return option.weeklyPercReturn > acc.weeklyPercReturn && option.weeklyPercReturn >= 3 ? option : acc, options[0]
-  })
+    return option.weeklyPercReturn > acc.weeklyPercReturn && option.weeklyPercReturn >= 3 ? option : acc
+  }, options[0])
 
   return best.weeklyPercReturn >= 1 ? best : null
 }
@@ -52,7 +47,6 @@ const selectBestOption = async (symbol, type, minStrike = null, maxWeeksOut = 4)
 
 
 module.exports = {
-  _selectOptionWithBestWeeklyRate,
   _selectOptionWithBestWeeklyPerc,
   selectBestOption,
 }
