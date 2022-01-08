@@ -1,9 +1,11 @@
 const positionsUtil = require('../tradier/getPositions')
 const pricesUtil = require('../tradier/getPrices')
-const quotesUtil = require('../tradier/getQuotes')
 const ordersUtil = require('../tradier/getOrders')
 const sendOrdersUtil = require('../tradier/sendOrders')
-const { getUnderlying } = require('../utils/determineOptionType')
+const {
+  getUnderlying,
+  getExpiration,
+} = require('../utils/determineOptionType')
 const logUtil = require('../utils/log')
 
 
@@ -15,16 +17,13 @@ const _getPutsExpiringToday = async () => {
     return []
   }
 
-  const symbols = putPositions.map(x => x.symbol)
-  const quotes = await quotesUtil.getQuotes(symbols)
-
   const putPositionsWithExpirations = putPositions.map(pos => {
-    const expiration = quotes.find(quote => quote.symbol === pos.symbol)?.expiration_date || 'none'
+    const expiration = getExpiration(pos.symbol)
     return {
       ...pos,
       expiration,
     }
-  }).filter(x => x.expiration !== 'none')
+  })
 
   const today = new Date().toISOString().split('T')[0]
   const putsExpiringToday = putPositionsWithExpirations.filter(put => put.expiration === today)
