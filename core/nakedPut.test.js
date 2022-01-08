@@ -5,6 +5,7 @@ const nakedPutHelpers = require('./nakedPutCycle')
 const settings = require('../utils/settings')
 const market = require('../tradier/market')
 const logUtil = require('../utils/log')
+const balanceUtil = require('../tradier/getBalances')
 
 const {
   sellNakedPuts,
@@ -25,6 +26,7 @@ describe('sellNakedPuts', () => {
     settings.getSettings = jest.fn().mockReturnValue(defaultSettings)
     market.isMarketOpen = jest.fn().mockReturnValue(true)
     logUtil.log = jest.fn()
+    balanceUtil.getBalances = jest.fn()
   })
 
   it('Does not run if putsEnabled setting is false', async () => {
@@ -62,6 +64,29 @@ describe('sellNakedPuts', () => {
   it('Retreives the best options for each ticker in the watchlist whose current prices are below the max allocation setting; does not call cycle function if all nulls', async () => {
     const mockSettings = { ...defaultSettings, maxAllocation: 2001 }
     settings.getSettings.mockReturnValue(mockSettings)
+    balanceUtil.getBalances.mockReturnValue({ optionBuyingPower: 2001 })
+    watchlistUtil.getWatchlistSymbols.mockReturnValue([ 'AAPL', 'FB', 'BB', 'MSFT', 'SFIX' ])
+    priceUtil.getPrices.mockReturnValue([
+      { symbol: 'AAPL', price: 20 },
+      { symbol: 'FB', price: 150 },
+      { symbol: 'BB', price: 5 },
+      { symbol: 'MSFT', price: 21 },
+      { symbol: 'SFIX', price: 15 },
+    ])
+    bestOption.selectBestOption.mockReturnValue(null)
+    await sellNakedPuts()
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'AAPL', 'FB', 'BB', 'MSFT', 'SFIX' ])
+    expect(bestOption.selectBestOption).toHaveBeenCalledTimes(3)
+    expect(bestOption.selectBestOption).toHaveBeenCalledWith('AAPL', 'put')
+    expect(bestOption.selectBestOption).toHaveBeenCalledWith('BB', 'put')
+    expect(bestOption.selectBestOption).toHaveBeenCalledWith('SFIX', 'put')
+    expect(nakedPutHelpers.sellNakedPutsCycle).not.toHaveBeenCalled()
+  })
+
+  it('Retreives the best options for each ticker in the watchlist whose current prices are below the optionBuyingPower; does not call cycle function if all nulls', async () => {
+    const mockSettings = { ...defaultSettings, maxAllocation: 5000 }
+    settings.getSettings.mockReturnValue(mockSettings)
+    balanceUtil.getBalances.mockReturnValue({ optionBuyingPower: 2001 })
     watchlistUtil.getWatchlistSymbols.mockReturnValue([ 'AAPL', 'FB', 'BB', 'MSFT', 'SFIX' ])
     priceUtil.getPrices.mockReturnValue([
       { symbol: 'AAPL', price: 20 },
@@ -83,6 +108,7 @@ describe('sellNakedPuts', () => {
   it('Retreives the best options for each ticker in the watchlist; does not call cycle function if all above max allocation', async () => {
     const mockSettings = { ...defaultSettings, maxAllocation: 999 }
     settings.getSettings.mockReturnValue(mockSettings)
+    balanceUtil.getBalances.mockReturnValue({ optionBuyingPower: 999 })
     watchlistUtil.getWatchlistSymbols.mockReturnValue([ 'AAPL', 'BB', 'SFIX' ])
     // Setting the prices super low so it calls selectBestOption on each
     priceUtil.getPrices.mockReturnValue([
@@ -103,6 +129,7 @@ describe('sellNakedPuts', () => {
   it('Calls the cycle function at least once with only the options that are below max allocation and are not null; exits cycle function if something other than \'success\' is returned', async () => {
     const mockSettings = { ...defaultSettings, maxAllocation: 1001 }
     settings.getSettings.mockReturnValue(mockSettings)
+    balanceUtil.getBalances.mockReturnValue({ optionBuyingPower: 1001 })
     watchlistUtil.getWatchlistSymbols.mockReturnValue([ 'AAPL', 'WMT' ])
     priceUtil.getPrices.mockReturnValue([
       { symbol: 'AAPL', price: 1 },
@@ -121,6 +148,7 @@ describe('sellNakedPuts', () => {
   it('Calls cycle function again if success returned', async () => {
     const mockSettings = { ...defaultSettings, maxAllocation: 1001 }
     settings.getSettings.mockReturnValue(mockSettings)
+    balanceUtil.getBalances.mockReturnValue({ optionBuyingPower: 1001 })
     watchlistUtil.getWatchlistSymbols.mockReturnValue([ 'AAPL', 'WMT' ])
     priceUtil.getPrices.mockReturnValue([
       { symbol: 'AAPL', price: 1 },

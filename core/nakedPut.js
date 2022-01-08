@@ -5,6 +5,7 @@ const nakedPutHelpers = require('./nakedPutCycle')
 const settingsUtil = require('../utils/settings')
 const market = require('../tradier/market')
 const logUtil = require('../utils/log')
+const balanceUtil = require('../tradier/getBalances')
 
 const sellNakedPuts = async () => {
   const settings = await settingsUtil.getSettings()
@@ -25,9 +26,11 @@ const sellNakedPuts = async () => {
     return
   }
 
+  const balances = await balanceUtil.getBalances()
+  const optionBuyingPower = balances.optionBuyingPower - settings.reserve
   const prices = await priceUtil.getPrices(watchlist)
   const watchlistBelowMaxAllocation = prices
-    .filter(ticker => ticker.price * 100 < settings.maxAllocation)
+    .filter(ticker => ticker.price * 100 < settings.maxAllocation && ticker.price * 100 < optionBuyingPower)
     .map(x => x.symbol)
 
   // for-loop so it doesn't call all at once
