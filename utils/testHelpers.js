@@ -32,7 +32,7 @@ const _generateSymbol = (symbol, type, customExp = null, customStrike = null) =>
 }
 
 
-const generateOrderObject = (symbol, quantity=1, type='stock', side='sell_to_open', status='pending', id=123456) => {
+const generateOrderObject = (symbol, quantity=1, type='stock', side='sell_to_open', status='pending', id=123456, customExp = null, customStrike = null) => {
   const ordClass = type === 'call' || type === 'put' ? 'option' : 'equity'
 
   const orderObj = {
@@ -57,7 +57,7 @@ const generateOrderObject = (symbol, quantity=1, type='stock', side='sell_to_ope
   if (ordClass === 'option') {
     return {
       ...orderObj,
-      option_symbol: _generateSymbol(symbol, type)
+      option_symbol: _generateSymbol(symbol, type, customExp, customStrike)
     }
   }
 
@@ -65,13 +65,13 @@ const generateOrderObject = (symbol, quantity=1, type='stock', side='sell_to_ope
 }
 
 
-const generatePositionObject = (symbol, quantity=1, type='stock', cost_basis=100, date_acquired='2019-01-31T17:05', id=123456) =>
+const generatePositionObject = (symbol, quantity=1, type='stock', cost_basis=100, date_acquired='2019-01-31T17:05', id=123456, customExp = null, customStrike = null) =>
   ({
     cost_basis,
     date_acquired,
     id,
     quantity,
-    symbol: _generateSymbol(symbol, type)
+    symbol: _generateSymbol(symbol, type, customExp, customStrike)
   })
 
 module.exports = {

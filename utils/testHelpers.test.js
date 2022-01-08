@@ -211,6 +211,28 @@ describe('generateOrderObject', () => {
       class: 'equity',
     })
   })
+
+  it('Generates a order object with custom expiration and strike', () => {
+    const order = generateOrderObject('FB', 2, 'call', 'buy_to_close', 'open', 654321, '2021-01-01', 12.5)
+    expect(order).toEqual({
+      id: 654321,
+      type: 'market',
+      symbol: 'FB',
+      side: 'buy_to_close',
+      quantity: 2,
+      status: 'open',
+      duration: 'pre',
+      avg_fill_price: 0.00000000,
+      exec_quantity: 0.00000000,
+      last_fill_price: 0.00000000,
+      last_fill_quantity: 0.00000000,
+      remaining_quantity: 0.00000000,
+      create_date: '2018-06-06T20:16:17.342Z',
+      transaction_date: '2018-06-06T20:16:17.357Z',
+      class: 'option',
+      option_symbol: 'FB210101C00012500'
+    })
+  })
 })
 
 
@@ -296,6 +318,17 @@ describe('generatePositionObject', () => {
     const position = generatePositionObject('TSLA', 4, 'stock', 125.12, '2021-01-01', 654321)
     expect(position).toEqual({
       symbol: 'TSLA',
+      id: 654321,
+      quantity: 4,
+      cost_basis: 125.12,
+      date_acquired: '2021-01-01'
+    })
+  })
+
+  it('Generates a position object custom expiration and strike', () => {
+    const position = generatePositionObject('TSLA', 4, 'call', 125.12, '2021-01-01', 654321, '2022-01-07', 14.5)
+    expect(position).toEqual({
+      symbol: 'TSLA220107C00014500',
       id: 654321,
       quantity: 4,
       cost_basis: 125.12,
