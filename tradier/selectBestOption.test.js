@@ -97,17 +97,21 @@ describe('selectBestOption', () => {
   it('Returns the option with the highest weekly rate. First one', async () => {
     selectBest.selectBestStrikeForDay.mockReturnValueOnce({
       symbol: 'AAPL1234',
-      premium: 85, // Weekly rate = 85
+      strike: 42,
+      premium: 85, // Weekly rate = 85, weekly perc = 2%
     })
     selectBest.selectBestStrikeForDay.mockReturnValueOnce({
       symbol: 'AAPL4321',
-      premium: 85, // Weekly rate = 42.5
+      strike: 42,
+      premium: 85, // Weekly rate = 42.5, weekly perc = 1%
     })
     const bestOption = await selectBestOption('AAPL', 'call', 30, 2)
     expect(bestOption).toEqual({
       symbol: 'AAPL1234',
+      strike: 42,
       premium: 85,
       weeklyRate: 85,
+      weeklyPercReturn: 2.024,
       weeksOut: 1,
     })
   })
@@ -115,17 +119,21 @@ describe('selectBestOption', () => {
   it('Returns the option with the highest weekly rate. Second one', async () => {
     selectBest.selectBestStrikeForDay.mockReturnValueOnce({
       symbol: 'AAPL1234',
-      premium: 85, // Weekly rate = 85
+      strike: 42,
+      premium: 85, // Weekly rate = 85, weekly perc = 2.023%
     })
     selectBest.selectBestStrikeForDay.mockReturnValueOnce({
       symbol: 'AAPL4321',
-      premium: 172, // Weekly rate = 86
+      strike: 42,
+      premium: 172, // Weekly rate = 86, weekly perc = 2.048%
     })
     const bestOption = await selectBestOption('AAPL', 'call', 30, 2)
     expect(bestOption).toEqual({
       symbol: 'AAPL4321',
+      strike: 42,
       premium: 172,
       weeklyRate: 86,
+      weeklyPercReturn: 2.048,
       weeksOut: 2
     })
   })
