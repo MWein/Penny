@@ -1,14 +1,33 @@
 // These functions generate mock orders and position objects for use in automated tests
 
+// TSLA220114C01290000
+// GME210418P00015500
+const _generateSymbol = (symbol, type, customExp = null, customStrike = null) => {
+  const expText = customExp ? customExp.replace(/-/g, '').slice(2) : '1234'
 
-const _generateSymbol = (symbol, type) => {
+  let strikeText = '3214'
+  if (customStrike) {
+    const beforeDecimalDigits = `${customStrike}`.split('.')[0].split('')
+    const afterDecimalDigits = `${customStrike}`.split('.')[1]?.split('') || []
+
+    while (beforeDecimalDigits.length !== 5) {
+      beforeDecimalDigits.unshift('0')
+    }
+
+    while (afterDecimalDigits.length !== 3) {
+      afterDecimalDigits.push('0')
+    }
+
+    strikeText = beforeDecimalDigits.join('') + afterDecimalDigits.join('')
+  }
+
   switch (type) {
   case 'stock':
     return symbol
   case 'call':
-    return `${symbol}1234C3214`
+    return `${symbol}${expText}C${strikeText}`
   case 'put':
-    return `${symbol}1234P3214`
+    return `${symbol}${expText}P${strikeText}`
   }
 }
 
