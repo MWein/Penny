@@ -8,14 +8,15 @@ const uniq = require('lodash/uniq')
 
 const updateWatchlist = async () => {
   try {
-    const tickers = await scraperUtil.scrapeTickers()
+    //const tickers = await scraperUtil.scrapeTickers()
+    const tickers = []
 
-    if (tickers.length === 0) {
-      logUtil.log({
-        type: 'error',
-        message: 'Ticker scraper may have failed'
-      })
-    }
+    // if (tickers.length === 0) {
+    //   logUtil.log({
+    //     type: 'error',
+    //     message: 'Ticker scraper may have failed'
+    //   })
+    // }
 
     const customTickers = await settingsUtil.getSetting('customTickers')
     const bannedTickers = await settingsUtil.getSetting('bannedTickers')
