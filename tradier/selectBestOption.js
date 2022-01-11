@@ -16,7 +16,7 @@ const _selectOptionWithBestWeeklyPerc = options => {
     return option.weeklyPercReturn > acc.weeklyPercReturn && option.weeklyPercReturn >= 3 ? option : acc
   }, options[0])
 
-  return best.weeklyPercReturn >= 1 ? best : null
+  return best
 }
 
 
