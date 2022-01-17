@@ -32,17 +32,6 @@ describe('_selectOptionWithBestWeeklyPerc', () => {
     const bestOption = _selectOptionWithBestWeeklyPerc(chain)
     expect(bestOption).toEqual({ weeksOut: 4, weeklyPercReturn: 3 })
   })
-
-  it('Returns null if none of the options have a weekly perc rate of 1% or better', () => {
-    const chain = [
-      { weeksOut: 1, weeklyPercReturn: 0.1 },
-      { weeksOut: 2, weeklyPercReturn: 0.11 },
-      { weeksOut: 3, weeklyPercReturn: 0.2 },
-      { weeksOut: 4, weeklyPercReturn: 0.9 },
-    ]
-    const bestOption = _selectOptionWithBestWeeklyPerc(chain)
-    expect(bestOption).toEqual(null)
-  })
 })
 
 
