@@ -8,6 +8,7 @@ const {
 } = require('../utils/determineOptionType')
 const logUtil = require('../utils/log')
 const settings = require('../utils/settings')
+const market = require('../tradier/market')
 
 
 const _getPutsExpiringToday = async () => {
@@ -66,6 +67,12 @@ const closeExpiringPuts = async () => {
   const closeExpiringPutsEnabled = await settings.getSetting('closeExpiringPuts')
   if (!closeExpiringPutsEnabled) {
     logUtil.log('Close Expiring Puts Disabled')
+    return
+  }
+
+  const open = await market.isMarketOpen()
+  if (!open) {
+    logUtil.log('Market Closed')
     return
   }
 

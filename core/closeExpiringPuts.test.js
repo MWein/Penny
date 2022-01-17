@@ -4,6 +4,7 @@ const ordersUtil = require('../tradier/getOrders')
 const sendOrdersUtil = require('../tradier/sendOrders')
 const logUtil = require('../utils/log')
 const settings = require('../utils/settings')
+const market = require('../tradier/market')
 
 const {
   _getPutsExpiringToday,
@@ -214,6 +215,7 @@ describe('closeExpiringPuts', () => {
     sendOrdersUtil.buyToCloseMarket = jest.fn()
     logUtil.log = jest.fn()
     settings.getSetting = jest.fn().mockReturnValue(true) // Return true for closeExpiringPuts setting
+    market.isMarketOpen = jest.fn().mockReturnValue(true)
   })
 
 
@@ -222,6 +224,20 @@ describe('closeExpiringPuts', () => {
     await closeExpiringPuts()
     expect(logUtil.log).toHaveBeenCalledTimes(1)
     expect(logUtil.log).toHaveBeenCalledWith('Close Expiring Puts Disabled')
+    expect(positionsUtil.getPositions).not.toHaveBeenCalled()
+    expect(pricesUtil.getPrices).not.toHaveBeenCalled()
+    expect(ordersUtil.getOrders).not.toHaveBeenCalled()
+    expect(sendOrdersUtil.cancelOrders).not.toHaveBeenCalled()
+    expect(sendOrdersUtil.buyToCloseMarket).not.toHaveBeenCalled()
+  })
+
+
+  it('Does nothing if market is closed', async () => {
+    settings.getSetting.mockReturnValue(true)
+    market.isMarketOpen.mockReturnValue(false)
+    await closeExpiringPuts()
+    expect(logUtil.log).toHaveBeenCalledTimes(1)
+    expect(logUtil.log).toHaveBeenCalledWith('Market Closed')
     expect(positionsUtil.getPositions).not.toHaveBeenCalled()
     expect(pricesUtil.getPrices).not.toHaveBeenCalled()
     expect(ordersUtil.getOrders).not.toHaveBeenCalled()
