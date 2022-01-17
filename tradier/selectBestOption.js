@@ -20,8 +20,10 @@ const _selectOptionWithBestWeeklyPerc = options => {
 }
 
 
-
+// TODO Add setting for target strike
 const selectBestOption = async (symbol, type, minStrike = null, maxWeeksOut = 4) => {
+  // TODO Change nextStrikeDates to use Tradier's expiration dates function
+  // Focus on weekly, so maxWeeksOut could probably be removed
   const expirationDates = nextStrikeDates(maxWeeksOut)
 
   // Week is used to calculate the weekly rate

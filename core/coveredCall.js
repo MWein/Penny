@@ -79,9 +79,17 @@ const sellCoveredCalls = async () => {
     logUtil.log('No Covered Call Opportunities')
   }
 
+  // TODO Grab watchlist from DB
+
   // In a for-loop so each request isn't sent up all at once
   for (let x = 0; x < coverableTickers.length; x++) {
     const currentPosition = coverableTickers[x]
+
+    // TODO Get settings for this specific ticker
+
+    // TODO Exit if calls enabled is false
+
+    // TODO Determine minimum strike based on settings, new function
 
     // Get cost basis for anything with a $0 as costPerShare to compensate for that stupid bug
     // Tradier shows cost basis of $0 for anything that was aquired via assignment

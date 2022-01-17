@@ -30,6 +30,7 @@ const _selectOptionClosestTo30 = chain => chain.length > 0 ? chain.reduce((acc, 
 ) : {}
 
 
+// TODO Add parameter for target delta
 const selectBestStrikeForDay = async (symbol, type, expiration, minStrike) => {
   const url = `markets/options/chains?symbol=${symbol}&expiration=${expiration}&greeks=true`
 
