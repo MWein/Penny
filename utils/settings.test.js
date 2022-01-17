@@ -95,6 +95,10 @@ describe('getSettings', () => {
         key: 'maxPositions',
         value: 6,
       },
+      {
+        key: 'priorityList',
+        value: [ 'AAPL', 'MSFT' ],
+      },
     ])
     const result = await getSettings()
     expect(result).toEqual({
@@ -105,6 +109,7 @@ describe('getSettings', () => {
       maxPositions: 6,
       reserve: 20,
       profitTarget: 0.70,
+      priorityList: [ 'AAPL', 'MSFT' ]
     })
   })
 
