@@ -7,6 +7,7 @@ const market = require('../tradier/market')
 const { getUnderlying } = require('../utils/determineOptionType')
 const logUtil = require('../utils/log')
 const costBasisUtil = require('../utils/determineCostBasis')
+const watchlistUtil = require('../utils/watchlist')
 
 
 // Note: This function assumes that positions were split between stocks and options properly
@@ -77,13 +78,20 @@ const sellCoveredCalls = async () => {
   const coverableTickers = await _determineCoverableTickers()
   if (coverableTickers.length === 0) {
     logUtil.log('No Covered Call Opportunities')
+    return
   }
 
-  // TODO Grab watchlist from DB
+  const watchlist = await watchlistUtil.getWatchlist()
 
   // In a for-loop so each request isn't sent up all at once
   for (let x = 0; x < coverableTickers.length; x++) {
     const currentPosition = coverableTickers[x]
+
+    // If no watchlist setting exists, skip
+    const stockSettings = watchlist.find(x => x.symbol === currentPosition.symbol)
+    if (!stockSettings) {
+      continue
+    }
 
     // TODO Get settings for this specific ticker
 

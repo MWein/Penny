@@ -6,6 +6,7 @@ const settings = require('../utils/settings')
 const market = require('../tradier/market')
 const logUtil = require('../utils/log')
 const costBasisUtil = require('../utils/determineCostBasis')
+const watchlistUtil = require('../utils/watchlist')
 const {
   _generatePermittedPositionsArray,
   _determineCoverableTickers,
@@ -259,6 +260,7 @@ describe('sellCoveredCalls', () => {
     market.isMarketOpen = jest.fn().mockReturnValue(true)
     logUtil.log = jest.fn()
     costBasisUtil.determineCostBasisPerShare = jest.fn()
+    watchlistUtil.getWatchlist = jest.fn()
   })
 
   it('Does not run if callsEnabled setting is false', async () => {
@@ -270,6 +272,7 @@ describe('sellCoveredCalls', () => {
     expect(positions.getPositions).not.toHaveBeenCalled()
     expect(orders.getOrders).not.toHaveBeenCalled()
     expect(sendOrders.sellToOpen).not.toHaveBeenCalled()
+    expect(watchlistUtil.getWatchlist).not.toHaveBeenCalled()
   })
 
   it('Does not run if market is closed', async () => {
@@ -281,6 +284,7 @@ describe('sellCoveredCalls', () => {
     expect(positions.getPositions).not.toHaveBeenCalled()
     expect(orders.getOrders).not.toHaveBeenCalled()
     expect(sendOrders.sellToOpen).not.toHaveBeenCalled()
+    expect(watchlistUtil.getWatchlist).not.toHaveBeenCalled()
   })
 
   it('If the opportunity array is empty, do nothing', async () => {
@@ -290,6 +294,7 @@ describe('sellCoveredCalls', () => {
     ])
     await sellCoveredCalls()
     expect(logUtil.log).toHaveBeenCalledWith('No Covered Call Opportunities')
+    expect(watchlistUtil.getWatchlist).not.toHaveBeenCalled()
     expect(bestOption.selectBestOption).not.toHaveBeenCalled()
   })
 
@@ -299,7 +304,24 @@ describe('sellCoveredCalls', () => {
       generatePositionObject('TSLA', 200, 'stock', 1870.70),
     ])
     orders.getOrders.mockReturnValue([])
-
+    watchlistUtil.getWatchlist.mockReturnValue([
+      {
+        symbol: 'AAPL',
+        call: {
+          enabled: true,
+          targetDelta: 0.30,
+          minStrikeMode: 'auto',
+        }
+      },
+      {
+        symbol: 'TSLA',
+        call: {
+          enabled: true,
+          targetDelta: 0.30,
+          minStrikeMode: 'auto',
+        }
+      }
+    ])
     bestOption.selectBestOption.mockReturnValueOnce({
       symbol: 'AAPL1234C3214'
     })
@@ -319,11 +341,53 @@ describe('sellCoveredCalls', () => {
     expect(logUtil.log).toHaveBeenCalledWith('Done')
   })
 
+
+  it('If a stock is not in the watchlist, skip it', async () => {
+    positions.getPositions.mockReturnValue([
+      generatePositionObject('AAPL', 100, 'stock', 207.01),
+      generatePositionObject('TSLA', 200, 'stock', 1870.70),
+    ])
+    orders.getOrders.mockReturnValue([])
+    watchlistUtil.getWatchlist.mockReturnValue([
+      {
+        symbol: 'AAPL',
+        call: {
+          enabled: true,
+          targetDelta: 0.30,
+          minStrikeMode: 'auto',
+        }
+      },
+    ])
+    bestOption.selectBestOption.mockReturnValueOnce({
+      symbol: 'AAPL1234C3214'
+    })
+
+    await sellCoveredCalls()
+    expect(bestOption.selectBestOption).toHaveBeenCalledTimes(1)
+    expect(bestOption.selectBestOption).toHaveBeenCalledWith('AAPL', 'call', 2.07)
+
+    expect(sendOrders.sellToOpen).toHaveBeenCalledTimes(1)
+    expect(sendOrders.sellToOpen).toHaveBeenCalledWith('AAPL', 'AAPL1234C3214', 1)
+
+    expect(logUtil.log).toHaveBeenCalledWith('Done')
+  })
+
+
   it('Skips a sell order if bestOption returns a null', async () => {
     positions.getPositions.mockReturnValue([
       generatePositionObject('AAPL', 100, 'stock', 207.01),
     ])
     orders.getOrders.mockReturnValue([])
+    watchlistUtil.getWatchlist.mockReturnValue([
+      {
+        symbol: 'AAPL',
+        call: {
+          enabled: true,
+          targetDelta: 0.30,
+          minStrikeMode: 'auto',
+        }
+      },
+    ])
 
     bestOption.selectBestOption.mockReturnValueOnce(null)
 
