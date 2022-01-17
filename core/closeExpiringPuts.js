@@ -7,6 +7,7 @@ const {
   getExpiration,
 } = require('../utils/determineOptionType')
 const logUtil = require('../utils/log')
+const settings = require('../utils/settings')
 
 
 const _getPutsExpiringToday = async () => {
@@ -62,6 +63,12 @@ const _closeExistingBTCOrders = async symbols => {
 
 
 const closeExpiringPuts = async () => {
+  const closeExpiringPutsEnabled = await settings.getSetting('closeExpiringPuts')
+  if (!closeExpiringPutsEnabled) {
+    logUtil.log('Close Expiring Puts Disabled')
+    return
+  }
+
   logUtil.log('Closing profitable puts expiring today')
   const putsExpiringToday = await _getPutsExpiringToday()
   const profitablePuts = _filterForPutsAtProfit(putsExpiringToday)
