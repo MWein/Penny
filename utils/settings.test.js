@@ -76,6 +76,10 @@ describe('getSettings', () => {
         value: false,
       },
       {
+        key: 'closeExpiringPuts',
+        value: true,
+      },
+      {
         key: 'maxAllocation',
         value: 40000,
       },
@@ -96,10 +100,17 @@ describe('getSettings', () => {
     expect(result).toEqual({
       callsEnabled: false,
       putsEnabled: false,
+      closeExpiringPuts: true,
       maxAllocation: 40000,
       maxPositions: 6,
       reserve: 20,
       profitTarget: 0.70,
     })
+  })
+
+  it('Returns defaults if Mongo is empty', async () => {
+    settingSchema.find.mockReturnValue([])
+    const result = await getSettings()
+    expect(result).toEqual(defaultSettings)
   })
 })

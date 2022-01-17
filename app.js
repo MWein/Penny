@@ -8,7 +8,6 @@ const { sellNakedPuts } = require('./core/nakedPut')
 const { createGTCOrders } = require('./core/gtcOrders')
 const { log, clearOldLogs } = require('./utils/log')
 const { savePositionsCron } = require('./utils/savePositionsCron')
-//const { updateWatchlist } = require('./utils/updateWatchlist')
 const { closeExpiringPuts } = require('./core/closeExpiringPuts')
 
 
@@ -60,19 +59,6 @@ const launchCrons = async () => {
   new CronJob('0 10 16 * * *', () => {
     housekeeping()
   }, null, true, 'America/New_York')
-
-
-  // Run every night at 10pm NY time in nonprod for testing
-  // Every Sunday 8pm NY time in prod
-  // const updateWatchlistCron = () => {
-  //   log('Updating Watchlist')
-  //   updateWatchlist()
-  // }
-  // if (process.env.BASEPATH.includes('sandbox')) {
-  //   new CronJob('0 30 21 * * 1-5', updateWatchlistCron, null, true, 'America/New_York')
-  // } else {
-  //   new CronJob('0 0 20 * * 0', updateWatchlistCron, null, true, 'America/New_York')
-  // }
 }
 
 
