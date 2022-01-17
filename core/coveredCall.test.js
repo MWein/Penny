@@ -373,6 +373,45 @@ describe('sellCoveredCalls', () => {
   })
 
 
+  it('If calls are not enabled for a particular stock, skip it', async () => {
+    positions.getPositions.mockReturnValue([
+      generatePositionObject('AAPL', 100, 'stock', 207.01),
+      generatePositionObject('TSLA', 200, 'stock', 1870.70),
+    ])
+    orders.getOrders.mockReturnValue([])
+    watchlistUtil.getWatchlist.mockReturnValue([
+      {
+        symbol: 'AAPL',
+        call: {
+          enabled: false,
+          targetDelta: 0.30,
+          minStrikeMode: 'auto',
+        }
+      },
+      {
+        symbol: 'TSLA',
+        call: {
+          enabled: true,
+          targetDelta: 0.30,
+          minStrikeMode: 'auto',
+        }
+      }
+    ])
+    bestOption.selectBestOption.mockReturnValueOnce({
+      symbol: 'TSLA1234C3214'
+    })
+
+    await sellCoveredCalls()
+    expect(bestOption.selectBestOption).toHaveBeenCalledTimes(1)
+    expect(bestOption.selectBestOption).toHaveBeenCalledWith('TSLA', 'call', 9.35)
+
+    expect(sendOrders.sellToOpen).toHaveBeenCalledTimes(1)
+    expect(sendOrders.sellToOpen).toHaveBeenCalledWith('TSLA', 'TSLA1234C3214', 2)
+
+    expect(logUtil.log).toHaveBeenCalledWith('Done')
+  })
+
+
   it('Skips a sell order if bestOption returns a null', async () => {
     positions.getPositions.mockReturnValue([
       generatePositionObject('AAPL', 100, 'stock', 207.01),

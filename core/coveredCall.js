@@ -87,15 +87,16 @@ const sellCoveredCalls = async () => {
   for (let x = 0; x < coverableTickers.length; x++) {
     const currentPosition = coverableTickers[x]
 
-    // If no watchlist setting exists, skip
+    // Skip if not in watchlist
     const stockSettings = watchlist.find(x => x.symbol === currentPosition.symbol)
     if (!stockSettings) {
       continue
     }
 
-    // TODO Get settings for this specific ticker
-
-    // TODO Exit if calls enabled is false
+    // Skip if calls disabled
+    if (!stockSettings.call.enabled) {
+      continue
+    }
 
     // TODO Determine minimum strike based on settings, new function
 
