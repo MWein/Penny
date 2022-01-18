@@ -349,7 +349,7 @@ describe('sellCoveredCalls', () => {
         symbol: 'AAPL',
         call: {
           enabled: true,
-          targetDelta: 0.30,
+          targetDelta: 0.50,
           minStrikeMode: 'auto',
         }
       },
@@ -357,7 +357,7 @@ describe('sellCoveredCalls', () => {
         symbol: 'TSLA',
         call: {
           enabled: true,
-          targetDelta: 0.30,
+          targetDelta: 0.70,
           minStrikeMode: 'auto',
         }
       }
@@ -371,8 +371,8 @@ describe('sellCoveredCalls', () => {
 
     await sellCoveredCalls()
     expect(bestOption.selectBestOption).toHaveBeenCalledTimes(2)
-    expect(bestOption.selectBestOption).toHaveBeenCalledWith('AAPL', 'call', 2.07)
-    expect(bestOption.selectBestOption).toHaveBeenCalledWith('TSLA', 'call', 9.35)
+    expect(bestOption.selectBestOption).toHaveBeenCalledWith('AAPL', 'call', 2.07, 0.5)
+    expect(bestOption.selectBestOption).toHaveBeenCalledWith('TSLA', 'call', 9.35, 0.7)
 
     expect(sendOrders.sellToOpen).toHaveBeenCalledTimes(2)
     expect(sendOrders.sellToOpen).toHaveBeenCalledWith('AAPL', 'AAPL1234C3214', 1)
@@ -404,7 +404,7 @@ describe('sellCoveredCalls', () => {
 
     await sellCoveredCalls()
     expect(bestOption.selectBestOption).toHaveBeenCalledTimes(1)
-    expect(bestOption.selectBestOption).toHaveBeenCalledWith('AAPL', 'call', 2.07)
+    expect(bestOption.selectBestOption).toHaveBeenCalledWith('AAPL', 'call', 2.07, 0.3)
 
     expect(sendOrders.sellToOpen).toHaveBeenCalledTimes(1)
     expect(sendOrders.sellToOpen).toHaveBeenCalledWith('AAPL', 'AAPL1234C3214', 1)
@@ -432,7 +432,7 @@ describe('sellCoveredCalls', () => {
         symbol: 'TSLA',
         call: {
           enabled: true,
-          targetDelta: 0.30,
+          targetDelta: 0.15,
           minStrikeMode: 'auto',
         }
       }
@@ -443,7 +443,7 @@ describe('sellCoveredCalls', () => {
 
     await sellCoveredCalls()
     expect(bestOption.selectBestOption).toHaveBeenCalledTimes(1)
-    expect(bestOption.selectBestOption).toHaveBeenCalledWith('TSLA', 'call', 9.35)
+    expect(bestOption.selectBestOption).toHaveBeenCalledWith('TSLA', 'call', 9.35, 0.15)
 
     expect(sendOrders.sellToOpen).toHaveBeenCalledTimes(1)
     expect(sendOrders.sellToOpen).toHaveBeenCalledWith('TSLA', 'TSLA1234C3214', 2)
@@ -462,7 +462,7 @@ describe('sellCoveredCalls', () => {
         symbol: 'AAPL',
         call: {
           enabled: true,
-          targetDelta: 0.30,
+          targetDelta: 0.35,
           minStrikeMode: 'auto',
         }
       },
@@ -472,7 +472,7 @@ describe('sellCoveredCalls', () => {
 
     await sellCoveredCalls()
     expect(bestOption.selectBestOption).toHaveBeenCalledTimes(1)
-    expect(bestOption.selectBestOption).toHaveBeenCalledWith('AAPL', 'call', 2.07)
+    expect(bestOption.selectBestOption).toHaveBeenCalledWith('AAPL', 'call', 2.07, 0.35)
     expect(sendOrders.sellToOpen).not.toHaveBeenCalled()
 
     expect(logUtil.log).toHaveBeenCalledWith('Done')

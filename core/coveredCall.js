@@ -103,7 +103,7 @@ const sellCoveredCalls = async () => {
 
     const minimumStrike = await _getMinimumStrike(currentPosition, stockSettings)
 
-    const best = await bestOption.selectBestOption(currentPosition.symbol, 'call', minimumStrike)
+    const best = await bestOption.selectBestOption(currentPosition.symbol, 'call', minimumStrike, stockSettings.call.targetDelta)
     if (best) {
       await sendOrders.sellToOpen(currentPosition.symbol, best.symbol, currentPosition.quantity)
     }
