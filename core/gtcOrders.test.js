@@ -3,6 +3,7 @@ const order = require('../tradier/getOrders')
 const sendOrders = require('../tradier/sendOrders')
 const settings = require('../utils/settings')
 const logUtil = require('../utils/log')
+const market = require('../tradier/market')
 
 const {
   _getOldOptionsPositions,
@@ -128,6 +129,15 @@ describe('gtcOrders', () => {
     sendOrders.buyToClose = jest.fn()
     logUtil.log = jest.fn()
     settings.getSetting = jest.fn()
+    market.isMarketOpen = jest.fn().mockReturnValue(true)
+  })
+
+  it('If market is closed, do nothing', async () => {
+    market.isMarketOpen.mockReturnValue(false)
+    await createGTCOrders()
+    expect(logUtil.log).toHaveBeenCalledWith('Market Closed')
+    expect(position.getPositions).not.toHaveBeenCalled()
+    expect(order.getOrders).not.toHaveBeenCalled()
   })
 
   it('If there are no positions, do nothing', async () => {
