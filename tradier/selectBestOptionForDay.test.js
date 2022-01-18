@@ -2,7 +2,7 @@ const network = require('../utils/network')
 const {
   _formatChain,
   _filterChain,
-  _selectOptionClosestTo30,
+  _selectOptionClosestToTarget,
   selectBestStrikeForDay,
 } = require('./selectBestOptionForDay')
 
@@ -22,14 +22,14 @@ describe('_formatChain', () => {
           option_type: 'call'
         }
       ]
-      const formattedCallChain = _formatChain(chain, 'call')
+      const formattedCallChain = _formatChain(chain, 'call', 0.3)
       expect(formattedCallChain).toEqual([
         {
           symbol: 'AAPL',
           premium: 107,
           strike: 1000,
           delta: 0.4,
-          distanceTo30: 0.10000000000000003,
+          distanceToDeltaTarget: 0.10000000000000003,
           expiration: 'tomorrow',
         }
       ])
@@ -58,14 +58,14 @@ describe('_formatChain', () => {
           option_type: 'put'
         }
       ]
-      const formattedCallChain = _formatChain(chain, 'call')
+      const formattedCallChain = _formatChain(chain, 'call', 0.3)
       expect(formattedCallChain).toEqual([
         {
           symbol: 'AAPL',
           premium: 107,
           strike: 1000,
           delta: 0.4,
-          distanceTo30: 0.10000000000000003,
+          distanceToDeltaTarget: 0.10000000000000003,
           expiration: 'tomorrow',
         }
       ])
@@ -86,14 +86,14 @@ describe('_formatChain', () => {
           option_type: 'put'
         }
       ]
-      const formattedCallChain = _formatChain(chain, 'put')
+      const formattedCallChain = _formatChain(chain, 'put', 0.3)
       expect(formattedCallChain).toEqual([
         {
           symbol: 'AAPL',
           premium: 107,
           strike: 1000,
           delta: 0.4,
-          distanceTo30: 0.10000000000000003,
+          distanceToDeltaTarget: 0.10000000000000003,
           expiration: 'tomorrow',
         }
       ])
@@ -122,14 +122,14 @@ describe('_formatChain', () => {
           option_type: 'put'
         }
       ]
-      const formattedCallChain = _formatChain(chain, 'put')
+      const formattedCallChain = _formatChain(chain, 'put', 0.3)
       expect(formattedCallChain).toEqual([
         {
           symbol: 'TSLA',
           premium: 109,
           strike: 80000,
           delta: 0.1,
-          distanceTo30: 0.19999999999999998,
+          distanceToDeltaTarget: 0.19999999999999998,
           expiration: 'day after tomorrow',
         }
       ])
@@ -244,21 +244,21 @@ describe('_filterChain', () => {
 
 
 
-describe('_selectOptionClosestTo30', () => {
+describe('_selectOptionClosestToTarget', () => {
   it('Returns empty object if given an empty array', () => {
-    const bestOption = _selectOptionClosestTo30([])
+    const bestOption = _selectOptionClosestToTarget([])
     expect(bestOption).toEqual({})
   })
 
-  it('Selects the delta closest to 0.30', () => {
+  it('Selects the delta closest the given target', () => {
     const chain = [
-      { distanceTo30: 0.2 },
-      { distanceTo30: 0.1 },
-      { distanceTo30: 0.7 },
-      { distanceTo30: 0.8 },
+      { distanceToDeltaTarget: 0.2 },
+      { distanceToDeltaTarget: 0.1 },
+      { distanceToDeltaTarget: 0.7 },
+      { distanceToDeltaTarget: 0.8 },
     ]
-    const bestOption = _selectOptionClosestTo30(chain)
-    expect(bestOption).toEqual({ distanceTo30: 0.1 })
+    const bestOption = _selectOptionClosestToTarget(chain)
+    expect(bestOption).toEqual({ distanceToDeltaTarget: 0.1 })
   })
 })
 
@@ -329,7 +329,7 @@ describe('selectBestStrikeForDay', () => {
       strike: 61,
       premium: 107,
       delta: 0.3,
-      distanceTo30: 0,
+      distanceToDeltaTarget: 0,
       expiration: 'tomorrow'
     })
   })
@@ -377,7 +377,7 @@ describe('selectBestStrikeForDay', () => {
       strike: 62,
       premium: 107,
       delta: 0.31,
-      distanceTo30: 0.010000000000000009,
+      distanceToDeltaTarget: 0.010000000000000009,
       expiration: 'tomorrow'
     })
   })
