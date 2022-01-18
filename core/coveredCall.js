@@ -50,16 +50,19 @@ const _determineCoverableTickers = async () => {
 }
 
 
-const _correctCostPerShare = async position => {
-  if (position.costPerShare === 0) {
-    const costPerShare = await costBasisUtil.determineCostBasisPerShare(position.symbol)
-    return {
-      ...position,
-      costPerShare
+const _getMinimumStrike = async (position, stockSettings) => {
+  if (stockSettings.call.minStrikeMode === 'auto') {
+    if (position.costPerShare === 0) {
+      const costPerShare = await costBasisUtil.determineCostBasisPerShare(stockSettings.symbol)
+      return costPerShare
     }
+    return position.costPerShare
+  } else if (stockSettings.call.minStrikeMode === 'custom') {
+    return stockSettings.call.minStrike
   }
-  return position
+  return null
 }
+
 
 
 const sellCoveredCalls = async () => {
@@ -98,15 +101,11 @@ const sellCoveredCalls = async () => {
       continue
     }
 
-    // TODO Determine minimum strike based on settings, new function
+    const minimumStrike = await _getMinimumStrike(currentPosition, stockSettings)
 
-    // Get cost basis for anything with a $0 as costPerShare to compensate for that stupid bug
-    // Tradier shows cost basis of $0 for anything that was aquired via assignment
-    const correctedPosition = await _correctCostPerShare(currentPosition)
-
-    const best = await bestOption.selectBestOption(correctedPosition.symbol, 'call', correctedPosition.costPerShare)
+    const best = await bestOption.selectBestOption(currentPosition.symbol, 'call', minimumStrike)
     if (best) {
-      await sendOrders.sellToOpen(correctedPosition.symbol, best.symbol, correctedPosition.quantity)
+      await sendOrders.sellToOpen(currentPosition.symbol, best.symbol, currentPosition.quantity)
     }
   }
 
@@ -116,6 +115,6 @@ const sellCoveredCalls = async () => {
 module.exports = {
   _generatePermittedPositionsArray,
   _determineCoverableTickers,
-  _correctCostPerShare,
+  _getMinimumStrike,
   sellCoveredCalls,
 }

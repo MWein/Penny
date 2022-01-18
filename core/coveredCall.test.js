@@ -10,7 +10,7 @@ const watchlistUtil = require('../utils/watchlist')
 const {
   _generatePermittedPositionsArray,
   _determineCoverableTickers,
-  _correctCostPerShare,
+  _getMinimumStrike,
   sellCoveredCalls,
 } = require('./coveredCall')
 
@@ -219,32 +219,72 @@ describe('_determineCoverableTickers', () => {
 })
 
 
-describe('_correctCostPerShare', () => {
+describe('_getMinimumStrike', () => {
   beforeEach(() => {
     costBasisUtil.determineCostBasisPerShare = jest.fn()
   })
 
-  it('If the costPerShare is not 0, returns the original position object', async () => {
-    const mockPosition = {
+  it('Returns null if minStrikeMode is off', async () => {
+    const stockSettings = {
       symbol: 'AAPL',
-      costPerShare: 20,
+      call: {
+        minStrikeMode: 'off',
+        minStrike: 34,
+      }
     }
-    const newPosition = await _correctCostPerShare(mockPosition)
-    expect(newPosition).toEqual(mockPosition)
+    const strike = await _getMinimumStrike(null, stockSettings)
+    expect(strike).toEqual(null)
     expect(costBasisUtil.determineCostBasisPerShare).not.toHaveBeenCalled()
   })
 
-  it('If the costPerShare is 0, calls costBasisUtil function', async () => {
-    costBasisUtil.determineCostBasisPerShare.mockReturnValue(35)
-    const mockPosition = {
+  it('Returns the custom strike from the settings if minStrikeMode is custom', async () => {
+    const stockSettings = {
       symbol: 'AAPL',
+      call: {
+        minStrikeMode: 'custom',
+        minStrike: 34,
+      }
+    }
+    const strike = await _getMinimumStrike(null, stockSettings)
+    expect(strike).toEqual(34)
+    expect(costBasisUtil.determineCostBasisPerShare).not.toHaveBeenCalled()
+  })
+
+  it('Returns last costPerShare if minStrikeMode is auto, and costPerShare is available', async () => {
+    const position = {
+      symbol: 'AAPL',
+      quantity: 5,
+      costPerShare: 50,
+    }
+    costBasisUtil.determineCostBasisPerShare.mockReturnValue(78)
+    const stockSettings = {
+      symbol: 'AAPL',
+      call: {
+        minStrikeMode: 'auto',
+        minStrike: 34,
+      }
+    }
+    const strike = await _getMinimumStrike(position, stockSettings)
+    expect(strike).toEqual(50)
+    expect(costBasisUtil.determineCostBasisPerShare).not.toHaveBeenCalled()
+  })
+
+  it('Returns last costPerShare if minStrikeMode is auto, and costPerShare is 0 because Tradier sucks', async () => {
+    const position = {
+      symbol: 'AAPL',
+      quantity: 5,
       costPerShare: 0,
     }
-    const newPosition = await _correctCostPerShare(mockPosition)
-    expect(newPosition).toEqual({
+    costBasisUtil.determineCostBasisPerShare.mockReturnValue(78)
+    const stockSettings = {
       symbol: 'AAPL',
-      costPerShare: 35,
-    })
+      call: {
+        minStrikeMode: 'auto',
+        minStrike: 34,
+      }
+    }
+    const strike = await _getMinimumStrike(position, stockSettings)
+    expect(strike).toEqual(78)
     expect(costBasisUtil.determineCostBasisPerShare).toHaveBeenCalledWith('AAPL')
   })
 })
