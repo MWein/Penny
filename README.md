@@ -181,7 +181,7 @@ I used [Alpaca](https://alpaca.markets/) for past versions of Penny but they don
 
 ### Robinhood
 
-My membership in r/WallStreetBets requires me to consider Robinhood, but they don't offer a dedicated API. They probably use CORS so that only their own clients (UI clients) can use it. But even if they don't, I wouldn't want to use it because I'd have to reverse engineer their API. They have no documentation and all tradeable assets have a weird ID attached to them that means I couldn't hope to find for the options chain. They are off the table. Probably for the better. They even offer paper trading.
+My membership in r/WallStreetBets requires me to consider Robinhood, but they don't offer a dedicated API. They probably use CORS so that only their own clients (UI clients) can use it. But even if they don't, I wouldn't want to use it because I'd have to reverse engineer their API. They have no documentation and all tradeable assets have a weird ID attached to them that means I couldn't hope to find for the options chain. They are off the table. Probably for the better. They don't even offer paper trading.
 
 ### Interactive Brokers
 
