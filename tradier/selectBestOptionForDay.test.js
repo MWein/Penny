@@ -188,8 +188,14 @@ describe('_filterChain', () => {
       {
         symbol: 'AAPL',
         premium: 107,
-        strike: 63,
+        strike: 62,
         delta: 0.5,
+      },
+      {
+        symbol: 'AAPL',
+        premium: 107,
+        strike: 63,
+        delta: 0.51,
       },
     ]
     const filteredChain = _filterChain(chain)
@@ -199,6 +205,12 @@ describe('_filterChain', () => {
         premium: 107,
         strike: 62,
         delta: 0.3,
+      },
+      {
+        symbol: 'AAPL',
+        premium: 107,
+        strike: 62,
+        delta: 0.5,
       },
     ])
   })
