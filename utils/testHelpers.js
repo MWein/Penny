@@ -2,7 +2,7 @@
 
 // TSLA220114C01290000
 // GME210418P00015500
-const _generateSymbol = (symbol, type, customExp = null, customStrike = null) => {
+const generateSymbol = (symbol, type, customExp = null, customStrike = null) => {
   const expText = customExp ? customExp.replace(/-/g, '').slice(2) : '1234'
 
   let strikeText = '3214'
@@ -57,7 +57,7 @@ const generateOrderObject = (symbol, quantity=1, type='stock', side='sell_to_ope
   if (ordClass === 'option') {
     return {
       ...orderObj,
-      option_symbol: _generateSymbol(symbol, type, customExp, customStrike)
+      option_symbol: generateSymbol(symbol, type, customExp, customStrike)
     }
   }
 
@@ -71,11 +71,11 @@ const generatePositionObject = (symbol, quantity=1, type='stock', cost_basis=100
     date_acquired,
     id,
     quantity,
-    symbol: _generateSymbol(symbol, type, customExp, customStrike)
+    symbol: generateSymbol(symbol, type, customExp, customStrike)
   })
 
 module.exports = {
-  _generateSymbol,
+  generateSymbol,
   generateOrderObject,
   generatePositionObject,
 }
