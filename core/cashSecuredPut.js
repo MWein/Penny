@@ -6,14 +6,7 @@ const priceUtil = require('../tradier/getPrices')
 const balanceUtil = require('../tradier/getBalances')
 
 
-const _getWatchlistPriorityUnion = async () => {
-  const [
-    priorityList,
-    watchlist,
-  ] = await Promise.all([
-    settings.getSetting('priorityList'),
-    watchlistUtil.getWatchlist(),
-  ])
+const _getWatchlistPriorityUnion = (priorityList, watchlist) => {
   return priorityList.map(symbol => {
     const watchlistItem = watchlist.find(x => x.symbol === symbol)
     return !watchlistItem ?
@@ -38,7 +31,9 @@ const _preStartFilterWatchlistItems = async (watchlistItems, buyingPower) => {
 
 
 const sellCashSecuredPuts = async () => {
-  const putsEnabled = await settings.getSetting('putsEnabled')
+  const settings = await settings.getSettings()
+
+  const putsEnabled = settings.putsEnabled
   if (!putsEnabled) {
     logUtil.log('Puts Disabled')
     return
@@ -50,7 +45,9 @@ const sellCashSecuredPuts = async () => {
     return
   }
 
-  const puts = await _getWatchlistPriorityUnion()
+
+  const watchlist = await watchlistUtil.getWatchlist()
+  const puts = await _getWatchlistPriorityUnion(settings.priorityList, watchlist)
 
   if (!puts.length) {
     logUtil.log('Priority List or Watchlist is Empty')
@@ -58,6 +55,9 @@ const sellCashSecuredPuts = async () => {
   }
 
   // Get balance. Calc balance - reserve
+  const balances = await balanceUtil.getBalances()
+  const optionBuyingPower = balances.optionBuyingPower - settings.reserve
+
 
   // Pre filter
 
