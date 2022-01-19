@@ -1,5 +1,4 @@
 const network = require('../utils/network')
-const logUtil = require('../utils/log')
 
 
 const getWatchlistSymbols = async () => {
