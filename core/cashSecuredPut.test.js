@@ -4,6 +4,9 @@ const market = require('../tradier/market')
 const watchlistUtil = require('../utils/watchlist')
 const priceUtil = require('../tradier/getPrices')
 const balanceUtil = require('../tradier/getBalances')
+const bestOptionUtil = require('../tradier/selectBestOption')
+const positionUtil = require('../tradier/getPositions')
+const orderUtil = require('../tradier/getOrders')
 
 const {
   _getWatchlistPriorityUnion,
@@ -97,6 +100,8 @@ describe('_getWatchlistPriorityUnion', () => {
 describe('_preStartFilterWatchlistItems', () => {
   beforeEach(() => {
     priceUtil.getPrices = jest.fn()
+    positionUtil.getPositions = jest.fn()
+    orderUtil.getOrders = jest.fn()
   })
 
   it('On the first pass, filters out maxPositions of 0. getPrices is called with empty array but that function doesnt make the network call if empty.', async () => {
@@ -169,6 +174,29 @@ describe('_preStartFilterWatchlistItems', () => {
 })
 
 
+
+describe('_selectBestOptionsFromWatchlist', () => {
+  beforeEach(() => {
+    bestOptionUtil.selectBestOption = jest.fn()
+  })
+
+  it('Failing test to remind me this is here', async () => {
+    expect(1).toEqual(0)
+  })
+})
+
+
+
+describe('_selectOptionsToSell', () => {
+  it('Only sells the one it can actually afford', () => {
+
+  })
+
+
+})
+
+
+
 describe('sellCashSecuredPuts', () => {
   beforeEach(() => {
     settings.getSettings = jest.fn().mockReturnValue({
@@ -180,6 +208,9 @@ describe('sellCashSecuredPuts', () => {
     watchlistUtil.getWatchlist = jest.fn()
     priceUtil.getPrices = jest.fn()
     balanceUtil.getBalances = jest.fn()
+    bestOptionUtil.selectBestOption = jest.fn()
+    positionUtil.getPositions = jest.fn()
+    orderUtil.getOrders = jest.fn()
   })
 
   it('Does nothing putsEnabled in settings is false', async () => {
@@ -225,6 +256,10 @@ describe('sellCashSecuredPuts', () => {
     expect(priceUtil.getPrices).not.toHaveBeenCalled()
     expect(balanceUtil.getBalances).not.toHaveBeenCalled()
     // TODO Add all other imports here
+  })
+
+  it('Exits if pre-filter doesnt pass any stocks', async () => {
+
   })
 
 

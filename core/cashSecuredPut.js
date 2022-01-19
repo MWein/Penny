@@ -4,6 +4,13 @@ const market = require('../tradier/market')
 const watchlistUtil = require('../utils/watchlist')
 const priceUtil = require('../tradier/getPrices')
 const balanceUtil = require('../tradier/getBalances')
+const bestOptionUtil = require('../tradier/selectBestOption')
+const positionUtil = require('../tradier/getPositions')
+const orderUtil = require('../tradier/getOrders')
+const {
+  isOption,
+  getUnderlying,
+} = require('../utils/determineOptionType')
 
 
 const _getWatchlistPriorityUnion = (priorityList, watchlist) =>
@@ -15,16 +22,71 @@ const _getWatchlistPriorityUnion = (priorityList, watchlist) =>
   }).filter(x => x) // Filter out the nulls
 
 
+
 const _preStartFilterWatchlistItems = async (watchlistItems, buyingPower) => {
   const firstPass = watchlistItems.filter(x => x.put.enabled && x.maxPositions > 0)
   if (firstPass.length === 0) {
     return []
   }
-  const prices = await priceUtil.getPrices(firstPass.map(x => x.symbol))
-  return firstPass.filter(watchlistItem => {
+
+  const [
+    prices,
+    positions,
+    orders,
+  ] = await Promise.all([
+    priceUtil.getPrices(firstPass.map(x => x.symbol)),
+    positionUtil.getPositions(),
+    orderUtil.getOrders(),
+  ])
+
+  const stockPositions = positionUtil.filterForOptionableStockPositions(positions)
+  const putPositions = positionUtil.filterForPutPositions(positions)
+  const relevantPositions = [ ...stockPositions, ...putPositions ]
+  const putOptionOrders = orderUtil.filterForCashSecuredPutOrders(orders)
+
+  const watchlistItemsWithUpdatedPositions = firstPass.map(watchlistItem => {
+    const numPositions = relevantPositions.filter(pos => getUnderlying(pos.symbol) === getUnderlying(watchlistItem.symbol))
+      .reduce((acc, x) => acc + (isOption(x.symbol) ? Math.abs(x.quantity) : Math.floor(x.quantity / 100)), 0)
+
+    const numOrders = putOptionOrders.filter(ord => ord.symbol === getUnderlying(watchlistItem.symbol))
+      .reduce((acc, x) => acc + Math.abs(x.quantity), 0)
+
+    const existing = numPositions + numOrders
+
+    return {
+      ...watchlistItem,
+      maxPositions: watchlistItem.maxPositions - existing
+    }
+  }).filter(x => x.maxPositions > 0)
+
+  return watchlistItemsWithUpdatedPositions.filter(watchlistItem => {
     const price = prices.find(x => x.symbol === watchlistItem.symbol)?.price
     return price ? buyingPower > price * 100 : true // If price is not returned, just pass the filter anyway
   })
+}
+
+
+const _selectBestOptionsFromWatchlist = async watchlist => {
+  const optionsToConsider = []
+  for (let x = 0; x < watchlist.length; x++) {
+    const currentItem = watchlist[x]
+    const maxPositions = currentItem.maxPositions
+    const targetDelta = currentItem.put.targetDelta
+    const bestOption = await bestOptionUtil.selectBestOption(currentItem.symbol, 'put', null, targetDelta)
+    console.log(bestOption)
+    optionsToConsider.push({
+      optionSymbol: bestOption.symbol,
+      maxPositions,
+    })
+  }
+  return optionsToConsider
+}
+
+
+
+const _selectOptionsToSell = (optionBuyingPower, optionsToConsider) => {
+
+  return []
 }
 
 
@@ -46,9 +108,9 @@ const sellCashSecuredPuts = async () => {
 
 
   const watchlist = await watchlistUtil.getWatchlist()
-  const puts = await _getWatchlistPriorityUnion(settings.priorityList, watchlist)
+  const watchlistPriorityUnion = await _getWatchlistPriorityUnion(settings.priorityList, watchlist)
 
-  if (!puts.length) {
+  if (!watchlistPriorityUnion.length) {
     logUtil.log('Priority List or Watchlist is Empty')
     return
   }
@@ -57,17 +119,29 @@ const sellCashSecuredPuts = async () => {
   const balances = await balanceUtil.getBalances()
   const optionBuyingPower = balances.optionBuyingPower - settings.reserve
 
+  // Get current positions and orders
+
 
   // Pre filter
+  // TODO Also filter based on pre-existing positions
+  const preFilteredWatchlistItems = await _preStartFilterWatchlistItems(watchlistPriorityUnion, optionBuyingPower)
+  if (!preFilteredWatchlistItems.length) {
+    logUtil.log('No stocks passed the pre-filter')
+    return
+  }
 
 
-  // Loop through and select the best option for each pursuent to the rules
+  const optionsToConsider = await _selectBestOptionsFromWatchlist(preFilteredWatchlistItems)
+
+  console.log(optionsToConsider)
+
+  // const optionsToSell = _selectOptionsToSell(optionBuyingPower, optionsToConsider)
 
 
-  // Figure out the allocation that can be made. Return an array.
+  // console.log(optionsToSell)
 
 
-  // Loop through that array and make the orders
+  // Make the orders
 
 }
 
@@ -75,5 +149,7 @@ const sellCashSecuredPuts = async () => {
 module.exports = {
   _getWatchlistPriorityUnion,
   _preStartFilterWatchlistItems,
+  _selectBestOptionsFromWatchlist,
+  _selectOptionsToSell,
   sellCashSecuredPuts,
 }
