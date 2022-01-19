@@ -21,13 +21,17 @@ describe('getWatchlist', () => {
   it('Returns watchlist from DB', async () => {
     watchlistSchema.find.mockReturnValue([
       {
-        symbol: 'stonk',
-        some: 'settings',
+        _doc: {
+          symbol: 'stonk',
+          some: 'settings',
+        },
       },
       {
-        symbol: 'AAPL',
-        some: 'moresettings',
-      },
+        _doc: {
+          symbol: 'AAPL',
+          some: 'moresettings',
+        },
+      }
     ])
     const watchlist = await getWatchlist()
     expect(watchlist).toEqual([
