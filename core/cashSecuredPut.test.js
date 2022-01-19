@@ -295,23 +295,10 @@ describe('_selectBestOptionsFromWatchlist', () => {
     bestOptionUtil.selectBestOption.mockImplementation(symbol => ({
       symbol: `${symbol}1234P3214`
     }))
-    const watchlist = [
-      {
-        symbol: 'AAPL',
-        maxPositions: 5,
-        put: {
-          targetDelta: 0.314
-        }
-      },
-      {
-        symbol: 'MSFT',
-        maxPositions: 4,
-        put: {
-          targetDelta: 0.512
-        }
-      },
-    ]
-    const bestOptions = await _selectBestOptionsFromWatchlist(watchlist)
+    const bestOptions = await _selectBestOptionsFromWatchlist([
+      _mockPutWatchlistItem('AAPL', 5, true, 0.314),
+      _mockPutWatchlistItem('MSFT', 4, true, 0.512),
+    ])
     expect(bestOptions).toEqual([
       {
         optionSymbol: 'AAPL1234P3214',
@@ -332,23 +319,10 @@ describe('_selectBestOptionsFromWatchlist', () => {
     bestOptionUtil.selectBestOption.mockReturnValueOnce({
       symbol: 'MSFT1234P3214'
     })
-    const watchlist = [
-      {
-        symbol: 'AAPL',
-        maxPositions: 5,
-        put: {
-          targetDelta: 0.314
-        }
-      },
-      {
-        symbol: 'MSFT',
-        maxPositions: 4,
-        put: {
-          targetDelta: 0.512
-        }
-      },
-    ]
-    const bestOptions = await _selectBestOptionsFromWatchlist(watchlist)
+    const bestOptions = await _selectBestOptionsFromWatchlist([
+      _mockPutWatchlistItem('AAPL', 5, true, 0.314),
+      _mockPutWatchlistItem('MSFT', 4, true, 0.512),
+    ])
     expect(bestOptions).toEqual([
       {
         optionSymbol: 'MSFT1234P3214',
