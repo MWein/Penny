@@ -7,6 +7,7 @@ const balanceUtil = require('../tradier/getBalances')
 const bestOptionUtil = require('../tradier/selectBestOption')
 const positionUtil = require('../tradier/getPositions')
 const orderUtil = require('../tradier/getOrders')
+const sendOrdersUtil = require('../tradier/sendOrders')
 
 const {
   _getWatchlistPriorityUnion,
@@ -491,6 +492,7 @@ describe('sellCashSecuredPuts', () => {
     bestOptionUtil.selectBestOption = jest.fn()
     positionUtil.getPositions = jest.fn()
     orderUtil.getOrders = jest.fn()
+    sendOrdersUtil.sellToOpen = jest.fn()
   })
 
   it('Does nothing putsEnabled in settings is false', async () => {

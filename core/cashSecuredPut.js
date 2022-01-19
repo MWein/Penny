@@ -7,6 +7,7 @@ const balanceUtil = require('../tradier/getBalances')
 const bestOptionUtil = require('../tradier/selectBestOption')
 const positionUtil = require('../tradier/getPositions')
 const orderUtil = require('../tradier/getOrders')
+const sendOrdersUtil = require('../tradier/sendOrders')
 const {
   isOption,
   getUnderlying,
@@ -172,12 +173,13 @@ const sellCashSecuredPuts = async () => {
   // Get balance. Calc balance - reserve
   const balances = await balanceUtil.getBalances()
   const optionBuyingPower = balances.optionBuyingPower - settings.reserve
-
-  // Get current positions and orders
+  if (optionBuyingPower <= 0) {
+    logUtil.log('No buying power')
+    return
+  }
 
 
   // Pre filter
-  // TODO Also filter based on pre-existing positions
   const preFilteredWatchlistItems = await _preStartFilterWatchlistItems(watchlistPriorityUnion, optionBuyingPower)
   if (!preFilteredWatchlistItems.length) {
     logUtil.log('No stocks passed the pre-filter')
@@ -186,17 +188,16 @@ const sellCashSecuredPuts = async () => {
 
 
   const optionsToConsider = await _selectBestOptionsFromWatchlist(preFilteredWatchlistItems)
-
-  console.log(optionsToConsider)
-
-  // const optionsToSell = _selectOptionsToSell(optionBuyingPower, optionsToConsider)
+  const optionsToSell = _selectOptionsToSell(optionBuyingPower, optionsToConsider)
 
 
-  // console.log(optionsToSell)
-
-
-  // Make the orders
-
+  // For-loop so they dont send all at once
+  for (let x = 0; x < optionsToSell.length; x++) {
+    const optionData = optionsToSell[x]
+    const symbol = getUnderlying(optionData.optionSymbol)
+    console.log('Selling', symbol)
+    await sendOrdersUtil.sellToOpen(symbol, optionData.optionSymbol, optionData.positions)
+  }
 }
 
 
