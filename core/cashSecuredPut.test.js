@@ -12,10 +12,12 @@ const {
   _getWatchlistPriorityUnion,
   _preStartFilterWatchlistItems,
   _selectBestOptionsFromWatchlist,
+  _selectOptionsToSell,
   sellCashSecuredPuts,
 } = require('./cashSecuredPut')
 
 const {
+  generateSymbol,
   generateOrderObject,
   generatePositionObject,
 } = require('../utils/testHelpers')
@@ -290,7 +292,6 @@ describe('_selectBestOptionsFromWatchlist', () => {
     bestOptionUtil.selectBestOption = jest.fn()
   })
 
-
   it('Goes through each watchlist item and calls the best option function', async () => {
     bestOptionUtil.selectBestOption.mockImplementation(symbol => ({
       symbol: `${symbol}1234P3214`
@@ -333,18 +334,114 @@ describe('_selectBestOptionsFromWatchlist', () => {
     expect(bestOptionUtil.selectBestOption).toHaveBeenCalledWith('AAPL', 'put', null, 0.314)
     expect(bestOptionUtil.selectBestOption).toHaveBeenCalledWith('MSFT', 'put', null, 0.512)
   })
-
 })
 
 
 
-// describe('_selectOptionsToSell', () => {
-//   it('Only sells the one it can actually afford', () => {
+describe('_selectOptionsToSell', () => {
+  it('Sells only one of the one symbol it can actually afford', () => {
+    const options = [
+      {
+        optionSymbol: generateSymbol('TSLA', 'put', '2022-01-01', 25),
+        maxPositions: 2,
+      },
+      {
+        optionSymbol: generateSymbol('AAPL', 'put', '2022-01-01', 150),
+        maxPositions: 5,
+      },
+      {
+        optionSymbol: generateSymbol('ABNB', 'put', '2022-01-01', 220),
+        maxPositions: 1,
+      },
+    ]
+    expect(_selectOptionsToSell(3000, options)).toEqual([
+      {
+        optionSymbol: generateSymbol('TSLA', 'put', '2022-01-01', 25),
+        positions: 1,
+      },
+    ])
+  })
 
-//   })
+
+  it('Sells two of the one symbol it can actually afford', () => {
+    const options = [
+      {
+        optionSymbol: generateSymbol('TSLA', 'put', '2022-01-01', 25),
+        maxPositions: 2,
+      },
+      {
+        optionSymbol: generateSymbol('AAPL', 'put', '2022-01-01', 150),
+        maxPositions: 5,
+      },
+      {
+        optionSymbol: generateSymbol('ABNB', 'put', '2022-01-01', 220),
+        maxPositions: 1,
+      },
+    ]
+    expect(_selectOptionsToSell(5000, options)).toEqual([
+      {
+        optionSymbol: generateSymbol('TSLA', 'put', '2022-01-01', 25),
+        positions: 2,
+      },
+    ])
+  })
 
 
-// })
+  it('Sells one of each symbol that it can afford', () => {
+    const options = [
+      {
+        optionSymbol: generateSymbol('TSLA', 'put', '2022-01-01', 25),
+        maxPositions: 2,
+      },
+      {
+        optionSymbol: generateSymbol('AAPL', 'put', '2022-01-01', 25),
+        maxPositions: 5,
+      },
+      {
+        optionSymbol: generateSymbol('ABNB', 'put', '2022-01-01', 220),
+        maxPositions: 1,
+      },
+    ]
+    expect(_selectOptionsToSell(5000, options)).toEqual([
+      {
+        optionSymbol: generateSymbol('TSLA', 'put', '2022-01-01', 25),
+        positions: 1,
+      },
+      {
+        optionSymbol: generateSymbol('AAPL', 'put', '2022-01-01', 25),
+        positions: 1,
+      },
+    ])
+  })
+
+
+  it('Sells 2 of the first, and 1 of the second', () => {
+    const options = [
+      {
+        optionSymbol: generateSymbol('TSLA', 'put', '2022-01-01', 25),
+        maxPositions: 2,
+      },
+      {
+        optionSymbol: generateSymbol('AAPL', 'put', '2022-01-01', 25),
+        maxPositions: 5,
+      },
+      {
+        optionSymbol: generateSymbol('ABNB', 'put', '2022-01-01', 220),
+        maxPositions: 1,
+      },
+    ]
+    expect(_selectOptionsToSell(7500, options)).toEqual([
+      {
+        optionSymbol: generateSymbol('TSLA', 'put', '2022-01-01', 25),
+        positions: 2,
+      },
+      {
+        optionSymbol: generateSymbol('AAPL', 'put', '2022-01-01', 25),
+        positions: 1,
+      },
+    ])
+  })
+})
 
 
 

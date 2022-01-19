@@ -10,6 +10,7 @@ const orderUtil = require('../tradier/getOrders')
 const {
   isOption,
   getUnderlying,
+  getStrike,
 } = require('../utils/determineOptionType')
 
 
@@ -84,9 +85,69 @@ const _selectBestOptionsFromWatchlist = async watchlist => {
 
 
 
-const _selectOptionsToSell = (optionBuyingPower, optionsToConsider) => {
+const _selectOptionsToSell = (buyingPower, optionsToConsider) => {
+  const { maxPositionsMap, symbols, symbolsToSellMap } = optionsToConsider.reduce((acc, opt) => ({
+    maxPositionsMap: {
+      ...acc.maxPositionsMap,
+      [opt.optionSymbol]: opt.maxPositions
+    },
+    symbolsToSellMap: {
+      ...acc.symbolsToSellMap,
+      [opt.optionSymbol]: 0
+    },
+    symbols: [ ...acc.symbols, opt.optionSymbol ]
+  }), {
+    maxPositionsMap: {},
+    symbolsToSellMap: {},
+    symbols: [],
+  })
 
-  return []
+
+  const _helper = (maxPositionsMap, symbols, index, skipCount, buyingPower, symbolsToSellMap) => {
+    const symbol = symbols[index]
+    const positionsAvailable = maxPositionsMap[symbol]
+
+    if (positionsAvailable === 0) {
+      // Check if the skip counter is greater than the number of unique symbols
+      if (skipCount >= symbols.length) {
+        return symbolsToSellMap
+      }
+      const newIndex = index === symbols.length - 1 ? 0 : index + 1
+      return _helper(maxPositionsMap, symbols, newIndex, skipCount + 1, buyingPower, symbolsToSellMap)
+    }
+
+    const collateral = getStrike(symbol) * 100
+    if (buyingPower < collateral) {
+      // Check if the skip counter is greater than the number of unique symbols
+      if (skipCount >= symbols.length) {
+        return symbolsToSellMap
+      }
+      const newIndex = index === symbols.length - 1 ? 0 : index + 1
+      return _helper(maxPositionsMap, symbols, newIndex, skipCount + 1, buyingPower, symbolsToSellMap)
+    }
+
+    // Add option to buy list!
+    const newMaxPositionsMap = {
+      ...maxPositionsMap,
+      [symbol]: maxPositionsMap[symbol] - 1
+    }
+    const newSymbolsToSellMap = {
+      ...symbolsToSellMap,
+      [symbol]: symbolsToSellMap[symbol] + 1
+    }
+    return _helper(newMaxPositionsMap, symbols, index + 1, 0, buyingPower - collateral, newSymbolsToSellMap)
+  }
+
+  const mapResult = _helper(maxPositionsMap, symbols, 0, 0, buyingPower, symbolsToSellMap)
+  return Object.keys(mapResult).reduce((acc, key) => {
+    return mapResult[key] === 0 ? acc : [
+      ...acc,
+      {
+        optionSymbol: key,
+        positions: mapResult[key]
+      }
+    ]
+  }, [])
 }
 
 
