@@ -11,6 +11,7 @@ const orderUtil = require('../tradier/getOrders')
 const {
   _getWatchlistPriorityUnion,
   _preStartFilterWatchlistItems,
+  _selectBestOptionsFromWatchlist,
   sellCashSecuredPuts,
 } = require('./cashSecuredPut')
 
@@ -289,20 +290,87 @@ describe('_selectBestOptionsFromWatchlist', () => {
     bestOptionUtil.selectBestOption = jest.fn()
   })
 
-  it('Failing test to remind me this is here', async () => {
-    expect(1).toEqual(0)
+
+  it('Goes through each watchlist item and calls the best option function', async () => {
+    bestOptionUtil.selectBestOption.mockImplementation(symbol => ({
+      symbol: `${symbol}1234P3214`
+    }))
+    const watchlist = [
+      {
+        symbol: 'AAPL',
+        maxPositions: 5,
+        put: {
+          targetDelta: 0.314
+        }
+      },
+      {
+        symbol: 'MSFT',
+        maxPositions: 4,
+        put: {
+          targetDelta: 0.512
+        }
+      },
+    ]
+    const bestOptions = await _selectBestOptionsFromWatchlist(watchlist)
+    expect(bestOptions).toEqual([
+      {
+        optionSymbol: 'AAPL1234P3214',
+        maxPositions: 5,
+      },
+      {
+        optionSymbol: 'MSFT1234P3214',
+        maxPositions: 4,
+      },
+    ])
+    expect(bestOptionUtil.selectBestOption).toHaveBeenCalledTimes(2)
+    expect(bestOptionUtil.selectBestOption).toHaveBeenCalledWith('AAPL', 'put', null, 0.314)
+    expect(bestOptionUtil.selectBestOption).toHaveBeenCalledWith('MSFT', 'put', null, 0.512)
   })
+
+  it('Returns only valid options if something comes up null', async () => {
+    bestOptionUtil.selectBestOption.mockReturnValueOnce(null)
+    bestOptionUtil.selectBestOption.mockReturnValueOnce({
+      symbol: 'MSFT1234P3214'
+    })
+    const watchlist = [
+      {
+        symbol: 'AAPL',
+        maxPositions: 5,
+        put: {
+          targetDelta: 0.314
+        }
+      },
+      {
+        symbol: 'MSFT',
+        maxPositions: 4,
+        put: {
+          targetDelta: 0.512
+        }
+      },
+    ]
+    const bestOptions = await _selectBestOptionsFromWatchlist(watchlist)
+    expect(bestOptions).toEqual([
+      {
+        optionSymbol: 'MSFT1234P3214',
+        maxPositions: 4,
+      },
+    ])
+    expect(bestOptionUtil.selectBestOption).toHaveBeenCalledTimes(2)
+    expect(bestOptionUtil.selectBestOption).toHaveBeenCalledWith('AAPL', 'put', null, 0.314)
+    expect(bestOptionUtil.selectBestOption).toHaveBeenCalledWith('MSFT', 'put', null, 0.512)
+  })
+
 })
 
 
 
-describe('_selectOptionsToSell', () => {
-  it('Only sells the one it can actually afford', () => {
+// describe('_selectOptionsToSell', () => {
+//   it('Only sells the one it can actually afford', () => {
 
-  })
+//   })
 
 
-})
+// })
 
 
 

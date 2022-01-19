@@ -70,14 +70,14 @@ const _selectBestOptionsFromWatchlist = async watchlist => {
   const optionsToConsider = []
   for (let x = 0; x < watchlist.length; x++) {
     const currentItem = watchlist[x]
-    const maxPositions = currentItem.maxPositions
     const targetDelta = currentItem.put.targetDelta
     const bestOption = await bestOptionUtil.selectBestOption(currentItem.symbol, 'put', null, targetDelta)
-    console.log(bestOption)
-    optionsToConsider.push({
-      optionSymbol: bestOption.symbol,
-      maxPositions,
-    })
+    if (bestOption) {
+      optionsToConsider.push({
+        optionSymbol: bestOption.symbol,
+        maxPositions: currentItem.maxPositions,
+      })
+    }
   }
   return optionsToConsider
 }
