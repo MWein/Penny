@@ -4,8 +4,6 @@ const defaultSettings = {
   callsEnabled: true,
   putsEnabled: true,
   closeExpiringPuts: false,
-  maxAllocation: 4000, // The maximum amount of money to put down on a single ticker
-  maxPositions: 5, // The maximum number of positions any one position can have
   reserve: 0, // Money that Penny shouldn't touch. BuyingPower - Reserve. For planned withdrawals.
   profitTarget: 0.75, // Profit to set Buy-To-Close orders to
   priorityList: []

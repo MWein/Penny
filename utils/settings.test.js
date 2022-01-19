@@ -80,20 +80,12 @@ describe('getSettings', () => {
         value: true,
       },
       {
-        key: 'maxAllocation',
-        value: 40000,
-      },
-      {
         key: 'reserve',
         value: 20,
       },
       {
         key: 'profitTarget',
         value: 0.70
-      },
-      {
-        key: 'maxPositions',
-        value: 6,
       },
       {
         key: 'priorityList',
@@ -105,8 +97,6 @@ describe('getSettings', () => {
       callsEnabled: false,
       putsEnabled: false,
       closeExpiringPuts: true,
-      maxAllocation: 40000,
-      maxPositions: 6,
       reserve: 20,
       profitTarget: 0.70,
       priorityList: [ 'AAPL', 'MSFT' ]
