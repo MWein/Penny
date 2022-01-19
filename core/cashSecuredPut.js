@@ -85,6 +85,34 @@ const _selectBestOptionsFromWatchlist = async watchlist => {
 
 
 // Well this is complicated
+
+const _selectOptionsToSellHelper = (maxPositionsMap, symbols, index, skipCount, buyingPower, symbolsToSellMap) => {
+  const nextIndex = index === symbols.length - 1 ? 0 : index + 1
+  const symbol = symbols[index]
+  const positionsAvailable = maxPositionsMap[symbol]
+  const collateral = getStrike(symbol) * 100
+
+  // Not enough money or no more positions are available; skip to the next symbol
+  if (positionsAvailable === 0 || buyingPower < collateral) {
+    // Check if the skip counter is greater than the number of unique symbols
+    if (skipCount >= symbols.length) {
+      return symbolsToSellMap
+    }
+    return _selectOptionsToSellHelper(maxPositionsMap, symbols, nextIndex, skipCount + 1, buyingPower, symbolsToSellMap)
+  }
+
+  // Add option to buy list!
+  const newMaxPositionsMap = {
+    ...maxPositionsMap,
+    [symbol]: maxPositionsMap[symbol] - 1
+  }
+  const newSymbolsToSellMap = {
+    ...symbolsToSellMap,
+    [symbol]: symbolsToSellMap[symbol] + 1
+  }
+  return _selectOptionsToSellHelper(newMaxPositionsMap, symbols, nextIndex, 0, buyingPower - collateral, newSymbolsToSellMap)
+}
+
 const _selectOptionsToSell = (buyingPower, optionsToConsider) => {
   const { maxPositionsMap, symbols, startSymbolsToSellMap } = optionsToConsider.reduce((acc, opt) => ({
     maxPositionsMap: {
@@ -101,34 +129,6 @@ const _selectOptionsToSell = (buyingPower, optionsToConsider) => {
     startSymbolsToSellMap: {},
     symbols: [],
   })
-
-
-  const _selectOptionsToSellHelper = (maxPositionsMap, symbols, index, skipCount, buyingPower, symbolsToSellMap) => {
-    const symbol = symbols[index]
-    const positionsAvailable = maxPositionsMap[symbol]
-    const collateral = getStrike(symbol) * 100
-
-    // Not enough money or no more positions are available; skip to the next symbol
-    if (positionsAvailable === 0 || buyingPower < collateral) {
-      // Check if the skip counter is greater than the number of unique symbols
-      if (skipCount >= symbols.length) {
-        return symbolsToSellMap
-      }
-      const newIndex = index === symbols.length - 1 ? 0 : index + 1
-      return _selectOptionsToSellHelper(maxPositionsMap, symbols, newIndex, skipCount + 1, buyingPower, symbolsToSellMap)
-    }
-
-    // Add option to buy list!
-    const newMaxPositionsMap = {
-      ...maxPositionsMap,
-      [symbol]: maxPositionsMap[symbol] - 1
-    }
-    const newSymbolsToSellMap = {
-      ...symbolsToSellMap,
-      [symbol]: symbolsToSellMap[symbol] + 1
-    }
-    return _selectOptionsToSellHelper(newMaxPositionsMap, symbols, index + 1, 0, buyingPower - collateral, newSymbolsToSellMap)
-  }
 
   const symbolsToSellMap = _selectOptionsToSellHelper(maxPositionsMap, symbols, 0, 0, buyingPower, startSymbolsToSellMap)
 

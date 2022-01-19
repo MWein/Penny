@@ -441,6 +441,38 @@ describe('_selectOptionsToSell', () => {
       },
     ])
   })
+
+
+  it('Sells everything if theres enough capital', () => {
+    const options = [
+      {
+        optionSymbol: generateSymbol('TSLA', 'put', '2022-01-01', 25),
+        maxPositions: 2,
+      },
+      {
+        optionSymbol: generateSymbol('AAPL', 'put', '2022-01-01', 25),
+        maxPositions: 5,
+      },
+      {
+        optionSymbol: generateSymbol('ABNB', 'put', '2022-01-01', 220),
+        maxPositions: 1,
+      },
+    ]
+    expect(_selectOptionsToSell(500000, options)).toEqual([
+      {
+        optionSymbol: generateSymbol('TSLA', 'put', '2022-01-01', 25),
+        positions: 2,
+      },
+      {
+        optionSymbol: generateSymbol('AAPL', 'put', '2022-01-01', 25),
+        positions: 5,
+      },
+      {
+        optionSymbol: generateSymbol('ABNB', 'put', '2022-01-01', 220),
+        positions: 1,
+      },
+    ])
+  })
 })
 
 
