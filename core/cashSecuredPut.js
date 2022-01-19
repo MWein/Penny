@@ -13,14 +13,12 @@ const _getPutPermittedWatchlistItems = async () => {
     watchlistUtil.getWatchlist(),
   ])
 
-  const permittedItems = priorityList.map(symbol => {
+  return priorityList.map(symbol => {
     const watchlistItem = watchlist.find(x => x.symbol === symbol)
     return !watchlistItem || watchlistItem.maxPositions === 0 || !watchlistItem.put.enabled ?
-      null :
+      null : // Mark null if not found or the rules don't allow such things
       watchlistItem
-  }).filter(x => x)
-
-  return permittedItems
+  }).filter(x => x) // Filter out the nulls
 }
 
 
@@ -43,6 +41,19 @@ const sellCashSecuredPuts = async () => {
     logUtil.log('Priority List or Watchlist is Empty')
     return
   }
+
+
+  // Get the option buying power
+
+
+  // Extract the symbols and get the prices
+
+
+  // Loop through and select the best option for each pursuent to the rules
+
+
+  // Recursive cycle function?
+
 
 }
 
