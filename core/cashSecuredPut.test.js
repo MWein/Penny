@@ -14,6 +14,11 @@ const {
   sellCashSecuredPuts,
 } = require('./cashSecuredPut')
 
+const {
+  generateOrderObject,
+  generatePositionObject,
+} = require('../utils/testHelpers')
+
 
 const _mockPutWatchlistItem = (symbol, maxPositions, enabled, targetDelta) => ({
   symbol,
@@ -110,6 +115,7 @@ describe('_preStartFilterWatchlistItems', () => {
     ], 1000)
     expect(result).toEqual([])
     expect(priceUtil.getPrices).not.toHaveBeenCalled()
+    expect(positionUtil.getPositions).not.toHaveBeenCalled()
   })
 
   it('On the first pass, filters out enabled of false.', async () => {
@@ -118,10 +124,14 @@ describe('_preStartFilterWatchlistItems', () => {
     ], 1000)
     expect(result).toEqual([])
     expect(priceUtil.getPrices).not.toHaveBeenCalled()
+    expect(priceUtil.getPrices).not.toHaveBeenCalled()
+    expect(positionUtil.getPositions).not.toHaveBeenCalled()
   })
 
   it('Gets prices for items that make it through the first pass filter. Returns anyway if a price isnt returned for some reason.', async () => {
     priceUtil.getPrices.mockReturnValue([])
+    positionUtil.getPositions.mockReturnValue([])
+    orderUtil.getOrders.mockReturnValue([])
     const result = await _preStartFilterWatchlistItems([
       _mockPutWatchlistItem('MSFT', 1, true, 0.3)
     ], 1000)
@@ -135,6 +145,8 @@ describe('_preStartFilterWatchlistItems', () => {
     priceUtil.getPrices.mockReturnValue([
       { symbol: 'MSFT', price: 21 },
     ])
+    positionUtil.getPositions.mockReturnValue([])
+    orderUtil.getOrders.mockReturnValue([])
     const result = await _preStartFilterWatchlistItems([
       _mockPutWatchlistItem('MSFT', 1, true, 0.3)
     ], 1000)
@@ -146,6 +158,8 @@ describe('_preStartFilterWatchlistItems', () => {
     priceUtil.getPrices.mockReturnValue([
       { symbol: 'MSFT', price: 5 },
     ])
+    positionUtil.getPositions.mockReturnValue([])
+    orderUtil.getOrders.mockReturnValue([])
     const result = await _preStartFilterWatchlistItems([
       _mockPutWatchlistItem('MSFT', 1, true, 0.3)
     ], 1000)
@@ -155,19 +169,114 @@ describe('_preStartFilterWatchlistItems', () => {
     expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT' ])
   })
 
+  it('Gets prices for items that make it through the first pass filter. Adjusts maximumPositions if there are stock positions.', async () => {
+    priceUtil.getPrices.mockReturnValue([
+      { symbol: 'MSFT', price: 5 },
+    ])
+    positionUtil.getPositions.mockReturnValue([
+      generatePositionObject('MSFT', 230, 'stock'),
+      generatePositionObject('AAPL', 100, 'stock'),
+    ])
+    orderUtil.getOrders.mockReturnValue([])
+    const result = await _preStartFilterWatchlistItems([
+      _mockPutWatchlistItem('MSFT', 5, true, 0.3)
+    ], 1000)
+    expect(result).toEqual([
+      _mockPutWatchlistItem('MSFT', 3, true, 0.3)
+    ])
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT' ])
+  })
+
+  it('Gets prices for items that make it through the first pass filter. Adjusts maximumPositions if there are put positions.', async () => {
+    priceUtil.getPrices.mockReturnValue([
+      { symbol: 'MSFT', price: 5 },
+    ])
+    positionUtil.getPositions.mockReturnValue([
+      generatePositionObject('MSFT', 3, 'put'),
+      generatePositionObject('AAPL', 1, 'put'),
+    ])
+    orderUtil.getOrders.mockReturnValue([])
+    const result = await _preStartFilterWatchlistItems([
+      _mockPutWatchlistItem('MSFT', 5, true, 0.3)
+    ], 1000)
+    expect(result).toEqual([
+      _mockPutWatchlistItem('MSFT', 2, true, 0.3)
+    ])
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT' ])
+  })
+
+  it('Gets prices for items that make it through the first pass filter. Adjusts maximumPositions if there are stock and put positions.', async () => {
+    priceUtil.getPrices.mockReturnValue([
+      { symbol: 'MSFT', price: 5 },
+    ])
+    positionUtil.getPositions.mockReturnValue([
+      generatePositionObject('MSFT', 300, 'stock'),
+      generatePositionObject('MSFT', 1, 'put'),
+    ])
+    orderUtil.getOrders.mockReturnValue([])
+    const result = await _preStartFilterWatchlistItems([
+      _mockPutWatchlistItem('MSFT', 5, true, 0.3)
+    ], 1000)
+    expect(result).toEqual([
+      _mockPutWatchlistItem('MSFT', 1, true, 0.3)
+    ])
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT' ])
+  })
+
+  it('Gets prices for items that make it through the first pass filter. Adjusts maximumPositions if there are put orders.', async () => {
+    priceUtil.getPrices.mockReturnValue([
+      { symbol: 'MSFT', price: 5 },
+    ])
+    positionUtil.getPositions.mockReturnValue([])
+    orderUtil.getOrders.mockReturnValue([
+      generateOrderObject('MSFT', -2, 'put', 'sell_to_open'),
+    ])
+    const result = await _preStartFilterWatchlistItems([
+      _mockPutWatchlistItem('MSFT', 5, true, 0.3)
+    ], 1000)
+    expect(result).toEqual([
+      _mockPutWatchlistItem('MSFT', 3, true, 0.3)
+    ])
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT' ])
+  })
+
+  it('If there are more positions already out there than maxPositions, return nothing.', async () => {
+    priceUtil.getPrices.mockReturnValue([
+      { symbol: 'MSFT', price: 5 },
+    ])
+    positionUtil.getPositions.mockReturnValue([
+      generatePositionObject('MSFT', 300, 'stock'),
+    ])
+    orderUtil.getOrders.mockReturnValue([
+      generateOrderObject('MSFT', -3, 'put', 'sell_to_open'),
+    ])
+    const result = await _preStartFilterWatchlistItems([
+      _mockPutWatchlistItem('MSFT', 5, true, 0.3)
+    ], 1000)
+    expect(result).toEqual([])
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT' ])
+  })
+
   it('All rules', async () => {
+    positionUtil.getPositions.mockReturnValue([
+      generatePositionObject('MSFT', 3, 'put'),
+      generatePositionObject('AAPL', 400, 'stock'),
+    ])
+    orderUtil.getOrders.mockReturnValue([
+      generateOrderObject('MSFT', -2, 'put', 'sell_to_open'),
+    ])
     priceUtil.getPrices.mockReturnValue([
       { symbol: 'MSFT', price: 5 },
       { symbol: 'AAPL', price: 12 },
     ])
     const result = await _preStartFilterWatchlistItems([
-      _mockPutWatchlistItem('AAPL', 1, true, 0.3),
-      _mockPutWatchlistItem('MSFT', 1, true, 0.3),
+      _mockPutWatchlistItem('AAPL', 4, true, 0.3),
+      _mockPutWatchlistItem('MSFT', 7, true, 0.3),
       _mockPutWatchlistItem('TSLA', 0, true, 0.3),
       _mockPutWatchlistItem('ABNB', 1, false, 0.3),
-    ], 1000)
+    ], 4000)
     expect(result).toEqual([
-      _mockPutWatchlistItem('MSFT', 1, true, 0.3)
+      _mockPutWatchlistItem('MSFT', 2, true, 0.3)
     ])
     expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'AAPL', 'MSFT' ])
   })
