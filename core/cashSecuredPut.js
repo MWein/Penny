@@ -1,4 +1,4 @@
-const settings = require('../utils/settings')
+const settingsUtil = require('../utils/settings')
 const logUtil = require('../utils/log')
 const market = require('../tradier/market')
 const watchlistUtil = require('../utils/watchlist')
@@ -6,14 +6,13 @@ const priceUtil = require('../tradier/getPrices')
 const balanceUtil = require('../tradier/getBalances')
 
 
-const _getWatchlistPriorityUnion = (priorityList, watchlist) => {
-  return priorityList.map(symbol => {
+const _getWatchlistPriorityUnion = (priorityList, watchlist) =>
+  priorityList.map(symbol => {
     const watchlistItem = watchlist.find(x => x.symbol === symbol)
     return !watchlistItem ?
       null : // Mark null if not found or the rules don't allow such things
       watchlistItem
   }).filter(x => x) // Filter out the nulls
-}
 
 
 const _preStartFilterWatchlistItems = async (watchlistItems, buyingPower) => {
@@ -31,7 +30,7 @@ const _preStartFilterWatchlistItems = async (watchlistItems, buyingPower) => {
 
 
 const sellCashSecuredPuts = async () => {
-  const settings = await settings.getSettings()
+  const settings = await settingsUtil.getSettings()
 
   const putsEnabled = settings.putsEnabled
   if (!putsEnabled) {
