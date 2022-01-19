@@ -4,11 +4,11 @@ const mongoose = require('mongoose')
 
 const { sellCoveredCalls } = require('./core/coveredCall')
 const { updateGainLossCollection } = require('./utils/updateGainLoss')
-const { sellNakedPuts } = require('./core/nakedPut')
 const { createGTCOrders } = require('./core/gtcOrders')
 const { log, clearOldLogs } = require('./utils/log')
 const { savePositionsCron } = require('./utils/savePositionsCron')
 const { closeExpiringPuts } = require('./core/closeExpiringPuts')
+const { sellCashSecuredPuts } = require('./core/cashSecuredPut')
 
 
 const housekeeping = async () => {
@@ -25,7 +25,7 @@ const sellOptions = async () => {
   log('Selling Covered Calls')
   await sellCoveredCalls()
   log('Selling Naked Puts')
-  await sellNakedPuts()
+  await sellCashSecuredPuts()()
 }
 
 
