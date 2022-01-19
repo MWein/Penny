@@ -2,9 +2,12 @@ const settings = require('../utils/settings')
 const logUtil = require('../utils/log')
 const market = require('../tradier/market')
 const watchlistUtil = require('../utils/watchlist')
+const priceUtil = require('../tradier/getPrices')
+const balanceUtil = require('../tradier/getBalances')
 
 const {
-  _getPutPermittedWatchlistItems,
+  _getWatchlistPriorityUnion,
+  _preStartFilterWatchlistItems,
   sellCashSecuredPuts,
 } = require('./cashSecuredPut')
 
@@ -19,7 +22,7 @@ const _mockPutWatchlistItem = (symbol, maxPositions, enabled, targetDelta) => ({
 })
 
 
-describe('_getPutPermittedWatchlistItems', () => {
+describe('_getWatchlistPriorityUnion', () => {
   beforeEach(() => {
     settings.getSetting = jest.fn()
     watchlistUtil.getWatchlist = jest.fn()
@@ -30,7 +33,7 @@ describe('_getPutPermittedWatchlistItems', () => {
     watchlistUtil.getWatchlist.mockReturnValue([
       _mockPutWatchlistItem('AAPL', 1, true, 0.3),
     ])
-    const permittedWatchlistItems = await _getPutPermittedWatchlistItems()
+    const permittedWatchlistItems = await _getWatchlistPriorityUnion()
     expect(settings.getSetting).toHaveBeenCalledWith('priorityList')
     expect(permittedWatchlistItems).toEqual([])
   })
@@ -38,7 +41,7 @@ describe('_getPutPermittedWatchlistItems', () => {
   it('If watchlist is emtpy, return empty array', async () => {
     settings.getSetting.mockReturnValueOnce([ 'AAPL', 'MSFT' ])
     watchlistUtil.getWatchlist.mockReturnValue([])
-    const permittedWatchlistItems = await _getPutPermittedWatchlistItems()
+    const permittedWatchlistItems = await _getWatchlistPriorityUnion()
     expect(settings.getSetting).toHaveBeenCalledWith('priorityList')
     expect(permittedWatchlistItems).toEqual([])
   })
@@ -46,7 +49,7 @@ describe('_getPutPermittedWatchlistItems', () => {
   it('If both priorityList and watchlist is empty, return emtpy array', async () => {
     settings.getSetting.mockReturnValueOnce([])
     watchlistUtil.getWatchlist.mockReturnValue([])
-    const permittedWatchlistItems = await _getPutPermittedWatchlistItems()
+    const permittedWatchlistItems = await _getWatchlistPriorityUnion()
     expect(settings.getSetting).toHaveBeenCalledWith('priorityList')
     expect(permittedWatchlistItems).toEqual([])
   })
@@ -57,33 +60,36 @@ describe('_getPutPermittedWatchlistItems', () => {
       _mockPutWatchlistItem('TSLA', 1, true, 0.3),
       _mockPutWatchlistItem('ABNB', 1, true, 0.3),
     ])
-    const permittedWatchlistItems = await _getPutPermittedWatchlistItems()
+    const permittedWatchlistItems = await _getWatchlistPriorityUnion()
     expect(settings.getSetting).toHaveBeenCalledWith('priorityList')
     expect(permittedWatchlistItems).toEqual([])
   })
 
-  it('Filters out symbols in the priority list, but with a max positions of 0', async () => {
-    settings.getSetting.mockReturnValueOnce([ 'AAPL', 'MSFT' ])
+  it('Returns watchlist items in the priority list. 1 missing from watchlist', async () => {
+    settings.getSetting.mockReturnValueOnce([ 'AAPL', 'MSFT', 'TSLA' ])
     watchlistUtil.getWatchlist.mockReturnValue([
       _mockPutWatchlistItem('AAPL', 1, true, 0.3),
-      _mockPutWatchlistItem('MSFT', 0, true, 0.3),
+      _mockPutWatchlistItem('MSFT', 1, true, 0.3),
     ])
-    const permittedWatchlistItems = await _getPutPermittedWatchlistItems()
+    const permittedWatchlistItems = await _getWatchlistPriorityUnion()
     expect(settings.getSetting).toHaveBeenCalledWith('priorityList')
     expect(permittedWatchlistItems).toEqual([
       _mockPutWatchlistItem('AAPL', 1, true, 0.3),
+      _mockPutWatchlistItem('MSFT', 1, true, 0.3),
     ])
   })
 
-  it('Filters out symbols in the priority list, but with a put.enabled of false', async () => {
+  it('Returns watchlist items in the priority list. 1 missing from priority list', async () => {
     settings.getSetting.mockReturnValueOnce([ 'AAPL', 'MSFT' ])
     watchlistUtil.getWatchlist.mockReturnValue([
-      _mockPutWatchlistItem('AAPL', 1, false, 0.3),
+      _mockPutWatchlistItem('AAPL', 1, true, 0.3),
       _mockPutWatchlistItem('MSFT', 1, true, 0.3),
+      _mockPutWatchlistItem('TSLA', 1, true, 0.3),
     ])
-    const permittedWatchlistItems = await _getPutPermittedWatchlistItems()
+    const permittedWatchlistItems = await _getWatchlistPriorityUnion()
     expect(settings.getSetting).toHaveBeenCalledWith('priorityList')
     expect(permittedWatchlistItems).toEqual([
+      _mockPutWatchlistItem('AAPL', 1, true, 0.3),
       _mockPutWatchlistItem('MSFT', 1, true, 0.3),
     ])
   })
@@ -94,23 +100,7 @@ describe('_getPutPermittedWatchlistItems', () => {
       _mockPutWatchlistItem('AAPL', 1, true, 0.3),
       _mockPutWatchlistItem('MSFT', 1, true, 0.3),
     ])
-    const permittedWatchlistItems = await _getPutPermittedWatchlistItems()
-    expect(settings.getSetting).toHaveBeenCalledWith('priorityList')
-    expect(permittedWatchlistItems).toEqual([
-      _mockPutWatchlistItem('MSFT', 1, true, 0.3),
-      _mockPutWatchlistItem('AAPL', 1, true, 0.3),
-    ])
-  })
-
-  it('All rules test', async () => {
-    settings.getSetting.mockReturnValueOnce([ 'MSFT', 'AAPL' ])
-    watchlistUtil.getWatchlist.mockReturnValue([
-      _mockPutWatchlistItem('AAPL', 1, true, 0.3),
-      _mockPutWatchlistItem('TSLA', 0, true, 0.3),
-      _mockPutWatchlistItem('ABNB', 1, false, 0.3),
-      _mockPutWatchlistItem('MSFT', 1, true, 0.3),
-    ])
-    const permittedWatchlistItems = await _getPutPermittedWatchlistItems()
+    const permittedWatchlistItems = await _getWatchlistPriorityUnion()
     expect(settings.getSetting).toHaveBeenCalledWith('priorityList')
     expect(permittedWatchlistItems).toEqual([
       _mockPutWatchlistItem('MSFT', 1, true, 0.3),
@@ -121,12 +111,89 @@ describe('_getPutPermittedWatchlistItems', () => {
 
 
 
+describe('_preStartFilterWatchlistItems', () => {
+  beforeEach(() => {
+    priceUtil.getPrices = jest.fn()
+  })
+
+  it('On the first pass, filters out maxPositions of 0. getPrices is called with empty array but that function doesnt make the network call if empty.', async () => {
+    const result = await _preStartFilterWatchlistItems([
+      _mockPutWatchlistItem('MSFT', 0, true, 0.3)
+    ], 1000)
+    expect(result).toEqual([])
+    expect(priceUtil.getPrices).not.toHaveBeenCalled()
+  })
+
+  it('On the first pass, filters out enabled of false.', async () => {
+    const result = await _preStartFilterWatchlistItems([
+      _mockPutWatchlistItem('MSFT', 1, false, 0.3)
+    ], 1000)
+    expect(result).toEqual([])
+    expect(priceUtil.getPrices).not.toHaveBeenCalled()
+  })
+
+  it('Gets prices for items that make it through the first pass filter. Returns anyway if a price isnt returned for some reason.', async () => {
+    priceUtil.getPrices.mockReturnValue([])
+    const result = await _preStartFilterWatchlistItems([
+      _mockPutWatchlistItem('MSFT', 1, true, 0.3)
+    ], 1000)
+    expect(result).toEqual([
+      _mockPutWatchlistItem('MSFT', 1, true, 0.3)
+    ])
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT' ])
+  })
+
+  it('Gets prices for items that make it through the first pass filter. Returns empty array if all prices are above buying power.', async () => {
+    priceUtil.getPrices.mockReturnValue([
+      { symbol: 'MSFT', price: 21 },
+    ])
+    const result = await _preStartFilterWatchlistItems([
+      _mockPutWatchlistItem('MSFT', 1, true, 0.3)
+    ], 1000)
+    expect(result).toEqual([])
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT' ])
+  })
+
+  it('Gets prices for items that make it through the first pass filter. Returns items that are below buying power.', async () => {
+    priceUtil.getPrices.mockReturnValue([
+      { symbol: 'MSFT', price: 5 },
+    ])
+    const result = await _preStartFilterWatchlistItems([
+      _mockPutWatchlistItem('MSFT', 1, true, 0.3)
+    ], 1000)
+    expect(result).toEqual([
+      _mockPutWatchlistItem('MSFT', 1, true, 0.3)
+    ])
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT' ])
+  })
+
+  it('All rules', async () => {
+    priceUtil.getPrices.mockReturnValue([
+      { symbol: 'MSFT', price: 5 },
+      { symbol: 'AAPL', price: 12 },
+    ])
+    const result = await _preStartFilterWatchlistItems([
+      _mockPutWatchlistItem('AAPL', 1, true, 0.3),
+      _mockPutWatchlistItem('MSFT', 1, true, 0.3),
+      _mockPutWatchlistItem('TSLA', 0, true, 0.3),
+      _mockPutWatchlistItem('ABNB', 1, false, 0.3),
+    ], 1000)
+    expect(result).toEqual([
+      _mockPutWatchlistItem('MSFT', 1, true, 0.3)
+    ])
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'AAPL', 'MSFT' ])
+  })
+})
+
+
 describe('sellCashSecuredPuts', () => {
   beforeEach(() => {
     settings.getSetting = jest.fn()
     logUtil.log = jest.fn()
     market.isMarketOpen = jest.fn().mockReturnValue(true)
     watchlistUtil.getWatchlist = jest.fn()
+    priceUtil.getPrices = jest.fn()
+    balanceUtil.getBalances = jest.fn()
   })
 
   it('Does nothing putsEnabled in settings is false', async () => {
