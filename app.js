@@ -12,20 +12,34 @@ const { sellCashSecuredPuts } = require('./core/cashSecuredPut')
 
 
 const housekeeping = async () => {
-  log('Clearing Old Logs')
-  await clearOldLogs()
-  log('Updating Gain Loss Collection')
-  await updateGainLossCollection()
-  log('Updating Positions Table')
-  await savePositionsCron()
+  try {
+    log('Clearing Old Logs')
+    await clearOldLogs()
+    log('Updating Gain Loss Collection')
+    await updateGainLossCollection()
+    log('Updating Positions Table')
+    await savePositionsCron()
+  } catch (e) {
+    log({
+      type: 'ERROR housekeeping',
+      message: e
+    })
+  }
 }
 
 
 const sellOptions = async () => {
-  log('Selling Covered Calls')
-  await sellCoveredCalls()
-  log('Selling Naked Puts')
-  await sellCashSecuredPuts()()
+  try {
+    log('Selling Covered Calls')
+    await sellCoveredCalls()
+    log('Selling Cash Secured Puts')
+    await sellCashSecuredPuts()
+  } catch (e) {
+    log({
+      type: 'ERROR sellOptions',
+      message: e
+    })
+  }
 }
 
 
