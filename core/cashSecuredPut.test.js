@@ -9,6 +9,15 @@ const {
 } = require('./cashSecuredPut')
 
 
+const _mockPutWatchlistItem = (symbol, maxPositions, enabled, targetDelta) => ({
+  symbol,
+  maxPositions,
+  put: {
+    enabled,
+    targetDelta,
+  }
+})
+
 
 describe('_getPutPermittedWatchlistItems', () => {
   beforeEach(() => {
@@ -19,14 +28,7 @@ describe('_getPutPermittedWatchlistItems', () => {
   it('If priorityList is empty, return empty array', async () => {
     settings.getSetting.mockReturnValueOnce([])
     watchlistUtil.getWatchlist.mockReturnValue([
-      {
-        symbol: 'AAPL',
-        maxPositions: 1,
-        put: {
-          enabled: true,
-          targetDelta: 0.3,
-        }
-      }
+      _mockPutWatchlistItem('AAPL', 1, true, 0.3),
     ])
     const permittedWatchlistItems = await _getPutPermittedWatchlistItems()
     expect(settings.getSetting).toHaveBeenCalledWith('priorityList')
@@ -52,22 +54,8 @@ describe('_getPutPermittedWatchlistItems', () => {
   it('Returns empty if there is no symbol overlap between priority list and watchlist', async () => {
     settings.getSetting.mockReturnValueOnce([ 'AAPL', 'MSFT' ])
     watchlistUtil.getWatchlist.mockReturnValue([
-      {
-        symbol: 'TSLA',
-        maxPositions: 1,
-        put: {
-          enabled: true,
-          targetDelta: 0.3,
-        }
-      },
-      {
-        symbol: 'ABNB',
-        maxPositions: 1,
-        put: {
-          enabled: true,
-          targetDelta: 0.3,
-        }
-      }
+      _mockPutWatchlistItem('TSLA', 1, true, 0.3),
+      _mockPutWatchlistItem('ABNB', 1, true, 0.3),
     ])
     const permittedWatchlistItems = await _getPutPermittedWatchlistItems()
     expect(settings.getSetting).toHaveBeenCalledWith('priorityList')
@@ -77,113 +65,58 @@ describe('_getPutPermittedWatchlistItems', () => {
   it('Filters out symbols in the priority list, but with a max positions of 0', async () => {
     settings.getSetting.mockReturnValueOnce([ 'AAPL', 'MSFT' ])
     watchlistUtil.getWatchlist.mockReturnValue([
-      {
-        symbol: 'AAPL',
-        maxPositions: 1,
-        put: {
-          enabled: true,
-          targetDelta: 0.3,
-        }
-      },
-      {
-        symbol: 'MSFT',
-        maxPositions: 0,
-        put: {
-          enabled: true,
-          targetDelta: 0.3,
-        }
-      }
+      _mockPutWatchlistItem('AAPL', 1, true, 0.3),
+      _mockPutWatchlistItem('MSFT', 0, true, 0.3),
     ])
     const permittedWatchlistItems = await _getPutPermittedWatchlistItems()
     expect(settings.getSetting).toHaveBeenCalledWith('priorityList')
     expect(permittedWatchlistItems).toEqual([
-      {
-        symbol: 'AAPL',
-        maxPositions: 1,
-        put: {
-          enabled: true,
-          targetDelta: 0.3,
-        }
-      },
+      _mockPutWatchlistItem('AAPL', 1, true, 0.3),
     ])
   })
 
   it('Filters out symbols in the priority list, but with a put.enabled of false', async () => {
     settings.getSetting.mockReturnValueOnce([ 'AAPL', 'MSFT' ])
     watchlistUtil.getWatchlist.mockReturnValue([
-      {
-        symbol: 'AAPL',
-        maxPositions: 1,
-        put: {
-          enabled: false,
-          targetDelta: 0.3,
-        }
-      },
-      {
-        symbol: 'MSFT',
-        maxPositions: 1,
-        put: {
-          enabled: true,
-          targetDelta: 0.3,
-        }
-      }
+      _mockPutWatchlistItem('AAPL', 1, false, 0.3),
+      _mockPutWatchlistItem('MSFT', 1, true, 0.3),
     ])
     const permittedWatchlistItems = await _getPutPermittedWatchlistItems()
     expect(settings.getSetting).toHaveBeenCalledWith('priorityList')
     expect(permittedWatchlistItems).toEqual([
-      {
-        symbol: 'MSFT',
-        maxPositions: 1,
-        put: {
-          enabled: true,
-          targetDelta: 0.3,
-        }
-      }
+      _mockPutWatchlistItem('MSFT', 1, true, 0.3),
     ])
   })
 
   it('Returns watchlist objects in the same order as the priority list', async () => {
     settings.getSetting.mockReturnValueOnce([ 'MSFT', 'AAPL' ])
     watchlistUtil.getWatchlist.mockReturnValue([
-      {
-        symbol: 'AAPL',
-        maxPositions: 1,
-        put: {
-          enabled: true,
-          targetDelta: 0.3,
-        }
-      },
-      {
-        symbol: 'MSFT',
-        maxPositions: 1,
-        put: {
-          enabled: true,
-          targetDelta: 0.3,
-        }
-      }
+      _mockPutWatchlistItem('AAPL', 1, true, 0.3),
+      _mockPutWatchlistItem('MSFT', 1, true, 0.3),
     ])
     const permittedWatchlistItems = await _getPutPermittedWatchlistItems()
     expect(settings.getSetting).toHaveBeenCalledWith('priorityList')
     expect(permittedWatchlistItems).toEqual([
-      {
-        symbol: 'MSFT',
-        maxPositions: 1,
-        put: {
-          enabled: true,
-          targetDelta: 0.3,
-        }
-      },
-      {
-        symbol: 'AAPL',
-        maxPositions: 1,
-        put: {
-          enabled: true,
-          targetDelta: 0.3,
-        }
-      },
+      _mockPutWatchlistItem('MSFT', 1, true, 0.3),
+      _mockPutWatchlistItem('AAPL', 1, true, 0.3),
     ])
   })
 
+  it('All rules test', async () => {
+    settings.getSetting.mockReturnValueOnce([ 'MSFT', 'AAPL' ])
+    watchlistUtil.getWatchlist.mockReturnValue([
+      _mockPutWatchlistItem('AAPL', 1, true, 0.3),
+      _mockPutWatchlistItem('TSLA', 0, true, 0.3),
+      _mockPutWatchlistItem('ABNB', 1, false, 0.3),
+      _mockPutWatchlistItem('MSFT', 1, true, 0.3),
+    ])
+    const permittedWatchlistItems = await _getPutPermittedWatchlistItems()
+    expect(settings.getSetting).toHaveBeenCalledWith('priorityList')
+    expect(permittedWatchlistItems).toEqual([
+      _mockPutWatchlistItem('MSFT', 1, true, 0.3),
+      _mockPutWatchlistItem('AAPL', 1, true, 0.3),
+    ])
+  })
 })
 
 
