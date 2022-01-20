@@ -64,36 +64,43 @@ const _closeExistingBTCOrders = async symbols => {
 
 
 const closeExpiringPuts = async () => {
-  const closeExpiringPutsEnabled = await settings.getSetting('closeExpiringPuts')
-  if (!closeExpiringPutsEnabled) {
-    logUtil.log('Close Expiring Puts Disabled')
-    return
-  }
+  try {
+    const closeExpiringPutsEnabled = await settings.getSetting('closeExpiringPuts')
+    if (!closeExpiringPutsEnabled) {
+      logUtil.log('Close Expiring Puts Disabled')
+      return
+    }
 
-  const open = await market.isMarketOpen()
-  if (!open) {
-    logUtil.log('Market Closed')
-    return
-  }
+    const open = await market.isMarketOpen()
+    if (!open) {
+      logUtil.log('Market Closed')
+      return
+    }
 
-  logUtil.log('Closing profitable puts expiring today')
-  const putsExpiringToday = await _getPutsExpiringToday()
-  const profitablePuts = _filterForPutsAtProfit(putsExpiringToday)
+    logUtil.log('Closing profitable puts expiring today')
+    const putsExpiringToday = await _getPutsExpiringToday()
+    const profitablePuts = _filterForPutsAtProfit(putsExpiringToday)
 
-  if (profitablePuts.length === 0) {
-    logUtil.log('No profitable puts expiring today')
-    return
-  }
+    if (profitablePuts.length === 0) {
+      logUtil.log('No profitable puts expiring today')
+      return
+    }
 
-  const profitableSymbols = profitablePuts.map(x => x.symbol)
+    const profitableSymbols = profitablePuts.map(x => x.symbol)
 
-  logUtil.log('Cancelling current BTC orders')
-  await _closeExistingBTCOrders(profitableSymbols)
+    logUtil.log('Cancelling current BTC orders')
+    await _closeExistingBTCOrders(profitableSymbols)
 
-  for (let x = 0; x < profitablePuts.length; x++) {
-    const putToClose = profitablePuts[x]
-    const symbol = getUnderlying(putToClose.symbol)
-    await sendOrdersUtil.buyToCloseMarket(symbol, putToClose.symbol, Math.abs(putToClose.quantity))
+    for (let x = 0; x < profitablePuts.length; x++) {
+      const putToClose = profitablePuts[x]
+      const symbol = getUnderlying(putToClose.symbol)
+      await sendOrdersUtil.buyToCloseMarket(symbol, putToClose.symbol, Math.abs(putToClose.quantity))
+    }
+  } catch (e) {
+    logUtil.log({
+      type: 'error',
+      message: e.toString()
+    })
   }
 }
 

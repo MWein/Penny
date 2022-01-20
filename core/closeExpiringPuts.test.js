@@ -219,6 +219,18 @@ describe('closeExpiringPuts', () => {
   })
 
 
+  it('Catches and logs exceptions', async () => {
+    market.isMarketOpen.mockImplementation(() => {
+      throw new Error('Oh nooooooo!')
+    })
+    await closeExpiringPuts()
+    expect(logUtil.log).toHaveBeenCalledWith({
+      type: 'error',
+      message: 'Error: Oh nooooooo!'
+    })
+  })
+
+
   it('Does nothing if closeExpiringPuts is false', async () => {
     settings.getSetting.mockReturnValue(false)
     await closeExpiringPuts()

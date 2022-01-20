@@ -35,29 +35,36 @@ const _getOldOptionsPositions = (positions, orders) => {
 
 
 const createGTCOrders = async () => {
-  const open = await market.isMarketOpen()
-  if (!open) {
-    logUtil.log('Market Closed')
-    return
-  }
-
-  const allPositions = await position.getPositions()
-  if (allPositions.length === 0) {
-    logUtil.log('No Positions to Close')
-    return
-  }
-  const allOrders = await order.getOrders()
-  const oldOptionsPositions = _getOldOptionsPositions(allPositions, allOrders)
-
-  const profitTarget = await settings.getSetting('profitTarget')
-  const buyToClosePerc = 1 - profitTarget
-
-  // For-loop so we don't send every one of them at once, not that there will be that many
-  for (let x = 0; x < oldOptionsPositions.length; x++) {
-    const oldOption = oldOptionsPositions[x]
-    const symbol = getUnderlying(oldOption.symbol)
-    const buyToCloseAmount = Number(((oldOption.costBasisPerPosition * buyToClosePerc) / 100).toFixed(2))
-    await sendOrders.buyToClose(symbol, oldOption.symbol, oldOption.quantity, buyToCloseAmount)
+  try {
+    const open = await market.isMarketOpen()
+    if (!open) {
+      logUtil.log('Market Closed')
+      return
+    }
+  
+    const allPositions = await position.getPositions()
+    if (allPositions.length === 0) {
+      logUtil.log('No Positions to Close')
+      return
+    }
+    const allOrders = await order.getOrders()
+    const oldOptionsPositions = _getOldOptionsPositions(allPositions, allOrders)
+  
+    const profitTarget = await settings.getSetting('profitTarget')
+    const buyToClosePerc = 1 - profitTarget
+  
+    // For-loop so we don't send every one of them at once, not that there will be that many
+    for (let x = 0; x < oldOptionsPositions.length; x++) {
+      const oldOption = oldOptionsPositions[x]
+      const symbol = getUnderlying(oldOption.symbol)
+      const buyToCloseAmount = Number(((oldOption.costBasisPerPosition * buyToClosePerc) / 100).toFixed(2))
+      await sendOrders.buyToClose(symbol, oldOption.symbol, oldOption.quantity, buyToCloseAmount)
+    }
+  } catch (e) {
+    logUtil.log({
+      type: 'error',
+      message: e.toString()
+    })
   }
 }
 

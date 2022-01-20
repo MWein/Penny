@@ -495,6 +495,17 @@ describe('sellCashSecuredPuts', () => {
     sendOrdersUtil.sellToOpen = jest.fn()
   })
 
+  it('Catches and logs exceptions', async () => {
+    market.isMarketOpen.mockImplementation(() => {
+      throw new Error('Oh nooooooo!')
+    })
+    await sellCashSecuredPuts()
+    expect(logUtil.log).toHaveBeenCalledWith({
+      type: 'error',
+      message: 'Error: Oh nooooooo!'
+    })
+  })
+
   it('Does nothing putsEnabled in settings is false', async () => {
     settings.getSettings.mockReturnValue({
       putsEnabled: false

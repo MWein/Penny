@@ -66,50 +66,57 @@ const _getMinimumStrike = async (position, stockSettings) => {
 
 
 const sellCoveredCalls = async () => {
-  const callsEnabled = await settings.getSetting('callsEnabled')
-  if (!callsEnabled) {
-    logUtil.log('Calls Disabled')
-    return
-  }
-
-  const open = await market.isMarketOpen()
-  if (!open) {
-    logUtil.log('Market Closed')
-    return
-  }
-
-  const coverableTickers = await _determineCoverableTickers()
-  if (coverableTickers.length === 0) {
-    logUtil.log('No Covered Call Opportunities')
-    return
-  }
-
-  const watchlist = await watchlistUtil.getWatchlist()
-
-  // In a for-loop so each request isn't sent up all at once
-  for (let x = 0; x < coverableTickers.length; x++) {
-    const currentPosition = coverableTickers[x]
-
-    // Skip if not in watchlist
-    const stockSettings = watchlist.find(x => x.symbol === currentPosition.symbol)
-    if (!stockSettings) {
-      continue
+  try {
+    const callsEnabled = await settings.getSetting('callsEnabled')
+    if (!callsEnabled) {
+      logUtil.log('Calls Disabled')
+      return
     }
 
-    // Skip if calls disabled
-    if (!stockSettings.call.enabled) {
-      continue
+    const open = await market.isMarketOpen()
+    if (!open) {
+      logUtil.log('Market Closed')
+      return
     }
 
-    const minimumStrike = await _getMinimumStrike(currentPosition, stockSettings)
-
-    const best = await bestOption.selectBestOption(currentPosition.symbol, 'call', minimumStrike, stockSettings.call.targetDelta)
-    if (best) {
-      await sendOrders.sellToOpen(currentPosition.symbol, best.symbol, currentPosition.quantity)
+    const coverableTickers = await _determineCoverableTickers()
+    if (coverableTickers.length === 0) {
+      logUtil.log('No Covered Call Opportunities')
+      return
     }
+
+    const watchlist = await watchlistUtil.getWatchlist()
+
+    // In a for-loop so each request isn't sent up all at once
+    for (let x = 0; x < coverableTickers.length; x++) {
+      const currentPosition = coverableTickers[x]
+
+      // Skip if not in watchlist
+      const stockSettings = watchlist.find(x => x.symbol === currentPosition.symbol)
+      if (!stockSettings) {
+        continue
+      }
+
+      // Skip if calls disabled
+      if (!stockSettings.call.enabled) {
+        continue
+      }
+
+      const minimumStrike = await _getMinimumStrike(currentPosition, stockSettings)
+
+      const best = await bestOption.selectBestOption(currentPosition.symbol, 'call', minimumStrike, stockSettings.call.targetDelta)
+      if (best) {
+        await sendOrders.sellToOpen(currentPosition.symbol, best.symbol, currentPosition.quantity)
+      }
+    }
+
+    logUtil.log('Done')
+  } catch (e) {
+    logUtil.log({
+      type: 'error',
+      message: e.toString()
+    })
   }
-
-  logUtil.log('Done')
 }
 
 module.exports = {

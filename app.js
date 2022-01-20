@@ -22,7 +22,7 @@ const housekeeping = async () => {
   } catch (e) {
     log({
       type: 'ERROR housekeeping',
-      message: e
+      message: e.toString()
     })
   }
 }
@@ -37,7 +37,7 @@ const sellOptions = async () => {
   } catch (e) {
     log({
       type: 'ERROR sellOptions',
-      message: e
+      message: e.toString()
     })
   }
 }

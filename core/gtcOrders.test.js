@@ -132,6 +132,17 @@ describe('gtcOrders', () => {
     market.isMarketOpen = jest.fn().mockReturnValue(true)
   })
 
+  it('Catches and logs exceptions', async () => {
+    market.isMarketOpen.mockImplementation(() => {
+      throw new Error('Oh nooooooo!')
+    })
+    await createGTCOrders()
+    expect(logUtil.log).toHaveBeenCalledWith({
+      type: 'error',
+      message: 'Error: Oh nooooooo!'
+    })
+  })
+
   it('If market is closed, do nothing', async () => {
     market.isMarketOpen.mockReturnValue(false)
     await createGTCOrders()

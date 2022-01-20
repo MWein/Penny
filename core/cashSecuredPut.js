@@ -147,56 +147,59 @@ const _selectOptionsToSell = (buyingPower, optionsToConsider) => {
 
 
 const sellCashSecuredPuts = async () => {
-  const settings = await settingsUtil.getSettings()
+  try {
+    const settings = await settingsUtil.getSettings()
 
-  const putsEnabled = settings.putsEnabled
-  if (!putsEnabled) {
-    logUtil.log('Puts Disabled')
-    return
-  }
+    const putsEnabled = settings.putsEnabled
+    if (!putsEnabled) {
+      logUtil.log('Puts Disabled')
+      return
+    }
 
-  const open = await market.isMarketOpen()
-  if (!open) {
-    logUtil.log('Market Closed')
-    return
-  }
+    const open = await market.isMarketOpen()
+    if (!open) {
+      logUtil.log('Market Closed')
+      return
+    }
 
+    const watchlist = await watchlistUtil.getWatchlist()
+    const watchlistPriorityUnion = await _getWatchlistPriorityUnion(settings.priorityList, watchlist)
 
-  const watchlist = await watchlistUtil.getWatchlist()
-  const watchlistPriorityUnion = await _getWatchlistPriorityUnion(settings.priorityList, watchlist)
+    if (!watchlistPriorityUnion.length) {
+      logUtil.log('Priority List or Watchlist is Empty')
+      return
+    }
 
-  if (!watchlistPriorityUnion.length) {
-    logUtil.log('Priority List or Watchlist is Empty')
-    return
-  }
+    // Get balance. Calc balance - reserve
+    const balances = await balanceUtil.getBalances()
+    const optionBuyingPower = balances.optionBuyingPower - settings.reserve
+    if (optionBuyingPower <= 0) {
+      logUtil.log('No buying power')
+      return
+    }
 
-  // Get balance. Calc balance - reserve
-  const balances = await balanceUtil.getBalances()
-  const optionBuyingPower = balances.optionBuyingPower - settings.reserve
-  if (optionBuyingPower <= 0) {
-    logUtil.log('No buying power')
-    return
-  }
+    // Pre filter
+    const preFilteredWatchlistItems = await _preStartFilterWatchlistItems(watchlistPriorityUnion, optionBuyingPower)
+    if (!preFilteredWatchlistItems.length) {
+      logUtil.log('No stocks passed the pre-filter')
+      return
+    }
 
+    const optionsToConsider = await _selectBestOptionsFromWatchlist(preFilteredWatchlistItems)
+    const optionsToSell = _selectOptionsToSell(optionBuyingPower, optionsToConsider)
 
-  // Pre filter
-  const preFilteredWatchlistItems = await _preStartFilterWatchlistItems(watchlistPriorityUnion, optionBuyingPower)
-  if (!preFilteredWatchlistItems.length) {
-    logUtil.log('No stocks passed the pre-filter')
-    return
-  }
-
-
-  const optionsToConsider = await _selectBestOptionsFromWatchlist(preFilteredWatchlistItems)
-  const optionsToSell = _selectOptionsToSell(optionBuyingPower, optionsToConsider)
-
-
-  // For-loop so they dont send all at once
-  for (let x = 0; x < optionsToSell.length; x++) {
-    const optionData = optionsToSell[x]
-    const symbol = getUnderlying(optionData.optionSymbol)
-    console.log('Selling', symbol)
-    await sendOrdersUtil.sellToOpen(symbol, optionData.optionSymbol, optionData.positions)
+    // For-loop so they dont send all at once
+    for (let x = 0; x < optionsToSell.length; x++) {
+      const optionData = optionsToSell[x]
+      const symbol = getUnderlying(optionData.optionSymbol)
+      console.log('Selling', symbol)
+      await sendOrdersUtil.sellToOpen(symbol, optionData.optionSymbol, optionData.positions)
+    }
+  } catch (e) {
+    logUtil.log({
+      type: 'error',
+      message: e.toString()
+    })
   }
 }
 

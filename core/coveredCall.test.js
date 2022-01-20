@@ -303,6 +303,17 @@ describe('sellCoveredCalls', () => {
     watchlistUtil.getWatchlist = jest.fn()
   })
 
+  it('Catches and logs exceptions', async () => {
+    market.isMarketOpen.mockImplementation(() => {
+      throw new Error('Oh nooooooo!')
+    })
+    await sellCoveredCalls()
+    expect(logUtil.log).toHaveBeenCalledWith({
+      type: 'error',
+      message: 'Error: Oh nooooooo!'
+    })
+  })
+
   it('Does not run if callsEnabled setting is false', async () => {
     settings.getSetting.mockReturnValue(false)
     await sellCoveredCalls()
