@@ -20,8 +20,8 @@ const _filterChain = (chain, minStrike) => chain.filter(option => {
   }
 
   // Filter out anything with a delta higher than .50 or lower than 0.1
-  // Filter out anything with a shit premium
-  return option.delta <= 0.5 && option.delta > 0.1 && option.premium >= 5
+  // Filter out anything with a shit premium that doesn't meet fee schedule (roughly $9 for assignment)
+  return option.delta <= 0.5 && option.delta > 0.1 && option.premium >= 20
 })
 
 

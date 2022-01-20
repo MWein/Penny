@@ -225,13 +225,13 @@ describe('_filterChain', () => {
       },
       {
         symbol: 'AAPL',
-        premium: 5,
+        premium: 20,
         strike: 62,
         delta: 0.3,
       },
       {
         symbol: 'AAPL',
-        premium: 7,
+        premium: 19,
         strike: 63,
         delta: 0.3,
       },
@@ -240,14 +240,8 @@ describe('_filterChain', () => {
     expect(filteredChain).toEqual([
       {
         symbol: 'AAPL',
-        premium: 5,
+        premium: 20,
         strike: 62,
-        delta: 0.3,
-      },
-      {
-        symbol: 'AAPL',
-        premium: 7,
-        strike: 63,
         delta: 0.3,
       },
     ])
