@@ -165,6 +165,8 @@ const sellCashSecuredPuts = async () => {
     // Get balance. Calc balance - reserve
     const balances = await balanceUtil.getBalances()
     const optionBuyingPower = balances.optionBuyingPower - settings.reserve
+
+    // Check if buying power is 0 or less, or if reserve is NaN and turns optionBuyingPower into NaN
     if (optionBuyingPower <= 0) {
       logUtil.log('No buying power')
       return
@@ -172,7 +174,6 @@ const sellCashSecuredPuts = async () => {
 
     const watchlist = await watchlistUtil.getWatchlist()
     const watchlistPriorityUnion = await _getWatchlistPriorityUnion(settings.priorityList, watchlist)
-
     if (!watchlistPriorityUnion.length) {
       logUtil.log('Priority List or Watchlist is Empty')
       return
@@ -186,6 +187,11 @@ const sellCashSecuredPuts = async () => {
     }
 
     const optionsToConsider = await _selectBestOptionsFromWatchlist(preFilteredWatchlistItems)
+    if (!optionsToConsider.length) {
+      logUtil.log('No good option opportunities')
+      return
+    }
+
     const optionsToSell = _selectOptionsToSell(optionBuyingPower, optionsToConsider)
 
     // For-loop so they dont send all at once

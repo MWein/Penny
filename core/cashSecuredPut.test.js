@@ -545,19 +545,89 @@ describe('sellCashSecuredPuts', () => {
   it('Does nothing if the permitted stock list is empty', async () => {
     settings.getSettings.mockReturnValue({
       putsEnabled: true,
-      priorityList: []
+      priorityList: [],
+      reserve: 0,
     })
     market.isMarketOpen.mockReturnValue(true)
     balanceUtil.getBalances.mockReturnValue({ optionBuyingPower: 1000 })
     watchlistUtil.getWatchlist.mockReturnValue([])
     await sellCashSecuredPuts()
     expect(settings.getSettings).toHaveBeenCalled()
-    expect(logUtil.log).toHaveBeenCalledWith('Priority List or Watchlist is Empty')
     expect(watchlistUtil.getWatchlist).toHaveBeenCalled()
+    expect(logUtil.log).toHaveBeenCalledWith('Priority List or Watchlist is Empty')
     expect(priceUtil.getPrices).not.toHaveBeenCalled()
-    // TODO Add all other imports here
+  })
+
+  it('Does nothing if no stocks pass the pre-filter', async () => {
+    settings.getSettings.mockReturnValue({
+      putsEnabled: true,
+      priorityList: [ 'AAPL' ],
+      reserve: 0,
+    })
+    market.isMarketOpen.mockReturnValue(true)
+    balanceUtil.getBalances.mockReturnValue({ optionBuyingPower: 1000 })
+    watchlistUtil.getWatchlist.mockReturnValue([
+      _mockPutWatchlistItem('AAPL', 0, false, 0.3)
+    ])
+    await sellCashSecuredPuts()
+    expect(settings.getSettings).toHaveBeenCalled()
+    expect(watchlistUtil.getWatchlist).toHaveBeenCalled()
+    expect(logUtil.log).toHaveBeenCalledWith('No stocks passed the pre-filter')
+    expect(priceUtil.getPrices).not.toHaveBeenCalled()
+  })
+
+  it('Calls selectBestOption for stocks that pass the pre-filter; all nulls', async () => {
+    settings.getSettings.mockReturnValue({
+      putsEnabled: true,
+      priorityList: [ 'AAPL' ],
+      reserve: 0,
+    })
+    market.isMarketOpen.mockReturnValue(true)
+    balanceUtil.getBalances.mockReturnValue({ optionBuyingPower: 1000 })
+    watchlistUtil.getWatchlist.mockReturnValue([
+      _mockPutWatchlistItem('AAPL', 1, true, 0.3)
+    ])
+    bestOptionUtil.selectBestOption.mockReturnValue(null)
+    priceUtil.getPrices.mockReturnValue([])
+    positionUtil.getPositions.mockReturnValue([])
+    orderUtil.getOrders.mockReturnValue([])
+    await sellCashSecuredPuts()
+    expect(logUtil.log).toHaveBeenCalledWith('No good option opportunities')
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'AAPL' ])
   })
 
 
-  // balanceUtil.getBalances.mockReturnValue({ optionBuyingPower: 2001 })
+  it('Calls selectBestOption for stocks that pass the pre-filter, calls sellToOpen on each', async () => {
+    settings.getSettings.mockReturnValue({
+      putsEnabled: true,
+      priorityList: [ 'AAPL', 'MSFT' ],
+      reserve: 0,
+    })
+    market.isMarketOpen.mockReturnValue(true)
+    balanceUtil.getBalances.mockReturnValue({ optionBuyingPower: 5000 })
+    watchlistUtil.getWatchlist.mockReturnValue([
+      _mockPutWatchlistItem('AAPL', 1, true, 0.3),
+      _mockPutWatchlistItem('MSFT', 2, true, 0.3)
+    ])
+    bestOptionUtil.selectBestOption.mockReturnValueOnce({
+      symbol: generateSymbol('AAPL', 'put', '2021-01-01', 25)
+    })
+    bestOptionUtil.selectBestOption.mockReturnValueOnce({
+      symbol: generateSymbol('MSFT', 'put', '2021-01-01', 25)
+    })
+    priceUtil.getPrices.mockReturnValue([])
+    positionUtil.getPositions.mockReturnValue([])
+    orderUtil.getOrders.mockReturnValue([])
+    await sellCashSecuredPuts()
+    expect(logUtil.log).not.toHaveBeenCalled()
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'AAPL', 'MSFT' ])
+
+    expect(bestOptionUtil.selectBestOption).toHaveBeenCalledTimes(2)
+    expect(bestOptionUtil.selectBestOption).toHaveBeenCalledWith('AAPL', 'put', null, 0.3)
+    expect(bestOptionUtil.selectBestOption).toHaveBeenCalledWith('MSFT', 'put', null, 0.3)
+
+    expect(sendOrdersUtil.sellToOpen).toHaveBeenCalledTimes(2)
+    expect(sendOrdersUtil.sellToOpen).toHaveBeenCalledWith('AAPL', 'AAPL210101P00025000', 1)
+    expect(sendOrdersUtil.sellToOpen).toHaveBeenCalledWith('MSFT', 'MSFT210101P00025000', 1)
+  })
 })
