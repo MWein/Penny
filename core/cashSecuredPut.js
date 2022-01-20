@@ -162,19 +162,19 @@ const sellCashSecuredPuts = async () => {
       return
     }
 
-    const watchlist = await watchlistUtil.getWatchlist()
-    const watchlistPriorityUnion = await _getWatchlistPriorityUnion(settings.priorityList, watchlist)
-
-    if (!watchlistPriorityUnion.length) {
-      logUtil.log('Priority List or Watchlist is Empty')
-      return
-    }
-
     // Get balance. Calc balance - reserve
     const balances = await balanceUtil.getBalances()
     const optionBuyingPower = balances.optionBuyingPower - settings.reserve
     if (optionBuyingPower <= 0) {
       logUtil.log('No buying power')
+      return
+    }
+
+    const watchlist = await watchlistUtil.getWatchlist()
+    const watchlistPriorityUnion = await _getWatchlistPriorityUnion(settings.priorityList, watchlist)
+
+    if (!watchlistPriorityUnion.length) {
+      logUtil.log('Priority List or Watchlist is Empty')
       return
     }
 
