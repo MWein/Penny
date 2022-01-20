@@ -482,7 +482,6 @@ describe('sellCashSecuredPuts', () => {
   beforeEach(() => {
     settings.getSettings = jest.fn().mockReturnValue({
       putsEnabled: true,
-
     })
     logUtil.log = jest.fn()
     market.isMarketOpen = jest.fn().mockReturnValue(true)
@@ -511,14 +510,9 @@ describe('sellCashSecuredPuts', () => {
       putsEnabled: false
     })
     await sellCashSecuredPuts()
-    expect(settings.getSettings).toHaveBeenCalled()
     expect(logUtil.log).toHaveBeenCalledTimes(1)
     expect(logUtil.log).toHaveBeenCalledWith('Puts Disabled')
     expect(market.isMarketOpen).not.toHaveBeenCalled()
-    expect(watchlistUtil.getWatchlist).not.toHaveBeenCalled()
-    expect(priceUtil.getPrices).not.toHaveBeenCalled()
-    expect(balanceUtil.getBalances).not.toHaveBeenCalled()
-    // TODO Add all other imports here
   })
 
   it('Does nothing if the market is not open', async () => {
@@ -527,12 +521,25 @@ describe('sellCashSecuredPuts', () => {
     })
     market.isMarketOpen.mockReturnValue(false)
     await sellCashSecuredPuts()
-    expect(settings.getSettings).toHaveBeenCalled()
     expect(market.isMarketOpen).toHaveBeenCalled()
     expect(logUtil.log).toHaveBeenCalledTimes(1)
     expect(logUtil.log).toHaveBeenCalledWith('Market Closed')
+    expect(balanceUtil.getBalances).not.toHaveBeenCalled()
+  })
+
+  it('Does nothing if balance is 0 or negative (reserve)', async () => {
+    settings.getSettings.mockReturnValue({
+      putsEnabled: true,
+      reserve: 10
+    })
+    market.isMarketOpen.mockReturnValue(true)
+    balanceUtil.getBalances.mockReturnValue({ optionBuyingPower: 10 })
+    await sellCashSecuredPuts()
+    expect(settings.getSettings).toHaveBeenCalled()
+    expect(balanceUtil.getBalances).toHaveBeenCalled()
+    expect(logUtil.log).toHaveBeenCalledTimes(1)
+    expect(logUtil.log).toHaveBeenCalledWith('No buying power')
     expect(watchlistUtil.getWatchlist).not.toHaveBeenCalled()
-    // TODO Add all other imports here
   })
 
   it('Does nothing if the permitted stock list is empty', async () => {
@@ -541,18 +548,14 @@ describe('sellCashSecuredPuts', () => {
       priorityList: []
     })
     market.isMarketOpen.mockReturnValue(true)
+    balanceUtil.getBalances.mockReturnValue({ optionBuyingPower: 1000 })
     watchlistUtil.getWatchlist.mockReturnValue([])
     await sellCashSecuredPuts()
     expect(settings.getSettings).toHaveBeenCalled()
     expect(logUtil.log).toHaveBeenCalledWith('Priority List or Watchlist is Empty')
     expect(watchlistUtil.getWatchlist).toHaveBeenCalled()
     expect(priceUtil.getPrices).not.toHaveBeenCalled()
-    expect(balanceUtil.getBalances).not.toHaveBeenCalled()
     // TODO Add all other imports here
-  })
-
-  it('Exits if pre-filter doesnt pass any stocks', async () => {
-
   })
 
 
