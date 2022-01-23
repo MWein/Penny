@@ -31,15 +31,9 @@ const _preStartFilterWatchlistItems = async (watchlistItems, buyingPower) => {
     return []
   }
 
-  const [
-    prices,
-    positions,
-    orders,
-  ] = await Promise.all([
-    priceUtil.getPrices(firstPass.map(x => x.symbol)),
-    positionUtil.getPositions(),
-    orderUtil.getOrders(),
-  ])
+  const prices = await priceUtil.getPrices(firstPass.map(x => x.symbol))
+  const positions = await positionUtil.getPositions()
+  const orders = await orderUtil.getOrders()
 
   const stockPositions = positionUtil.filterForOptionableStockPositions(positions)
   const putPositions = positionUtil.filterForPutPositions(positions)
