@@ -97,6 +97,7 @@ describe('getSettings', () => {
       callsEnabled: false,
       putsEnabled: false,
       closeExpiringPuts: true,
+      allocateUnutilizedCash: false,
       reserve: 20,
       profitTarget: 0.70,
       priorityList: [ 'AAPL', 'MSFT' ]
