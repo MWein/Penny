@@ -530,7 +530,8 @@ describe('sellCashSecuredPuts', () => {
   it('Does nothing if balance is 0 or negative (reserve)', async () => {
     settings.getSettings.mockReturnValue({
       putsEnabled: true,
-      reserve: 10
+      reserve: 10,
+      priorityList: []
     })
     market.isMarketOpen.mockReturnValue(true)
     balanceUtil.getBalances.mockReturnValue({ optionBuyingPower: 10 })
@@ -539,7 +540,6 @@ describe('sellCashSecuredPuts', () => {
     expect(balanceUtil.getBalances).toHaveBeenCalled()
     expect(logUtil.log).toHaveBeenCalledTimes(1)
     expect(logUtil.log).toHaveBeenCalledWith('No buying power')
-    expect(watchlistUtil.getWatchlist).not.toHaveBeenCalled()
   })
 
   it('Does nothing if the permitted stock list is empty', async () => {

@@ -145,6 +145,52 @@ const _selectOptionsToSell = (buyingPower, optionsToConsider) => {
 }
 
 
+const getPositionsToSell = async ({ reserve, priorityList }) => {
+  const createReturnObj = (balances, watchlist = [], optionsToSell = []) => ({
+    balances,
+    watchlist,
+    optionsToSell,
+  })
+
+  const [
+    balances,
+    watchlist,
+  ] = await Promise.all([
+    balanceUtil.getBalances(),
+    watchlistUtil.getWatchlist(),
+  ])
+
+  const optionBuyingPower = balances.optionBuyingPower - reserve
+  const watchlistPriorityUnion = await _getWatchlistPriorityUnion(priorityList, watchlist)
+
+  if (optionBuyingPower <= 0) {
+    logUtil.log('No buying power')
+    return createReturnObj(balances, watchlist)
+  }
+
+  if (!watchlistPriorityUnion.length) {
+    logUtil.log('Priority List or Watchlist is Empty')
+    return createReturnObj(balances, watchlist)
+  }
+
+  // Pre filter
+  const preFilteredWatchlistItems = await _preStartFilterWatchlistItems(watchlistPriorityUnion, optionBuyingPower)
+  if (!preFilteredWatchlistItems.length) {
+    logUtil.log('No stocks passed the pre-filter')
+    return createReturnObj(balances, watchlist)
+  }
+
+  const optionsToConsider = await _selectBestOptionsFromWatchlist(preFilteredWatchlistItems)
+  if (!optionsToConsider.length) {
+    logUtil.log('No good option opportunities')
+    return createReturnObj(balances, watchlist)
+  }
+
+  const optionsToSell = _selectOptionsToSell(optionBuyingPower, optionsToConsider)
+
+  return createReturnObj(balances, watchlist, optionsToSell)
+}
+
 
 const sellCashSecuredPuts = async () => {
   try {
@@ -162,43 +208,13 @@ const sellCashSecuredPuts = async () => {
       return
     }
 
-    // Get balance. Calc balance - reserve
-    const balances = await balanceUtil.getBalances()
-    const optionBuyingPower = balances.optionBuyingPower - settings.reserve
-
-    // Check if buying power is 0 or less, or if reserve is NaN and turns optionBuyingPower into NaN
-    if (optionBuyingPower <= 0) {
-      logUtil.log('No buying power')
-      return
-    }
-
-    const watchlist = await watchlistUtil.getWatchlist()
-    const watchlistPriorityUnion = await _getWatchlistPriorityUnion(settings.priorityList, watchlist)
-    if (!watchlistPriorityUnion.length) {
-      logUtil.log('Priority List or Watchlist is Empty')
-      return
-    }
-
-    // Pre filter
-    const preFilteredWatchlistItems = await _preStartFilterWatchlistItems(watchlistPriorityUnion, optionBuyingPower)
-    if (!preFilteredWatchlistItems.length) {
-      logUtil.log('No stocks passed the pre-filter')
-      return
-    }
-
-    const optionsToConsider = await _selectBestOptionsFromWatchlist(preFilteredWatchlistItems)
-    if (!optionsToConsider.length) {
-      logUtil.log('No good option opportunities')
-      return
-    }
-
-    const optionsToSell = _selectOptionsToSell(optionBuyingPower, optionsToConsider)
+    const { optionsToSell } = await getPositionsToSell(settings)
 
     // For-loop so they dont send all at once
     for (let x = 0; x < optionsToSell.length; x++) {
       const optionData = optionsToSell[x]
       const symbol = getUnderlying(optionData.optionSymbol)
-      console.log('Selling', symbol)
+      //console.log('Selling', symbol)
       await sendOrdersUtil.sellToOpen(symbol, optionData.optionSymbol, optionData.positions)
     }
   } catch (e) {
@@ -215,5 +231,6 @@ module.exports = {
   _preStartFilterWatchlistItems,
   _selectBestOptionsFromWatchlist,
   _selectOptionsToSell,
+  getPositionsToSell,
   sellCashSecuredPuts,
 }
