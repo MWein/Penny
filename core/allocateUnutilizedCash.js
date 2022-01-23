@@ -39,7 +39,11 @@ const allocateUnutilizedCash = async () => {
     try {
         const settings = await settingsUtil.getSettings()
 
-        // TODO Check if auto-allocation is enabled
+        if (!settings.allocateUnutilizedCash) {
+            logUtil.log('Allocate Unutilized Funds Disabled')
+            return
+        }
+
         // TODO Check if position goals are present
         // TODO Check if position goals are all fulfilled
 

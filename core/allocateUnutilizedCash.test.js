@@ -20,11 +20,24 @@ describe('allocateUnutilizedCash', () => {
   })
 
   it('On exception, logs error', async () => {
-
+    settingsUtil.getSettings.mockImplementation(() => {
+      throw new Error('OH NOOOOOO')
+    })
+    await allocateUnutilizedCash()
+    expect(logUtil.log).toHaveBeenCalledWith({
+      type: 'error',
+      message: 'Error: OH NOOOOOO',
+    })
   })
 
   it('Does nothing if allocateUnutilizedCash is false', async () => {
-
+    settingsUtil.getSettings.mockReturnValue({
+      allocateUnutilizedCash: false,
+    })
+    await allocateUnutilizedCash()
+    expect(logUtil.log).toHaveBeenCalledWith('Allocate Unutilized Funds Disabled')
+    expect(positionUtil.getPositions).not.toHaveBeenCalled()
+    expect(orderUtil.getOrders).not.toHaveBeenCalled()
   })
 
   it('Does nothing if position goals is empty', async () => {
