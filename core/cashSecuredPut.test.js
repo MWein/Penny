@@ -14,6 +14,7 @@ const {
   _preStartFilterWatchlistItems,
   _selectBestOptionsFromWatchlist,
   _selectOptionsToSell,
+  getPositionsToSell,
   sellCashSecuredPuts,
 } = require('./cashSecuredPut')
 
@@ -474,6 +475,12 @@ describe('_selectOptionsToSell', () => {
       },
     ])
   })
+})
+
+
+
+describe('getPositionsToSell', () => {
+  // TODO
 })
 
 
