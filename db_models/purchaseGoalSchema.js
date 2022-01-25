@@ -5,6 +5,11 @@ const PurchaseGoalSchema = mongoose.Schema({
     type: String,
     required: true,
   },
+  enabled: {
+    type: Boolean,
+    required: true,
+    default: true,
+  },
   priority: {
     type: Number,
     required: true,
