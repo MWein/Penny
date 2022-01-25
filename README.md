@@ -9,13 +9,9 @@ Penny is a trading bot that will sell weekly [covered calls](https://www.investo
 
 By using Penny or any software that may be derived from Penny for your own portfolio you agree to the following:
 
-- I, the author, am not responsible for any damages you suffer caused by this program or any derivatives thereof.
-
-- You will try this program on a paper-trading account for not less than **1 million years** before you even consider turning it on an account full of your hard-earned money.
+- I, the author, am not responsible for any damages you will definitely suffer caused by this program or any derivatives thereof.
 
 - This readme and the code itself will be used for education purposes only. The kind of education you get from an underfunded community college taught by a professor who faked his credentials to get hired and lost his entire 401k daytrading Gamestop in a manner befitting the r/WallStreetBets hall of fame.
-
-- You will publish a peer-reviewed research paper on and understand covered calls, naked puts, or any other current or future strategy written in this readme or employed by Penny prior to real world use.
 
 - Any of my personal success with either the program or strategies I use that I share in this readme shall not be construed as a guarantee of success.
 
