@@ -7,6 +7,7 @@ const purchaseGoalSchema = require('../db_models/purchaseGoalSchema')
 const priceUtil = require('../tradier/getPrices')
 const costBasisUtil = require('../utils/determineCostBasis')
 const sendOrderUtil = require('../tradier/sendOrders')
+const market = require('../tradier/market')
 
 const {
   _idealPositions,
@@ -1323,6 +1324,7 @@ describe('allocateUnutilizedCash', () => {
     costBasisUtil.determineCostBasisPerShare = jest.fn()
     sendOrderUtil.buy = jest.fn()
     purchaseGoalSchema.find = jest.fn()
+    market.isMarketOpen = jest.fn().mockReturnValue(true)
   })
 
   it('On exception, logs error', async () => {
@@ -1334,6 +1336,17 @@ describe('allocateUnutilizedCash', () => {
       type: 'error',
       message: 'Error: OH NOOOOOO',
     })
+  })
+
+  it('Does nothing if market is closed', async () => {
+    settingsUtil.getSettings.mockReturnValue({
+      allocateUnutilizedCash: true,
+    })
+    market.isMarketOpen.mockReturnValue(false)
+    await allocateUnutilizedCash()
+    expect(logUtil.log).toHaveBeenCalledWith('Market Closed')
+    expect(positionUtil.getPositions).not.toHaveBeenCalled()
+    expect(orderUtil.getOrders).not.toHaveBeenCalled()
   })
 
   it('Does nothing if allocateUnutilizedCash is false', async () => {

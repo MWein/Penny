@@ -10,6 +10,7 @@ const purchaseGoalSchema = require('../db_models/purchaseGoalSchema')
 const priceUtil = require('../tradier/getPrices')
 const costBasisUtil = require('../utils/determineCostBasis')
 const sendOrderUtil = require('../tradier/sendOrders')
+const market = require('../tradier/market')
 const uniq = require('lodash/uniq')
 
 const {
@@ -212,6 +213,12 @@ const allocateUnutilizedCash = async () => {
     const settings = await settingsUtil.getSettings()
     if (!settings.allocateUnutilizedCash) {
       logUtil.log('Allocate Unutilized Funds Disabled')
+      return
+    }
+
+    const open = await market.isMarketOpen()
+    if (!open) {
+      logUtil.log('Market Closed')
       return
     }
 
