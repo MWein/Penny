@@ -1,6 +1,3 @@
-// TODO Fix later
-///* eslint-disable indent */
-
 const cashSecuredPutUtil = require('./cashSecuredPut')
 const settingsUtil = require('../utils/settings')
 const logUtil = require('../utils/log')
@@ -17,10 +14,6 @@ const {
   getUnderlying,
   getStrike,
 } = require('../utils/determineOptionType')
-
-// TODO REQUIREMENT
-// Need a function that can specifically return the amount available for purchasing
-// That way Penny-Data could use it when this becomes a mono-repo
 
 
 const _idealPositions = (watchlist, positions, orders, optionsToSell, defaultVolatility) => {
