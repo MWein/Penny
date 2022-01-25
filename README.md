@@ -65,9 +65,9 @@ https://www.youtube.com/user/TDAmeritrade (SFW but not funny at all)
 
 TL;DR V1-V3 didn't work. V4 might. Mike and his imploded Robinhood account lived unhappily ever after.
 
-The original version of Penny was written to take advantage of pump-and-dump schemes with Penny stocks, hence the name. The original version would sift through emails where scammers would promise +1000% profits and stocks trading at >$1. As the scheme goes, they would make a large purchase, encourage idiots (including 18yr old me) to purchase, and sell off after the price of the stock inflated. This in turn would leave the idiots holding the bag with large losses. Penny would detect, buy, and then (hopefully) sell after reaching decent gains (5% or better), but most of the time the stock would've already reached it's apex before Penny detected it and made a purchase. Worse yet, I was limited by the day-trader rule which required me to hold each position for at least 1 full trading day. Thankfully, I was smart enough to test the strategy with paper money.
+The original version of Penny was written to take advantage of pump-and-dump schemes with Penny stocks, hence the name. The original version would sift through emails where scammers would promise +1000% profits and stocks trading at <$1. As the scheme goes, they would make a large purchase, encourage idiots (including 18yr old me) to purchase, and sell off after the price of the stock inflated. This in turn would leave the idiots holding the bag with large losses. Penny would detect, buy, and then (hopefully) sell after reaching decent gains (5% or better), but most of the time the stock would've already reached it's apex before Penny detected it and made a purchase. Worse yet, I was limited by the day-trader rule which required me to hold each position for at least 1 full trading day. Thankfully, I was smart enough to test the strategy with paper money.
 
-V1.5 was written to remedy the late entry that Penny would make by shorting the stocks detected. I know, I know, not an incredible idea. The obvious problem with shorting is that loss potential is theoretically unlimited. Look at what happened with Gamestop! All those poor hedge fund managers waiting at the breadlines ='(. The second problem is that few brokers will have easy-to-borrow (ETB) shares of penny stocks available to trade. Due to the ETB problem, this strategy was limited to 3 or 4 different stocks per week. So the capital needed to make any kind of profit was much too high. However, this proved to be somewhat successful. I made ~$500 in my best week but the unlimited risk kept me up at night. I only ran this for a month or so all the while watching the charts every 5 minutes instead of working, ready to change my identity and move to Azerbaijan if s**t went sideways.
+V1.5 was written to remedy the late entry that Penny would make by shorting the stocks detected. I know, I know, not an incredible idea. The obvious problem with shorting is that loss potential is theoretically unlimited. Look at what happened with Gamestop! All those poor hedge fund managers waiting at the breadlines ='(. The second problem is that few brokers will have easy-to-borrow (ETB) shares of penny stocks available to trade. Due to the ETB problem, this strategy was limited to 3 or 4 different stocks per week. So the capital needed to make any kind of profit was much too high. However, this proved to be somewhat successful. I made ~$500 in my best week with an average of $200 but the unlimited risk kept me up at night. I only ran this for a month or so all the while watching the charts every 5 minutes instead of working, ready to change my identity and move to Azerbaijan if s**t went sideways.
 
 V1.7 never left the paper account. In this version I opened up Penny to short larger stocks and ignore penny stocks because higher priced stocks were much more likely to be easy-to-borrow. Imagine if I had this running during the GME fiasco.
 
@@ -77,7 +77,7 @@ On to V4. V4 will automate a strategy that I've been doing manually. This has be
 
 ## App Composition
 
-Penny will be composed of two API's and one UI. Why? Cause. It's to address all of my security concerns. Endpoints exposed to the internet are exposed to risk. Even a health endpoint that simply returns "true" to let me know Penny is up and running is a little too much risk to take on for an app that I'm writing to handle real money. Worse yet, the source code is now public! Now, Golang is fairly secure. So is Node. And I'd be pretty stupid to tell you a**holes what cloud service I'm using. But I also focused on cybersecurity for my Masters degree. I learned to do some scary sh*t.
+Penny will be composed of two API's and one UI. Why? Cause. It's to address all of my security concerns. Endpoints exposed to the internet are exposed to risk. Even a health endpoint that simply returns "true" to let me know Penny is up and running is a little too much risk to take on for an app that I'm writing to handle real money. And I was stupid enough to make this public but I'd be pretty stupid to tell you a**holes what cloud service I'm using. But I also focused on cybersecurity for my Masters degree. I learned to do some scary sh*t.
 
 The primary API, the piece of Penny that will run in a cloud environment, will be as isolated as I can make it. It will only initiate network calls; it won't be able to receive them so none of you can get my tendies. Thats the piece that will handle all of the actual trading. It will also post a timestamp to MongoDB every 10 or so minutes so I can verify it's alive.
 
@@ -93,41 +93,7 @@ You will need the [Mermaid](https://chrome.google.com/webstore/detail/github-%20
 
 ### Sell Covered Calls
 
-This function makes up the minimum viable product for Penny and it will run every day. Until the naked puts function is written, Penny will simply write covered calls against whatever stocks the brokerage account has.
-
-In the foreach loop, two different call options will be considered. The call expiring in the current week and the call expiring next week. If the current weeks call brings in a premium of $8, but next weeks premium brings in $20, it would make more sense to sell next weeks premium because that's an average of $10/week rather than $8. This would occur if the options are considered on a Wednesday. Options tend to degrade in value as time goes on (theta).
-
-Also when sending the orders, I've found that they are more likely to execute if I set the order for $1 less than what the call is worth. I can stand losing out on a $1 here or there.
-
-```mermaid
-flowchart TD
-\n
-Stop1{{Exit}}
-GetPositions([Retreive All Positions\nfrom Broker])
-100Shares[Select Stocks\nwith >100 Shares]
-GetPendingOrders([Retreive Pending\nOrders from Broker])
-CoveredCallsCanBeSold[Determine how many Covered Calls can be sold for each ticker.\n# of Positions/100 - # of Active Calls - # Pending Call Orders]
-AllowedAndCoverable[Select Tickers where # Possible Covered Calls > 0]
-ForEach1{Foreach}
-OptionsChain([Retrieve Options Chain])
-SelectStrike[Select option expiring in the current\nweek with 0.30delta or minimum strike,\nWhichever is higher]
-SelectStrike2[Select option expiring next week\n0.30delta or min strike,\nWhichever is higher]
-SelectHigherPremium[Select the option with a higher weekly premium\nEx. Next weeks premium >= 2x this weeks premium]
-Order([Send Covered Call Sell Order to Broker])
-
-
-Start --> GetPositions
-GetPositions --> 100Shares -- # Stocks > 0 --> GetPendingOrders --> CoveredCallsCanBeSold
-100Shares-- # Stocks == 0 --> Stop1
-CoveredCallsCanBeSold --> AllowedAndCoverable --> ForEach1
---> OptionsChain
---> SelectStrike
-OptionsChain --> SelectStrike2
-SelectStrike --> SelectHigherPremium
-SelectStrike2 --> SelectHigherPremium
---> Order
---> ForEach1
-```
+This function makes up the minimum viable product for Penny and it will run every day. Until the cash-secured puts function is written, Penny will simply write covered calls against whatever stocks the brokerage account has. It will look forward 2 weeks and pick the call that has the higher weekly percentage. If this weeks call sells for $100 but next weeks sells for $300, it makes more sense to sell the call expiring next week.
 
 ### Sell Naked Puts
 
@@ -139,7 +105,7 @@ The naked put functionality will come later. Penny will gather the options chain
 
 ### Buy to Close
 
-This function will be quite simple. An options value will (typically) move with the stock price. Sometimes the value will fall all the way down to $0.01/share ($1 total) before expiration. Why wait until expiration to save ourselves a single dollar? It is a good idea to buy-to-close the option for a buck to free up the shares/cash as collateral to sell another option the following week.
+An options value will (typically) move with the stock price. Sometimes the value will fall all the way down to $0.01/share ($1 total) before expiration. Why wait until expiration to save ourselves a single dollar? It is a good idea to buy-to-close the option for a buck to free up the shares/cash as collateral to sell another option the following week.
 
 This could easily be a part of the Sell functions, but the problem is that options trades are considered day trades and subject to the day-trader rule.
 
@@ -171,7 +137,7 @@ DTR -- No --> ForEach1
 
 ### Tax Estimation
 
-Uncle Sam wants his cut, so I'm going to write some functionality that will estimate how much ~~theft~~ taxes I'll have to pay on whatever I earn since I won't have the "luxury" of tax withholding. This where the Ledger collection comes in. I will also have to consider the [Wash-Sale Rule](https://www.youtube.com/watch?v=R7OmiwjGsZE) rule. Or not. This is just an estimation.
+Uncle Sam wants his cut, so I'm going to write some functionality that will estimate how much ~~theft~~ taxes I'll have to pay on whatever I earn since I won't have the "luxury" of tax withholding. I will also have to consider the [Wash-Sale Rule](https://www.youtube.com/watch?v=R7OmiwjGsZE) rule. Or not. This is just an estimation.
 
 ## Brokers
 
