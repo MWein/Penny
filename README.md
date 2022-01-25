@@ -19,7 +19,7 @@ By using Penny or any software that may be derived from Penny for your own portf
 
 - Any of my personal success with either the program or strategies I use that I share in this readme shall not be construed as a guarantee of success.
 
-- You acknowledge and accept that this program was conceived and written by an idiot with no financial background whatsoever and less than 5 ~~unsuccessful~~ years of trading experience.
+- You acknowledge and accept that this program was conceived and written by an idiot with no financial background whatsoever and less than 10 ~~unsuccessful~~ years of trading experience.
 
 If you use this program on a real account you will lose money. <- This is financial advice.
 
