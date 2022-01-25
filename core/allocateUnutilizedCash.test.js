@@ -831,6 +831,7 @@ describe('_determinePositionsToBuy', () => {
   it('Logs and returns empty if prices is empty', () => {
     const positionGoals = [
       {
+        _id: 1234,
         symbol: 'AAPL',
         enabled: true,
         priority: 60,
@@ -838,6 +839,7 @@ describe('_determinePositionsToBuy', () => {
         fulfilled: 0,
       },
       {
+        _id: 4321,
         symbol: 'MSFT',
         enabled: true,
         priority: 20,
@@ -857,6 +859,7 @@ describe('_determinePositionsToBuy', () => {
   it('Logs and returns empty if prices failed for the highest priority', () => {
     const positionGoals = [
       {
+        _id: 1234,
         symbol: 'MSFT',
         enabled: true,
         priority: 20,
@@ -864,6 +867,7 @@ describe('_determinePositionsToBuy', () => {
         fulfilled: 0,
       },
       {
+        _id: 4321,
         symbol: 'AAPL',
         enabled: true,
         priority: 60,
@@ -888,6 +892,7 @@ describe('_determinePositionsToBuy', () => {
   it('Logs but returns highest priority if prices failed for the second highest priority, assuming enough cash to close out the first', () => {
     const positionGoals = [
       {
+        _id: 1234,
         symbol: 'MSFT',
         enabled: true,
         priority: 20,
@@ -895,6 +900,7 @@ describe('_determinePositionsToBuy', () => {
         fulfilled: 0,
       },
       {
+        _id: 4321,
         symbol: 'AAPL',
         enabled: true,
         priority: 60,
@@ -911,6 +917,7 @@ describe('_determinePositionsToBuy', () => {
     const result = _determinePositionsToBuy(4000, positionGoals, prices)
     expect(result).toEqual([
       {
+        _id: 4321,
         symbol: 'AAPL',
         quantity: 50,
       }
@@ -924,6 +931,7 @@ describe('_determinePositionsToBuy', () => {
   it('Returns empty if there isnt enough to buy a single share of the highest priority stock', () => {
     const positionGoals = [
       {
+        _id: 1234,
         symbol: 'MSFT',
         enabled: true,
         priority: 20,
@@ -931,6 +939,7 @@ describe('_determinePositionsToBuy', () => {
         fulfilled: 0,
       },
       {
+        _id: 4321,
         symbol: 'AAPL',
         enabled: true,
         priority: 60,
@@ -940,6 +949,7 @@ describe('_determinePositionsToBuy', () => {
     ]
     const prices = [
       {
+        _id: 4321,
         symbol: 'AAPL',
         price: 400,
       }
@@ -952,6 +962,7 @@ describe('_determinePositionsToBuy', () => {
   it('Returns highest priority stock and number of shares it can afford', () => {
     const positionGoals = [
       {
+        _id: 1234,
         symbol: 'MSFT',
         enabled: true,
         priority: 20,
@@ -959,6 +970,7 @@ describe('_determinePositionsToBuy', () => {
         fulfilled: 0,
       },
       {
+        _id: 4321,
         symbol: 'AAPL',
         enabled: true,
         priority: 60,
@@ -975,6 +987,7 @@ describe('_determinePositionsToBuy', () => {
     const result = _determinePositionsToBuy(1500, positionGoals, prices)
     expect(result).toEqual([
       {
+        _id: 4321,
         symbol: 'AAPL',
         quantity: 37
       }
@@ -985,6 +998,7 @@ describe('_determinePositionsToBuy', () => {
   it('Returns highest priority stock and number of shares it can afford, with some already having been fulfilled', () => {
     const positionGoals = [
       {
+        _id: 1234,
         symbol: 'MSFT',
         enabled: true,
         priority: 20,
@@ -992,6 +1006,7 @@ describe('_determinePositionsToBuy', () => {
         fulfilled: 0,
       },
       {
+        _id: 4321,
         symbol: 'AAPL',
         enabled: true,
         priority: 60,
@@ -1012,10 +1027,12 @@ describe('_determinePositionsToBuy', () => {
     const result = _determinePositionsToBuy(4000, positionGoals, prices)
     expect(result).toEqual([
       {
+        _id: 4321,
         symbol: 'AAPL',
         quantity: 26
       },
       {
+        _id: 1234,
         symbol: 'MSFT',
         quantity: 50
       },
@@ -1026,6 +1043,7 @@ describe('_determinePositionsToBuy', () => {
   it('Returns highest and next highest priority if theres enough cash to complete a goal', () => {
     const positionGoals = [
       {
+        _id: 1234,
         symbol: 'MSFT',
         enabled: true,
         priority: 20,
@@ -1033,6 +1051,7 @@ describe('_determinePositionsToBuy', () => {
         fulfilled: 0,
       },
       {
+        _id: 4321,
         symbol: 'AAPL',
         enabled: true,
         priority: 60,
@@ -1053,10 +1072,12 @@ describe('_determinePositionsToBuy', () => {
     const result = _determinePositionsToBuy(2500, positionGoals, prices)
     expect(result).toEqual([
       {
+        _id: 4321,
         symbol: 'AAPL',
         quantity: 50
       },
       {
+        _id: 1234,
         symbol: 'MSFT',
         quantity: 10,
       }
@@ -1067,6 +1088,7 @@ describe('_determinePositionsToBuy', () => {
   it('Returns all if theres enough cash to fulfill all positions', () => {
     const positionGoals = [
       {
+        _id: 1234,
         symbol: 'MSFT',
         enabled: true,
         priority: 20,
@@ -1074,6 +1096,7 @@ describe('_determinePositionsToBuy', () => {
         fulfilled: 0,
       },
       {
+        _id: 4321,
         symbol: 'AAPL',
         enabled: true,
         priority: 60,
@@ -1094,10 +1117,12 @@ describe('_determinePositionsToBuy', () => {
     const result = _determinePositionsToBuy(10000, positionGoals, prices)
     expect(result).toEqual([
       {
+        _id: 4321,
         symbol: 'AAPL',
         quantity: 50
       },
       {
+        _id: 1234,
         symbol: 'MSFT',
         quantity: 50,
       }

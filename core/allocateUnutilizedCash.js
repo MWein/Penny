@@ -135,6 +135,7 @@ const _determinePositionsToBuy = (unutilizedCash, positionGoals, prices) =>
       const newPositions = affordableShares > 0 ? [
         ...acc.positions,
         {
+          _id: goal._id,
           symbol: goal.symbol,
           quantity: affordableShares
         }
