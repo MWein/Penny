@@ -241,13 +241,13 @@ const allocateUnutilizedCash = async () => {
       return
     }
 
-    // const unutilizedCash = balances.optionBuyingPower - settings.reserve - buffer
+    const unutilizedCash = balances.optionBuyingPower - settings.reserve - buffer
 
-    // const goalTickers = uniq(positionGoals.map(x => x.symbol))
-    // const prices = await priceUtil.getPrices(goalTickers)
-    // const positionsToBuy = _determinePositionsToBuy(unutilizedCash, positionGoals, prices)
+    const goalTickers = uniq(positionGoals.map(x => x.symbol))
+    const prices = await priceUtil.getPrices(goalTickers)
+    const positionsToBuy = _determinePositionsToBuy(unutilizedCash, positionGoals, prices)
 
-    // const filledPositions = await _buyPositions(positionsToBuy)
+    const filledPositions = await _buyPositions(positionsToBuy)
 
     // TODO Modify table in Mongo
   } catch (e) {
