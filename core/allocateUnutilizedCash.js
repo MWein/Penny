@@ -18,16 +18,13 @@ const {
 
 
 const _idealPositions = (watchlist, positions, orders, optionsToSell, defaultVolatility) => {
-    const filteredWatchlist = watchlist.filter(item => item.put.enabled && item.maxPositions > 0)
-    if (!filteredWatchlist.length) {
-        return []
-    }
-
     const optionablePositions = positionUtil.filterForOptionableStockPositions(positions)
     const putPositions = positionUtil.filterForPutPositions(positions)
     const putOrders = orderUtil.filterForCashSecuredPutOrders(orders)
 
-    return filteredWatchlist.map(item => {
+    return watchlist
+      .filter(item => item.put.enabled && item.maxPositions > 0)
+      .map(item => {
         const symbol = item.symbol
         const maxPositions = item.maxPositions
         const volatility = item.volatility || defaultVolatility
@@ -49,27 +46,6 @@ const _idealPositions = (watchlist, positions, orders, optionsToSell, defaultVol
             positions: Math.min(maxPositions, numStockOptUnits + numPutPositions + numPutOrders + numOptsToSell)
         }
     }).filter(x => x.positions > 0)
-
-
-    /*
-        Should return an array with each position, and how many Penny
-        can sell with the current amount of money Penny has right now.
-
-        To calculate, it should take the actual number of positions + orders
-        and add the amount of options Penny would sell if cashSecuredPuts was
-        run right now. Only looks at those in the watchlist
-
-        [
-            {
-                symbol: 'AAPL',
-                positions: 2,
-            },
-            {
-                symbol: 'SPY',
-                positions: 1
-            }
-        ]
-    */
 }
 
 
