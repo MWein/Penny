@@ -34,7 +34,7 @@ const filterForOptionBuyToCloseOrders = orders =>
 const getOrder = async orderId => {
   const url = `accounts/${process.env.ACCOUNTNUM}/orders/${orderId}`
   const response = await network.get(url)
-  if (response.orders === 'null') {
+  if (response.order === 'null') {
     return null
   }
   return response.order

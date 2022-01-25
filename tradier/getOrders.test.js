@@ -55,7 +55,7 @@ describe('getOrder', () => {
   it('Creates the URL using the account number env and orderID', async () => {
     process.env.ACCOUNTNUM = 'somethingsomthing'
     network.get.mockReturnValue({
-      orders: 'null'
+      order: 'null'
     })
     await getOrder(1234)
     expect(network.get).toHaveBeenCalledWith('accounts/somethingsomthing/orders/1234')
@@ -63,7 +63,7 @@ describe('getOrder', () => {
 
   it('Returns null if Tradier returns null', async () => {
     network.get.mockReturnValue({
-      orders: 'null'
+      order: 'null'
     })
     const orders = await getOrder(1234)
     expect(orders).toEqual(null)
@@ -71,14 +71,12 @@ describe('getOrder', () => {
 
   it('Returns order', async () => {
     const response = {
-      orders: {
-        order: generateOrderObject('AAPL', 50, 'stock', 'buy', 'open', 228175)
-      }
+      order: generateOrderObject('AAPL', 50, 'stock', 'buy', 'open', 228175)
     }
     network.get.mockReturnValue(response)
 
     const orders = await getOrder(1234)
-    expect(orders).toEqual(response.orders.order)
+    expect(orders).toEqual(response.order)
   })
 })
 
