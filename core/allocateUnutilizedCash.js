@@ -103,13 +103,8 @@ const allocateUnutilizedCash = async () => {
 
         This is to prevent a situation where a symbol increases in value,
         but still allow Penny to have enough free money to continue trading it.
-        */
-
-        /*
-            A custom buffer setting should also be considered.
-            Literally just reserve a specific amount for this function to ignore minus reserve
-            PennyData should be able to tell me how many of each stock Penny could trade
-            with the given threshold prior to saving it
+        
+        ALSO ALSO add the cost of buying buy_to_close orders for each put currently uncovered by one
         */
 
 
