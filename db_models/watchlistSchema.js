@@ -10,7 +10,7 @@ const WatchlistSchema = mongoose.Schema({
     required: true,
     default: 0,
   },
-  automaticAllocationBuffer: {
+  volatility: {
     type: Number,
     required: false,
   },
