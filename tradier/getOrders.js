@@ -31,6 +31,16 @@ const filterForOptionBuyToCloseOrders = orders =>
   )
 
 
+const getOrder = async orderId => {
+  const url = `accounts/${process.env.ACCOUNTNUM}/orders/${orderId}`
+  const response = await network.get(url)
+  if (response.orders === 'null') {
+    return null
+  }
+  return response.orders.order
+}
+
+
 const getOrders = async () => {
   const url = `accounts/${process.env.ACCOUNTNUM}/orders`
   const response = await network.get(url)
@@ -44,9 +54,11 @@ const getOrders = async () => {
   }
 }
 
+
 module.exports = {
   filterForCoveredCallOrders,
   filterForCashSecuredPutOrders,
   filterForOptionBuyToCloseOrders,
+  getOrder,
   getOrders,
 }
