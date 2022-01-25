@@ -44,6 +44,10 @@ describe('allocateUnutilizedCash', () => {
 
   })
 
+  it('Does nothing if no position goals are enabled', async () => {
+
+  })
+
   it('Does nothing if position goals have all been fulfilled', async () => {
         
   })
