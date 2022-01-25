@@ -6,6 +6,7 @@ const settingsUtil = require('../utils/settings')
 const logUtil = require('../utils/log')
 const positionUtil = require('../tradier/getPositions')
 const orderUtil = require('../tradier/getOrders')
+const purchaseGoalSchema = require('../db_models/purchaseGoalSchema')
 
 // TODO REQUIREMENT
 // Need a function that can specifically return the amount available for purchasing
@@ -38,14 +39,17 @@ const _idealPositions = (positions, orders, optionsToSell) => {
 const allocateUnutilizedCash = async () => {
     try {
         const settings = await settingsUtil.getSettings()
-
         if (!settings.allocateUnutilizedCash) {
             logUtil.log('Allocate Unutilized Funds Disabled')
             return
         }
 
-        // TODO Check if position goals are present
-        // TODO Check if position goals are all fulfilled
+        const allPositionGoals = await purchaseGoalSchema.find()
+        const positionGoals = allPositionGoals.filter(goal => goal.enabled && goal.fulfilled < goal.goal)
+        if (!positionGoals.length) {
+            logUtil.log('No position goals to trade on')
+            return
+        }
 
         const positions = await positionUtil.getPositions()
         const orders = await orderUtil.getOrders()
