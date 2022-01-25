@@ -19,14 +19,14 @@ const {
 
 
 describe('_idealPositions', () => {
-  const watchlistItem = (symbol, maxPositions, putEnabled) => ({
+  const watchlistItem = (symbol, maxPositions, putEnabled, volatility) => ({
     symbol,
     maxPositions,
+    volatility,
     put: {
       enabled: putEnabled
     }
   })
-
 
   it('Nothing in watchlist - returns empty', () => {
     const watchlist = []
@@ -37,7 +37,7 @@ describe('_idealPositions', () => {
       generateOrderObject('AAPL', 1, 'put', 'sell_to_open')
     ]
     const optionsToSell = []
-    const result = _idealPositions(watchlist, positions, orders, optionsToSell)
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell, 0.2)
     expect(result).toEqual([])
   })
 
@@ -54,7 +54,7 @@ describe('_idealPositions', () => {
       generateOrderObject('AAPL', 1, 'put', 'sell_to_open')
     ]
     const optionsToSell = []
-    const result = _idealPositions(watchlist, positions, orders, optionsToSell)
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell, 0.2)
     expect(result).toEqual([])
   })
 
@@ -66,7 +66,7 @@ describe('_idealPositions', () => {
     ]
     const orders = []
     const optionsToSell = []
-    const result = _idealPositions(watchlist, positions, orders, optionsToSell)
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell, 0.2)
     expect(result).toEqual([])
   })
 
@@ -77,10 +77,11 @@ describe('_idealPositions', () => {
     ]
     const orders = []
     const optionsToSell = []
-    const result = _idealPositions(watchlist, positions, orders, optionsToSell)
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell, 0.2)
     expect(result).toEqual([
       {
         symbol: 'MSFT',
+        volatility: 0.2,
         positions: 1
       },
     ])
@@ -93,10 +94,11 @@ describe('_idealPositions', () => {
     ]
     const orders = []
     const optionsToSell = []
-    const result = _idealPositions(watchlist, positions, orders, optionsToSell)
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell, 0.2)
     expect(result).toEqual([
       {
         symbol: 'MSFT',
+        volatility: 0.2,
         positions: 5
       },
     ])
@@ -109,10 +111,11 @@ describe('_idealPositions', () => {
     ]
     const orders = []
     const optionsToSell = []
-    const result = _idealPositions(watchlist, positions, orders, optionsToSell)
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell, 0.2)
     expect(result).toEqual([
       {
         symbol: 'MSFT',
+        volatility: 0.2,
         positions: 1
       },
     ])
@@ -127,10 +130,11 @@ describe('_idealPositions', () => {
     ]
     const orders = []
     const optionsToSell = []
-    const result = _idealPositions(watchlist, positions, orders, optionsToSell)
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell, 0.2)
     expect(result).toEqual([
       {
         symbol: 'MSFT',
+        volatility: 0.2,
         positions: 2
       },
     ])
@@ -145,10 +149,11 @@ describe('_idealPositions', () => {
     ]
     const orders = []
     const optionsToSell = []
-    const result = _idealPositions(watchlist, positions, orders, optionsToSell)
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell, 0.2)
     expect(result).toEqual([
       {
         symbol: 'MSFT',
+        volatility: 0.2,
         positions: 5
       },
     ])
@@ -161,10 +166,11 @@ describe('_idealPositions', () => {
       generateOrderObject('MSFT', -1, 'put', 'sell_to_open', 'pending')
     ]
     const optionsToSell = []
-    const result = _idealPositions(watchlist, positions, orders, optionsToSell)
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell, 0.2)
     expect(result).toEqual([
       {
         symbol: 'MSFT',
+        volatility: 0.2,
         positions: 1
       },
     ])
@@ -178,10 +184,11 @@ describe('_idealPositions', () => {
       generateOrderObject('MSFT', -2, 'put'),
     ]
     const optionsToSell = []
-    const result = _idealPositions(watchlist, positions, orders, optionsToSell)
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell, 0.2)
     expect(result).toEqual([
       {
         symbol: 'MSFT',
+        volatility: 0.2,
         positions: 3
       },
     ])
@@ -194,7 +201,7 @@ describe('_idealPositions', () => {
       generateOrderObject('MSFT', 2, 'put', 'buy_to_close'),
     ]
     const optionsToSell = []
-    const result = _idealPositions(watchlist, positions, orders, optionsToSell)
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell, 0.2)
     expect(result).toEqual([])
   })
 
@@ -205,7 +212,7 @@ describe('_idealPositions', () => {
       generateOrderObject('MSFT', 2, 'put', 'sell_to_open', 'rejected'),
     ]
     const optionsToSell = []
-    const result = _idealPositions(watchlist, positions, orders, optionsToSell)
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell, 0.2)
     expect(result).toEqual([])
   })
 
@@ -216,10 +223,11 @@ describe('_idealPositions', () => {
       generateOrderObject('MSFT', -7, 'put'),
     ]
     const optionsToSell = []
-    const result = _idealPositions(watchlist, positions, orders, optionsToSell)
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell, 0.2)
     expect(result).toEqual([
       {
         symbol: 'MSFT',
+        volatility: 0.2,
         positions: 5
       },
     ])
@@ -234,6 +242,10 @@ describe('_idealPositions', () => {
   })
 
   it('Item in watchlist has a position, an order, a buy-to-close order, and optionToSell - adds all values together', () => {
+
+  })
+
+  it('Item in watchlist has a position, an order, a buy-to-close order, and optionToSell - sum is greater than max positions - returns max positions', () => {
 
   })
 

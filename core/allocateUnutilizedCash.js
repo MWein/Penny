@@ -17,7 +17,7 @@ const {
 // That way Penny-Data could use it when this becomes a mono-repo
 
 
-const _idealPositions = (watchlist, positions, orders, optionsToSell) => {
+const _idealPositions = (watchlist, positions, orders, optionsToSell, defaultVolatility) => {
     const filteredWatchlist = watchlist.filter(item => item.put.enabled && item.maxPositions > 0)
     if (!filteredWatchlist.length) {
         return []
@@ -30,6 +30,7 @@ const _idealPositions = (watchlist, positions, orders, optionsToSell) => {
     return filteredWatchlist.map(item => {
         const symbol = item.symbol
         const maxPositions = item.maxPositions
+        const volatility = item.volatility || defaultVolatility
 
         const numStockOptUnits = Math.floor(optionablePositions.find(x => x.symbol === symbol)?.quantity / 100) || 0
         const numPutPositions = putPositions
@@ -41,6 +42,7 @@ const _idealPositions = (watchlist, positions, orders, optionsToSell) => {
 
         return {
             symbol,
+            volatility,
             positions: Math.min(maxPositions, numStockOptUnits + numPutPositions + numPutOrders)
         }
     }).filter(x => x.positions > 0)
@@ -85,14 +87,14 @@ const allocateUnutilizedCash = async () => {
 
         // TODO Check if anything is in the watchlist
 
-        const positions = await positionUtil.getPositions()
-        const orders = await orderUtil.getOrders()
+        // const positions = await positionUtil.getPositions()
+        // const orders = await orderUtil.getOrders()
 
-        const {
-            balances,
-            watchlist,
-            optionsToSell
-        } = await cashSecuredPutUtil.getPositionsToSell(settings)
+        // const {
+        //     balances,
+        //     watchlist,
+        //     optionsToSell
+        // } = await cashSecuredPutUtil.getPositionsToSell(settings)
 
 
         // TODO Build current ideal positions object
