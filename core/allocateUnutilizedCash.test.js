@@ -19,7 +19,7 @@ const {
 
 
 describe('_idealPositions', () => {
-  it('Case 1 - Nothing in watchlist - returns empty', () => {
+  it('Nothing in watchlist - returns empty', () => {
     const watchlist = []
     const positions = [
       generatePositionObject('UAL', 7, 'stock', 329)
@@ -32,7 +32,7 @@ describe('_idealPositions', () => {
     expect(result).toEqual([])
   })
 
-  it('Case 2 - Watchlist has only non-put-enabled or 0-max-position items - returns empty', () => {
+  it('Watchlist has only non-put-enabled or 0-max-position items - returns empty', () => {
     const watchlist = [
       {
         symbol: 'AAPL',
@@ -58,6 +58,62 @@ describe('_idealPositions', () => {
     const optionsToSell = []
     const result = _idealPositions(watchlist, positions, orders, optionsToSell)
     expect(result).toEqual([])
+  })
+
+
+  const oneItemWatchlist = maxPositions => ([
+    {
+      symbol: 'MSFT',
+      maxPositions,
+      put: {
+        enabled: true
+      }
+    },
+  ])
+
+
+  it('One item in watchlist has a stock position less than 100 - returns empty', () => {
+
+  })
+
+  it('One item in watchlist has a stock position of more than 100, less than 200 - returns as having 1 optionable position', () => {
+    
+  })
+
+  it('One item in watchlist has stock positions greater than maxPositions - returns maxPositions value', () => {
+
+  })
+
+  it('One item in watchlist has a put position - returns as having 1 optionable', () => {
+
+  })
+
+  it('One item in watchlist has put positions greater than maxPositions - returns maxPositions value', () => {
+
+  })
+
+  it('One item in watchlist has a put order (sell to open) - returns as having 1 optionable', () => {
+    
+  })
+
+  it('One item in watchlist has a put order (buy to close) - returns as having 0 optionable', () => {
+    
+  })
+
+  it('One item in watchlist has a put order (sell to open, rejected) - returns as having 0 optionable', () => {
+    
+  })
+
+  it('One item in watchlist has put orders greater than maxPositions - returns maxPositions value', () => {
+
+  })
+
+  it('One item in watchlist has optionToSell - returns whatever that optionsToSell value is', () => {
+
+  })
+
+  it('One item in watchlist has a position, an order, a buy-to-close order, and optionToSell - adds all values together', () => {
+
   })
 
 })

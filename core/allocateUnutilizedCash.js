@@ -25,7 +25,7 @@ const _idealPositions = (watchlist, positions, orders, optionsToSell) => {
 
         To calculate, it should take the actual number of positions + orders
         and add the amount of options Penny would sell if cashSecuredPuts was
-        run right now.
+        run right now. Only looks at those in the watchlist
 
         [
             {
