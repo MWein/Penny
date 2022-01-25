@@ -8,9 +8,11 @@ const positionUtil = require('../tradier/getPositions')
 const orderUtil = require('../tradier/getOrders')
 const purchaseGoalSchema = require('../db_models/purchaseGoalSchema')
 const priceUtil = require('../tradier/getPrices')
+const costBasisUtil = require('../utils/determineCostBasis')
 
 const {
-    getUnderlying
+    getUnderlying,
+    getStrike,
 } = require('../utils/determineOptionType')
 
 // TODO REQUIREMENT
@@ -50,19 +52,58 @@ const _idealPositions = (watchlist, positions, orders, optionsToSell, defaultVol
 }
 
 
-const _getBuffer = async idealPositions => {
+const _getBuffer = async (idealPositions, positions, orders) => {
     if (!idealPositions.length) {
         return 0
+    }
+
+    const _getCostBasis = async stockPosition => {
+        if (!stockPosition) {
+            return 0
+        } else if (stockPosition.cost_basis) {
+            return stockPosition.cost_basis / stockPosition.quantity
+        }
+        const costBasis = await costBasisUtil.determineCostBasisPerShare(stockPosition.symbol)
+        return costBasis
     }
 
     const symbols = idealPositions.map(x => x.symbol)
     const prices = await priceUtil.getPrices(symbols)
 
-    return Number(idealPositions.reduce((acc, pos) => {
-        const price = prices.find(x => x.symbol === pos.symbol)?.price
-        const bufferForSymbol = price * pos.positions * 100 * pos.volatility
-        return acc + bufferForSymbol
-    }, 0).toFixed(2)) || null
+    const optionablePositions = positionUtil.filterForOptionableStockPositions(positions)
+    const putPositions = positionUtil.filterForPutPositions(positions)
+    const putOrders = orderUtil.filterForCashSecuredPutOrders(orders)
+
+    let buffer = 0
+    for (let x = 0; x < idealPositions.length; x++) {
+        const idealPosition = idealPositions[x]
+
+        const currentPrice = prices.find(x => x.symbol === idealPosition.symbol)?.price || 0
+
+        const stockPosition = optionablePositions.find(x => x.symbol === idealPosition.symbol)
+        const puts = putPositions
+            .filter(x => getUnderlying(x.symbol) === idealPosition.symbol && x.quantity < 0)
+        const orders = putOrders
+            .filter(x => getUnderlying(x.symbol) === idealPosition.symbol && x.quantity < 0)
+
+        const allPutStrikes = puts.map(pos => getStrike(pos.symbol))
+        const allPutOrderStrikes = orders.map(ord => getStrike(ord.option_symbol))
+
+        const longStockCostBasis = await _getCostBasis(stockPosition)
+
+        const highestValue = Math.max(currentPrice, longStockCostBasis, ...allPutStrikes, ...allPutOrderStrikes)
+        const newBuffer = highestValue * 100 * idealPosition.positions * idealPosition.volatility
+
+        buffer += newBuffer
+    }
+
+    return buffer
+
+    // return Number(idealPositions.reduce((acc, pos) => {
+    //     const price = prices.find(x => x.symbol === pos.symbol)?.price
+    //     const bufferForSymbol = price * pos.positions * 100 * pos.volatility
+    //     return acc + bufferForSymbol
+    // }, 0).toFixed(2)) || null
 }
 
 

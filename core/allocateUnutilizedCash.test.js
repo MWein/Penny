@@ -5,6 +5,7 @@ const positionUtil = require('../tradier/getPositions')
 const orderUtil = require('../tradier/getOrders')
 const purchaseGoalSchema = require('../db_models/purchaseGoalSchema')
 const priceUtil = require('../tradier/getPrices')
+const costBasisUtil = require('../utils/determineCostBasis')
 
 const {
   _idealPositions,
@@ -434,85 +435,290 @@ describe('_idealPositions', () => {
 describe('_getBuffer', () => {
   beforeEach(() => {
     priceUtil.getPrices = jest.fn()
+    costBasisUtil.determineCostBasisPerShare = jest.fn()
   })
 
   it('Returns 0 if given empty array, does not call priceUtil', async () => {
     priceUtil.getPrices.mockReturnValue([])
-    const result = await _getBuffer([])
+    const result = await _getBuffer([], [], [])
     expect(result).toEqual(0)
     expect(priceUtil.getPrices).not.toHaveBeenCalled()
+    expect(costBasisUtil.determineCostBasisPerShare).not.toHaveBeenCalled()
   })
 
-  it('Calls priceUtil for each ideal position given. Returns null if getPrices returns empty', async () => {
-    priceUtil.getPrices.mockReturnValue([])
-    const idealPositions = [
-      {
-        symbol: 'MSFT',
-        volatility: 0.2,
-        positions: 1
-      },
-      {
-        symbol: 'AAPL',
-        volatility: 0.5,
-        positions: 1
-      },
-    ]
-    const result = await _getBuffer(idealPositions)
-    expect(result).toEqual(null)
-    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT', 'AAPL' ])
-  })
 
-  it('Calls priceUtil for each ideal position given. Returns null if one is missing from getPrices return', async () => {
+  // For these tests, when I say "return the strike" I mean "strike * 100 * volatility * numPositions"
+  it('Ideal that has no positions or orders, return the price', async () => {
     priceUtil.getPrices.mockReturnValue([
       {
         symbol: 'MSFT',
-        price: 100,
-      },
-    ])
-    const idealPositions = [
-      {
-        symbol: 'MSFT',
-        volatility: 0.2,
-        positions: 1
-      },
-      {
-        symbol: 'AAPL',
-        volatility: 0.5,
-        positions: 1
-      },
-    ]
-    const result = await _getBuffer(idealPositions)
-    expect(result).toEqual(null)
-    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT', 'AAPL' ])
-  })
-
-  it('Returns a buffer calculated from the price and volatility, rounded to the nearest 100th (price * 100 * numPositions * volatility)', async () => {
-    priceUtil.getPrices.mockReturnValue([
-      {
-        symbol: 'MSFT',
-        price: 296.10,
-      },
-      {
-        symbol: 'AAPL',
-        price: 159.75,
+        price: 250,
       }
     ])
     const idealPositions = [
       {
         symbol: 'MSFT',
         volatility: 0.2,
-        positions: 4
-      },
-      {
-        symbol: 'AAPL',
-        volatility: 0.15,
         positions: 1
       },
     ]
-    const result = await _getBuffer(idealPositions)
-    expect(result).toEqual(26084.25)
-    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT', 'AAPL' ])
+    const positions = []
+    const orders = []
+    const result = await _getBuffer(idealPositions, positions, orders)
+    expect(result).toEqual(5000)
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT' ])
+    expect(costBasisUtil.determineCostBasisPerShare).not.toHaveBeenCalled()
   })
+
+  it('Ideal that has a long position (position has cost basis), return the cost basis', async () => {
+    priceUtil.getPrices.mockReturnValue([
+      {
+        symbol: 'MSFT',
+        price: 200,
+      }
+    ])
+    const idealPositions = [
+      {
+        symbol: 'MSFT',
+        volatility: 0.2,
+        positions: 1
+      },
+    ]
+    const positions = [
+      generatePositionObject('MSFT', 100, 'stock', 23000)
+    ]
+    const orders = []
+    const result = await _getBuffer(idealPositions, positions, orders)
+    expect(result).toEqual(4600)
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT' ])
+    expect(costBasisUtil.determineCostBasisPerShare).not.toHaveBeenCalled()
+  })
+
+  it('Ideal that has a long position (position has cost basis) but price is higher, return the price', async () => {
+    priceUtil.getPrices.mockReturnValue([
+      {
+        symbol: 'MSFT',
+        price: 250,
+      }
+    ])
+    const idealPositions = [
+      {
+        symbol: 'MSFT',
+        volatility: 0.2,
+        positions: 1
+      },
+    ]
+    const positions = [
+      generatePositionObject('MSFT', 100, 'stock', 23000)
+    ]
+    const orders = []
+    const result = await _getBuffer(idealPositions, positions, orders)
+    expect(result).toEqual(5000)
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT' ])
+    expect(costBasisUtil.determineCostBasisPerShare).not.toHaveBeenCalled()
+  })
+
+  it('Ideal that has a long position (cost basis = 0), call costBasis function and return the cost basis', async () => {
+    priceUtil.getPrices.mockReturnValue([
+      {
+        symbol: 'MSFT',
+        price: 200,
+      }
+    ])
+    costBasisUtil.determineCostBasisPerShare.mockReturnValue(260)
+    const idealPositions = [
+      {
+        symbol: 'MSFT',
+        volatility: 0.2,
+        positions: 1
+      },
+    ]
+    const positions = [
+      generatePositionObject('MSFT', 100, 'stock', 0)
+    ]
+    const orders = []
+    const result = await _getBuffer(idealPositions, positions, orders)
+    expect(result).toEqual(5200)
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT' ])
+    expect(costBasisUtil.determineCostBasisPerShare).toHaveBeenCalledWith('MSFT')
+  })
+  
+  it('Ideal that has 1 put position, return the strike if higher than price', async () => {
+    priceUtil.getPrices.mockReturnValue([
+      {
+        symbol: 'MSFT',
+        price: 250,
+      }
+    ])
+    const idealPositions = [
+      {
+        symbol: 'MSFT',
+        volatility: 0.2,
+        positions: 1
+      },
+    ]
+    const positions = [
+      generatePositionObject('MSFT', -1, 'put', -230, '2021-12-01', 1234, '2022-01-01', 300)
+    ]
+    const orders = []
+    const result = await _getBuffer(idealPositions, positions, orders)
+    expect(result).toEqual(6000)
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT' ])
+  })
+
+  it('Ideal that has 1 put position, return the price if higher than strike', async () => {
+    priceUtil.getPrices.mockReturnValue([
+      {
+        symbol: 'MSFT',
+        price: 250,
+      }
+    ])
+    const idealPositions = [
+      {
+        symbol: 'MSFT',
+        volatility: 0.2,
+        positions: 1
+      },
+    ]
+    const positions = [
+      generatePositionObject('MSFT', -1, 'put', -230, '2021-12-01', 1234, '2022-01-01', 200)
+    ]
+    const orders = []
+    const result = await _getBuffer(idealPositions, positions, orders)
+    expect(result).toEqual(5000)
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT' ])
+  })
+
+  it('Ideal that has 2 put positions, return the higher strike', async () => {
+    priceUtil.getPrices.mockReturnValue([
+      {
+        symbol: 'MSFT',
+        price: 100,
+      }
+    ])
+    const idealPositions = [
+      {
+        symbol: 'MSFT',
+        volatility: 0.2,
+        positions: 1
+      },
+    ]
+    const positions = [
+      generatePositionObject('MSFT', -1, 'put', -230, '2021-12-01', 1234, '2022-01-01', 200),
+      generatePositionObject('MSFT', -1, 'put', -230, '2021-12-01', 1234, '2022-01-01', 300)
+    ]
+    const orders = []
+    const result = await _getBuffer(idealPositions, positions, orders)
+    expect(result).toEqual(6000)
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT' ])
+  })
+
+  it('Ideal that has 2 put positions but price is higher, return the price', async () => {
+    priceUtil.getPrices.mockReturnValue([
+      {
+        symbol: 'MSFT',
+        price: 320,
+      }
+    ])
+    const idealPositions = [
+      {
+        symbol: 'MSFT',
+        volatility: 0.2,
+        positions: 1
+      },
+    ]
+    const positions = [
+      generatePositionObject('MSFT', -1, 'put', -230, '2021-12-01', 1234, '2022-01-01', 200),
+      generatePositionObject('MSFT', -1, 'put', -230, '2021-12-01', 1234, '2022-01-01', 300)
+    ]
+    const orders = []
+    const result = await _getBuffer(idealPositions, positions, orders)
+    expect(result).toEqual(6400)
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT' ])
+  })
+
+  it('Ideal that has 1 put order, return the strike', async () => {
+
+  })
+
+  it('Ideal that has 2 put orders, return the higher strike', async () => {
+
+  })
+
+  it('Ideal that has 2 put orders but price is higher, return the price', async () => {
+
+  })
+
+  // it('Calls priceUtil for each ideal position given. Returns null if getPrices returns empty', async () => {
+  //   priceUtil.getPrices.mockReturnValue([])
+  //   const idealPositions = [
+  //     {
+  //       symbol: 'MSFT',
+  //       volatility: 0.2,
+  //       positions: 1
+  //     },
+  //     {
+  //       symbol: 'AAPL',
+  //       volatility: 0.5,
+  //       positions: 1
+  //     },
+  //   ]
+  //   const result = await _getBuffer(idealPositions)
+  //   expect(result).toEqual(null)
+  //   expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT', 'AAPL' ])
+  // })
+
+  // it('Calls priceUtil for each ideal position given. Returns null if one is missing from getPrices return', async () => {
+  //   priceUtil.getPrices.mockReturnValue([
+  //     {
+  //       symbol: 'MSFT',
+  //       price: 100,
+  //     },
+  //   ])
+  //   const idealPositions = [
+  //     {
+  //       symbol: 'MSFT',
+  //       volatility: 0.2,
+  //       positions: 1
+  //     },
+  //     {
+  //       symbol: 'AAPL',
+  //       volatility: 0.5,
+  //       positions: 1
+  //     },
+  //   ]
+  //   const result = await _getBuffer(idealPositions)
+  //   expect(result).toEqual(null)
+  //   expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT', 'AAPL' ])
+  // })
+
+  // it('Returns a buffer calculated from the price and volatility, rounded to the nearest 100th (price * 100 * numPositions * volatility)', async () => {
+  //   priceUtil.getPrices.mockReturnValue([
+  //     {
+  //       symbol: 'MSFT',
+  //       price: 296.10,
+  //     },
+  //     {
+  //       symbol: 'AAPL',
+  //       price: 159.75,
+  //     }
+  //   ])
+  //   const idealPositions = [
+  //     {
+  //       symbol: 'MSFT',
+  //       volatility: 0.2,
+  //       positions: 4
+  //     },
+  //     {
+  //       symbol: 'AAPL',
+  //       volatility: 0.15,
+  //       positions: 1
+  //     },
+  //   ]
+  //   const result = await _getBuffer(idealPositions)
+  //   expect(result).toEqual(26084.25)
+  //   expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT', 'AAPL' ])
+  // })
 })
 
 
