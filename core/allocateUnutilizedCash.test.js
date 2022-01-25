@@ -12,6 +12,7 @@ const {
 } = require('./allocateUnutilizedCash')
 
 const {
+  generateSymbol,
   generateOrderObject,
   generatePositionObject,
 } = require('../utils/testHelpers')
@@ -234,21 +235,197 @@ describe('_idealPositions', () => {
   })
 
   it('Item in watchlist has optionToSell - returns whatever that optionsToSell value is', () => {
+    const watchlist = [ watchlistItem('MSFT', 5, true), ]
+    const positions = []
+    const orders = []
+    const optionsToSell = [
+      {
+        optionSymbol: generateSymbol('MSFT', 'put'),
+        positions: 2,
+      },
+    ]
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell, 0.2)
+    expect(result).toEqual([
+      {
+        symbol: 'MSFT',
+        volatility: 0.2,
+        positions: 2
+      },
+    ])
+  })
 
+  it('Item in watchlist has multiple optionToSell (impossible edge case but still worth covering) - returns the sum', () => {
+    const watchlist = [ watchlistItem('MSFT', 5, true), ]
+    const positions = []
+    const orders = []
+    const optionsToSell = [
+      {
+        optionSymbol: generateSymbol('MSFT', 'put'),
+        positions: 2,
+      },
+      {
+        optionSymbol: generateSymbol('MSFT', 'put'),
+        positions: 2,
+      },
+    ]
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell, 0.2)
+    expect(result).toEqual([
+      {
+        symbol: 'MSFT',
+        volatility: 0.2,
+        positions: 4
+      },
+    ])
   })
 
   it('Item in watchlist has optionToSell greater than maxPositions - returns max positions', () => {
-
+    const watchlist = [ watchlistItem('MSFT', 5, true), ]
+    const positions = []
+    const orders = []
+    const optionsToSell = [
+      {
+        optionSymbol: generateSymbol('MSFT', 'put'),
+        positions: 7,
+      },
+    ]
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell, 0.2)
+    expect(result).toEqual([
+      {
+        symbol: 'MSFT',
+        volatility: 0.2,
+        positions: 5
+      },
+    ])
   })
 
   it('Item in watchlist has a position, an order, a buy-to-close order, and optionToSell - adds all values together', () => {
-
+    const watchlist = [ watchlistItem('MSFT', 10, true), ]
+    const positions = [
+      generatePositionObject('MSFT', -1, 'put'), // 1
+      generatePositionObject('MSFT', 127, 'stock'), // 1
+      generatePositionObject('MSFT', 1, 'put'), // 0 because its a protective put
+    ]
+    const orders = [
+      generateOrderObject('MSFT', -1, 'put'), // 1
+      generateOrderObject('MSFT', -1, 'put', 'buy_to_close'), // 0
+    ]
+    const optionsToSell = [
+      {
+        optionSymbol: generateSymbol('MSFT', 'put'),
+        positions: 2,
+      },
+    ]
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell, 0.2)
+    expect(result).toEqual([
+      {
+        symbol: 'MSFT',
+        volatility: 0.2,
+        positions: 5
+      },
+    ])
   })
 
   it('Item in watchlist has a position, an order, a buy-to-close order, and optionToSell - sum is greater than max positions - returns max positions', () => {
-
+    const watchlist = [ watchlistItem('MSFT', 4, true), ]
+    const positions = [
+      generatePositionObject('MSFT', -1, 'put'), // 1
+      generatePositionObject('MSFT', 127, 'stock'), // 1
+      generatePositionObject('MSFT', 1, 'put'), // 0 because its a protective put
+    ]
+    const orders = [
+      generateOrderObject('MSFT', -1, 'put'), // 1
+      generateOrderObject('MSFT', -1, 'put', 'buy_to_close'), // 0
+    ]
+    const optionsToSell = [
+      {
+        optionSymbol: generateSymbol('MSFT', 'put'),
+        positions: 2,
+      },
+    ]
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell, 0.2)
+    expect(result).toEqual([
+      {
+        symbol: 'MSFT',
+        volatility: 0.2,
+        positions: 4
+      },
+    ])
   })
 
+  it('Multiple watchlist items, random cases', () => {
+    const watchlist = [
+      watchlistItem('MSFT', 4, true),
+      watchlistItem('AAPL', 0, true),
+      watchlistItem('TSLA', 5, false),
+      watchlistItem('ASAN', 5, true), // Will not be in result because no positions, orders, or opts to sell
+      watchlistItem('IBM', 5, true),
+      watchlistItem('WMT', 2, true),
+    ]
+    const positions = [
+      generatePositionObject('MSFT', -1, 'put'), // 1
+      generatePositionObject('MSFT', 127, 'stock'), // 1
+      generatePositionObject('MSFT', 1, 'put'), // 0 because its a protective put
+      generatePositionObject('AAPL', -1, 'put'), // 0 because max positions is 0
+      generatePositionObject('WMT', -3, 'put'), // 2, because of max positions
+    ]
+    const orders = [
+      generateOrderObject('MSFT', -1, 'put'), // 1
+      generateOrderObject('MSFT', -1, 'put', 'buy_to_close'), // 0
+      generateOrderObject('TSLA', -1, 'put'), // 0 because puts arent enabled
+      generateOrderObject('IBM', -2, 'put'), // 1
+      generateOrderObject('WMT', -7, 'put'), // 0 because this might be a manual order, above max
+    ]
+    const optionsToSell = [
+      {
+        optionSymbol: generateSymbol('MSFT', 'put'),
+        positions: 2,
+      },
+    ]
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell, 0.2)
+    expect(result).toEqual([
+      {
+        symbol: 'MSFT',
+        volatility: 0.2,
+        positions: 4
+      },
+      {
+        symbol: 'IBM',
+        volatility: 0.2,
+        positions: 2
+      },
+      {
+        symbol: 'WMT',
+        volatility: 0.2,
+        positions: 2
+      },
+    ])
+  })
+
+  it('Two items that pass filters to return - One has an assigned volatility, the other does not', () => {
+    const watchlist = [
+      watchlistItem('MSFT', 5, true),
+      watchlistItem('AAPL', 5, true, 0.5),
+    ]
+    const positions = [
+      generatePositionObject('MSFT', -1, 'put'),
+      generatePositionObject('AAPL', -1, 'put')
+    ]
+    const orders = []
+    const optionsToSell = []
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell, 0.2)
+    expect(result).toEqual([
+      {
+        symbol: 'MSFT',
+        volatility: 0.2,
+        positions: 1
+      },
+      {
+        symbol: 'AAPL',
+        volatility: 0.5,
+        positions: 1
+      },
+    ])
+  })
 })
 
 

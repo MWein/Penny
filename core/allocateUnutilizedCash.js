@@ -39,11 +39,14 @@ const _idealPositions = (watchlist, positions, orders, optionsToSell, defaultVol
         const numPutOrders = putOrders
             .filter(x => getUnderlying(x.symbol) === symbol && x.quantity < 0)
             .reduce((acc, x) => acc + Math.abs(x.quantity), 0)
+        const numOptsToSell = optionsToSell
+            .filter(x => getUnderlying(x.optionSymbol) === symbol)
+            .reduce((acc, x) => acc + x.positions, 0)
 
         return {
             symbol,
             volatility,
-            positions: Math.min(maxPositions, numStockOptUnits + numPutPositions + numPutOrders)
+            positions: Math.min(maxPositions, numStockOptUnits + numPutPositions + numPutOrders + numOptsToSell)
         }
     }).filter(x => x.positions > 0)
 
