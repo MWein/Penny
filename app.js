@@ -9,6 +9,7 @@ const { log, clearOldLogs } = require('./utils/log')
 const { savePositionsCron } = require('./utils/savePositionsCron')
 const { closeExpiringPuts } = require('./core/closeExpiringPuts')
 const { sellCashSecuredPuts } = require('./core/cashSecuredPut')
+const { allocateUnutilizedCash } = require('./core/allocateUnutilizedCash')
 
 
 const housekeeping = async () => {
@@ -67,6 +68,9 @@ const launchCrons = async () => {
   new CronJob('0 0 09 * * 5', closeExpiringPuts, null, true, 'America/New_York')
   new CronJob('0 0 11 * * 5', closeExpiringPuts, null, true, 'America/New_York')
   new CronJob('0 0 13 * * 5', closeExpiringPuts, null, true, 'America/New_York')
+
+  // Allocate unutilized money at the end of the day on fridays
+  new CronJob('30 0 15 * * 5', allocateUnutilizedCash, null, true, 'America/New_York')
 
   // Run every day at 4:10 NY time
   // 10 mins after market close
