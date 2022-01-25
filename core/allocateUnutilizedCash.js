@@ -175,13 +175,16 @@ const _buyPositions = async positionsToBuy => {
         remainingTries--
         continue
       }
-      const id = orderResp.id
+      const orderId = orderResp.id
 
       let status = 'open'
       // Non-terminal statuses
       while (['open', 'partially_filled', 'pending'].includes(status)) {
-        // Get the order
-        // Set status to whatever the order status is
+        const order = await orderUtil.getOrder(orderId)
+        if (!order) {
+          continue
+        }
+        status = order.status
       }
 
       if (status === 'filled') {
