@@ -158,7 +158,8 @@ const _determinePositionsToBuy = (unutilizedCash, positionGoals, prices) =>
     }).positions
 
 
-
+// Has to be nested loops like this so it waits for a network call before making the next
+// Rate limiting and all that
 const _buyPositions = async positionsToBuy => {
   const filledOrders = []
   for (let x = 0; x < positionsToBuy.length; x++) {
