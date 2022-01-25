@@ -6,6 +6,7 @@ const orderUtil = require('../tradier/getOrders')
 const purchaseGoalSchema = require('../db_models/purchaseGoalSchema')
 const priceUtil = require('../tradier/getPrices')
 const costBasisUtil = require('../utils/determineCostBasis')
+const sendOrderUtil = require('../tradier/sendOrders')
 
 const {
   _idealPositions,
@@ -1104,6 +1105,10 @@ describe('_determinePositionsToBuy', () => {
 })
 
 
+describe('_buyPositions', () => {
+  
+
+})
 
 
 describe('allocateUnutilizedCash', () => {
@@ -1115,6 +1120,7 @@ describe('allocateUnutilizedCash', () => {
     orderUtil.getOrders = jest.fn()
     priceUtil.getPrices = jest.fn()
     costBasisUtil.determineCostBasisPerShare = jest.fn()
+    sendOrderUtil.buy = jest.fn()
     purchaseGoalSchema.find = jest.fn()
   })
 

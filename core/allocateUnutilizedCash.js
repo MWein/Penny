@@ -9,6 +9,7 @@ const orderUtil = require('../tradier/getOrders')
 const purchaseGoalSchema = require('../db_models/purchaseGoalSchema')
 const priceUtil = require('../tradier/getPrices')
 const costBasisUtil = require('../utils/determineCostBasis')
+const sendOrderUtil = require('../tradier/sendOrders')
 const uniq = require('lodash/uniq')
 
 const {
@@ -157,6 +158,52 @@ const _determinePositionsToBuy = (unutilizedCash, positionGoals, prices) =>
     }).positions
 
 
+
+const _buyPositions = async positionsToBuy => {
+  const filledOrders = []
+  for (let x = 0; x < positionsToBuy.length; x++) {
+    const currentPosition = positionsToBuy[x]
+
+    const symbol = currentPosition.symbol
+    let quantity = currentPosition.quantity
+    let remainingTries = 10
+
+    while(remainingTries > 0) {
+      const orderResp = await sendOrderUtil.buy(symbol, quantity)
+
+      if (orderResp.status !== 'ok') {
+        remainingTries--
+        continue
+      }
+      const id = orderResp.id
+
+      let status = 'open'
+      // Non-terminal statuses
+      while (['open', 'partially_filled', 'pending'].includes(status)) {
+        // Get the order
+        // Set status to whatever the order status is
+      }
+
+      if (status === 'filled') {
+        filledOrders.push({ symbol, quantity })
+        break
+      } else {
+        quantity--
+        remainingTries--
+      }
+    }
+
+    if (remainingTries === 0) {
+      // Dont buy the next goal if this order failed 10 times
+      break
+    }
+  }
+
+  return filledOrders
+}
+
+
+
 const allocateUnutilizedCash = async () => {
   try {
     const settings = await settingsUtil.getSettings()
@@ -195,8 +242,9 @@ const allocateUnutilizedCash = async () => {
 
     const goalTickers = uniq(positionGoals.map(x => x.symbol))
     const prices = await priceUtil.getPrices(goalTickers)
+    const positionsToBuy = _determinePositionsToBuy(unutilizedCash, positionGoals, prices)
 
-
+    await _buyPositions(positionsToBuy)
 
     // TODO Figure out which stocks to load up on
     // Filter out anything thats fulfilled or unaffordable (based on current prices, obviously)
@@ -222,5 +270,6 @@ module.exports = {
   _idealPositions,
   _getBuffer,
   _determinePositionsToBuy,
+  _buyPositions,
   allocateUnutilizedCash,
 }
