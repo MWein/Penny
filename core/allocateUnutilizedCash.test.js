@@ -155,22 +155,81 @@ describe('_idealPositions', () => {
   })
 
   it('Item in watchlist has a put order (sell to open) - returns as having 1 optionable', () => {
-    
+    const watchlist = [ watchlistItem('MSFT', 2, true), ]
+    const positions = []
+    const orders = [
+      generateOrderObject('MSFT', -1, 'put', 'sell_to_open', 'pending')
+    ]
+    const optionsToSell = []
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell)
+    expect(result).toEqual([
+      {
+        symbol: 'MSFT',
+        positions: 1
+      },
+    ])
+  })
+
+  it('Item in watchlist has multiple put orders (sell to open) - returns sum of quantity', () => {
+    const watchlist = [ watchlistItem('MSFT', 5, true), ]
+    const positions = []
+    const orders = [
+      generateOrderObject('MSFT', -1, 'put'),
+      generateOrderObject('MSFT', -2, 'put'),
+    ]
+    const optionsToSell = []
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell)
+    expect(result).toEqual([
+      {
+        symbol: 'MSFT',
+        positions: 3
+      },
+    ])
   })
 
   it('Item in watchlist has a put order (buy to close) - returns as having 0 optionable', () => {
-    
+    const watchlist = [ watchlistItem('MSFT', 5, true), ]
+    const positions = []
+    const orders = [
+      generateOrderObject('MSFT', 2, 'put', 'buy_to_close'),
+    ]
+    const optionsToSell = []
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell)
+    expect(result).toEqual([])
   })
 
   it('Item in watchlist has a put order (sell to open, rejected) - returns as having 0 optionable', () => {
-    
+    const watchlist = [ watchlistItem('MSFT', 5, true), ]
+    const positions = []
+    const orders = [
+      generateOrderObject('MSFT', 2, 'put', 'sell_to_open', 'rejected'),
+    ]
+    const optionsToSell = []
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell)
+    expect(result).toEqual([])
   })
 
   it('Item in watchlist has put orders greater than maxPositions - returns maxPositions value', () => {
-
+    const watchlist = [ watchlistItem('MSFT', 5, true), ]
+    const positions = []
+    const orders = [
+      generateOrderObject('MSFT', -7, 'put'),
+    ]
+    const optionsToSell = []
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell)
+    expect(result).toEqual([
+      {
+        symbol: 'MSFT',
+        positions: 5
+      },
+    ])
   })
 
   it('Item in watchlist has optionToSell - returns whatever that optionsToSell value is', () => {
+
+  })
+
+  it('Item in watchlist has optionToSell greater than maxPositions - returns max positions', () => {
 
   })
 

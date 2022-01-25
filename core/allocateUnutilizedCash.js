@@ -25,6 +25,7 @@ const _idealPositions = (watchlist, positions, orders, optionsToSell) => {
 
     const optionablePositions = positionUtil.filterForOptionableStockPositions(positions)
     const putPositions = positionUtil.filterForPutPositions(positions)
+    const putOrders = orderUtil.filterForCashSecuredPutOrders(orders)
 
     return filteredWatchlist.map(item => {
         const symbol = item.symbol
@@ -34,10 +35,13 @@ const _idealPositions = (watchlist, positions, orders, optionsToSell) => {
         const numPutPositions = putPositions
             .filter(x => getUnderlying(x.symbol) === symbol && x.quantity < 0)
             .reduce((acc, x) => acc + Math.abs(x.quantity), 0)
+        const numPutOrders = putOrders
+            .filter(x => getUnderlying(x.symbol) === symbol && x.quantity < 0)
+            .reduce((acc, x) => acc + Math.abs(x.quantity), 0)
 
         return {
             symbol,
-            positions: Math.min(maxPositions, numStockOptUnits + numPutPositions)
+            positions: Math.min(maxPositions, numStockOptUnits + numPutPositions + numPutOrders)
         }
     }).filter(x => x.positions > 0)
 
