@@ -94,16 +94,16 @@ const _getBuffer = async (idealPositions, positions, orders) => {
         const highestValue = Math.max(currentPrice, longStockCostBasis, ...allPutStrikes, ...allPutOrderStrikes)
         const newBuffer = highestValue * 100 * idealPosition.positions * idealPosition.volatility
 
+        // Failure condition for at least one stock
+        // If the price fails and there isn't any backup, should not continue with purchases
+        if (newBuffer === 0) {
+            return null
+        }
+
         buffer += newBuffer
     }
 
     return buffer
-
-    // return Number(idealPositions.reduce((acc, pos) => {
-    //     const price = prices.find(x => x.symbol === pos.symbol)?.price
-    //     const bufferForSymbol = price * pos.positions * 100 * pos.volatility
-    //     return acc + bufferForSymbol
-    // }, 0).toFixed(2)) || null
 }
 
 

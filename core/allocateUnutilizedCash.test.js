@@ -438,8 +438,7 @@ describe('_getBuffer', () => {
     costBasisUtil.determineCostBasisPerShare = jest.fn()
   })
 
-  it('Returns 0 if given empty array, does not call priceUtil', async () => {
-    priceUtil.getPrices.mockReturnValue([])
+  it('Returns 0 if given empty idealPositions, does not call priceUtil', async () => {
     const result = await _getBuffer([], [], [])
     expect(result).toEqual(0)
     expect(priceUtil.getPrices).not.toHaveBeenCalled()
@@ -448,6 +447,52 @@ describe('_getBuffer', () => {
 
 
   // For these tests, when I say "return the strike" I mean "strike * 100 * volatility * numPositions"
+  it('Ideal that has no positions or orders, price fails, returns null since everything failed', async () => {
+    priceUtil.getPrices.mockReturnValue([])
+    const idealPositions = [
+      {
+        symbol: 'MSFT',
+        volatility: 0.2,
+        positions: 1
+      },
+    ]
+    const positions = []
+    const orders = []
+    const result = await _getBuffer(idealPositions, positions, orders)
+    expect(result).toEqual(null)
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT' ])
+    expect(costBasisUtil.determineCostBasisPerShare).not.toHaveBeenCalled()
+  })
+
+  it('Multiple ideals, but one ideal has no positions or orders, price fails, returns null since everything failed', async () => {
+    priceUtil.getPrices.mockReturnValue([
+      {
+        symbol: 'MSFT',
+        price: 250,
+      }
+    ])
+    const idealPositions = [
+      {
+        symbol: 'MSFT',
+        volatility: 0.2,
+        positions: 1
+      },
+      {
+        symbol: 'AAPL',
+        volatility: 0.2,
+        positions: 1
+      },
+    ]
+    const positions = []
+    const orders = [
+      generateOrderObject('MSFT', -1, 'put')
+    ]
+    const result = await _getBuffer(idealPositions, positions, orders)
+    expect(result).toEqual(null)
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT', 'AAPL' ])
+    expect(costBasisUtil.determineCostBasisPerShare).not.toHaveBeenCalled()
+  })
+
   it('Ideal that has no positions or orders, return the price', async () => {
     priceUtil.getPrices.mockReturnValue([
       {
@@ -649,76 +694,30 @@ describe('_getBuffer', () => {
 
   })
 
-  // it('Calls priceUtil for each ideal position given. Returns null if getPrices returns empty', async () => {
-  //   priceUtil.getPrices.mockReturnValue([])
-  //   const idealPositions = [
-  //     {
-  //       symbol: 'MSFT',
-  //       volatility: 0.2,
-  //       positions: 1
-  //     },
-  //     {
-  //       symbol: 'AAPL',
-  //       volatility: 0.5,
-  //       positions: 1
-  //     },
-  //   ]
-  //   const result = await _getBuffer(idealPositions)
-  //   expect(result).toEqual(null)
-  //   expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT', 'AAPL' ])
-  // })
+  it('Ideal has multiple ideal positions, returns price multiplied by number of positions', async () => {
+    priceUtil.getPrices.mockReturnValue([
+      {
+        symbol: 'MSFT',
+        price: 320,
+      }
+    ])
+    const idealPositions = [
+      {
+        symbol: 'MSFT',
+        volatility: 0.2,
+        positions: 3
+      },
+    ]
+    const positions = []
+    const orders = []
+    const result = await _getBuffer(idealPositions, positions, orders)
+    expect(result).toEqual(19200)
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT' ])
+  })
 
-  // it('Calls priceUtil for each ideal position given. Returns null if one is missing from getPrices return', async () => {
-  //   priceUtil.getPrices.mockReturnValue([
-  //     {
-  //       symbol: 'MSFT',
-  //       price: 100,
-  //     },
-  //   ])
-  //   const idealPositions = [
-  //     {
-  //       symbol: 'MSFT',
-  //       volatility: 0.2,
-  //       positions: 1
-  //     },
-  //     {
-  //       symbol: 'AAPL',
-  //       volatility: 0.5,
-  //       positions: 1
-  //     },
-  //   ]
-  //   const result = await _getBuffer(idealPositions)
-  //   expect(result).toEqual(null)
-  //   expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT', 'AAPL' ])
-  // })
+  it('All conditions', async () => {
 
-  // it('Returns a buffer calculated from the price and volatility, rounded to the nearest 100th (price * 100 * numPositions * volatility)', async () => {
-  //   priceUtil.getPrices.mockReturnValue([
-  //     {
-  //       symbol: 'MSFT',
-  //       price: 296.10,
-  //     },
-  //     {
-  //       symbol: 'AAPL',
-  //       price: 159.75,
-  //     }
-  //   ])
-  //   const idealPositions = [
-  //     {
-  //       symbol: 'MSFT',
-  //       volatility: 0.2,
-  //       positions: 4
-  //     },
-  //     {
-  //       symbol: 'AAPL',
-  //       volatility: 0.15,
-  //       positions: 1
-  //     },
-  //   ]
-  //   const result = await _getBuffer(idealPositions)
-  //   expect(result).toEqual(26084.25)
-  //   expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT', 'AAPL' ])
-  // })
+  })
 })
 
 
