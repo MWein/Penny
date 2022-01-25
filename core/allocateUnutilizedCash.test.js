@@ -1153,7 +1153,7 @@ describe('_buyPositions', () => {
   })
 
   it('Buys one position, tries again 10 times with quantity decreasing each time', async () => {
-    sendOrderUtil.buy.mockReturnValue({ status: 'ok', id: 1234 })
+    sendOrderUtil.buy.mockReturnValue({ order: { status: 'ok', id: 1234 } })
     orderUtil.getOrder.mockReturnValue({ status: 'rejected' })
     const result = await _buyPositions([
       {
@@ -1170,7 +1170,7 @@ describe('_buyPositions', () => {
   })
 
   it('Buys one position, tries again 5 times with quantity decreasing each time, exits if quantity reaches 0 before it can try 10 times', async () => {
-    sendOrderUtil.buy.mockReturnValue({ status: 'ok', id: 4321 })
+    sendOrderUtil.buy.mockReturnValue({ order: { status: 'ok', id: 4321 } })
     orderUtil.getOrder.mockReturnValue({ status: 'rejected' })
     const result = await _buyPositions([
       {
@@ -1187,7 +1187,7 @@ describe('_buyPositions', () => {
   })
 
   it('Buys one position, tries again if orderConfirmation is not ok, does not decrease quantity', async () => {
-    sendOrderUtil.buy.mockReturnValue({ status: 'not ok' })
+    sendOrderUtil.buy.mockReturnValue({ order: { status: 'not ok' }})
     const result = await _buyPositions([
       {
         _id: 1234,
@@ -1202,7 +1202,7 @@ describe('_buyPositions', () => {
   })
 
   it('Retries getOrder continuously until order returns', async () => {
-    sendOrderUtil.buy.mockReturnValue({ status: 'ok', id: 4741 })
+    sendOrderUtil.buy.mockReturnValue({ order: { status: 'ok', id: 4741 } })
     orderUtil.getOrder.mockReturnValueOnce(null)
     orderUtil.getOrder.mockReturnValueOnce(null)
     orderUtil.getOrder.mockReturnValueOnce(null)
@@ -1223,7 +1223,7 @@ describe('_buyPositions', () => {
   })
 
   it('With two positions, does not attempt to buy the second if the first one fails for quantity drop', async () => {
-    sendOrderUtil.buy.mockReturnValue({ status: 'ok', id: 4321 })
+    sendOrderUtil.buy.mockReturnValue({ order: { status: 'ok', id: 4321 } })
     orderUtil.getOrder.mockReturnValue({ status: 'rejected' })
     const result = await _buyPositions([
       {
@@ -1246,7 +1246,7 @@ describe('_buyPositions', () => {
   })
 
   it('With two positions, does not attempt to buy the second if the first one fails for failure count', async () => {
-    sendOrderUtil.buy.mockReturnValue({ status: 'ok', id: 4321 })
+    sendOrderUtil.buy.mockReturnValue({ order: { status: 'ok', id: 4321 }})
     orderUtil.getOrder.mockReturnValue({ status: 'rejected' })
     const result = await _buyPositions([
       {
@@ -1269,7 +1269,7 @@ describe('_buyPositions', () => {
   })
 
   it('Partial happy path, returns actual quantity purchased', async () => {
-    sendOrderUtil.buy.mockReturnValue({ status: 'ok', id: 4321 })
+    sendOrderUtil.buy.mockReturnValue({ order: { status: 'ok', id: 4321 }})
     orderUtil.getOrder.mockReturnValueOnce({ status: 'rejected' })
     orderUtil.getOrder.mockReturnValueOnce({ status: 'rejected' })
     orderUtil.getOrder.mockReturnValueOnce({ status: 'filled' })
@@ -1294,7 +1294,7 @@ describe('_buyPositions', () => {
   })
 
   it('Happy path with one position', async () => {
-    sendOrderUtil.buy.mockReturnValueOnce({ status: 'ok', id: 4321 })
+    sendOrderUtil.buy.mockReturnValueOnce({ order: { status: 'ok', id: 4321 }})
     orderUtil.getOrder.mockReturnValue({ status: 'filled' })
     const result = await _buyPositions([
       {
@@ -1317,8 +1317,8 @@ describe('_buyPositions', () => {
   })
 
   it('Happy path with two positions', async () => {
-    sendOrderUtil.buy.mockReturnValueOnce({ status: 'ok', id: 4321 })
-    sendOrderUtil.buy.mockReturnValueOnce({ status: 'ok', id: 1234 })
+    sendOrderUtil.buy.mockReturnValueOnce({ order: { status: 'ok', id: 4321 }})
+    sendOrderUtil.buy.mockReturnValueOnce({ order: { status: 'ok', id: 1234 }})
     orderUtil.getOrder.mockReturnValue({ status: 'filled' })
     const result = await _buyPositions([
       {
