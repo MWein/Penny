@@ -47,7 +47,7 @@ If you use this program on a real account you will lose money. <- This is financ
 
 - **Covered Call**: A strategy where you own 100 shares of a certain stock and sell a call option to some r/WallStreetBets gambler. Ideally, the underlying stock would trade sideways up until expiration so you can keep both the premium and the shares. You can lose out on some tendies if the underlying skyrockets above the strike. Should only be attempted on blue chip stocks or index funds that you actually want to own long term. Don't go chasing high premiums, son. The premiums could be high but the underlying stock might be s***t that brokers will make fun of you for owning.
 
-- **Naked Put**: Also known as a **Cash-Secured Put**. This is a strategy where you don't own the shares but have the money to buy them at whatever strike price you sell the option for. If you sell a put on AAPL for $147, your broker will hold on to $14,700 as collateral.
+- **Naked Put**: Also known as a **Cash-Secured Put**. (EDIT: No it isn't. A naked put is different in that it doesn't require collateral but I'm leaving it as is because I made too many jokes about it) This is a strategy where you don't own the shares but have the money to buy them at whatever strike price you sell the option for. If you sell a put on AAPL for $147, your broker will hold on to $14,700 as collateral.
 
 - **Assignment**: When an option executes and you fulfil your side of the contract to either buy or sell shares at the agreed upon price. This can be bad if the actual market price is way higher than the strike you have to sell the shares for. The buyer may choose to execute an option earlier than the expiration date, especially if a dividend is coming.
 
