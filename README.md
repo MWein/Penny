@@ -55,7 +55,7 @@ If you use this program on a real account you will lose money. <- This is financ
 
 - **Day-Trade**: Where you buy and sell the same underlying or option with the same underlying within the same trading session.
 
-- **Day-Trader Rule**: That pesky SEC rule that says an American brokerage won't allow any account with less than $25k to day-trade more than 3 times in a 5-day period. Really annoying but probably delayed the inevitable foreclosures of many r/WallStreetBets homes. You could get around this through the use of some shady overseas broker. But that might be illegal, idk. I wouldn't try your luck.
+- **Day-Trader Rule**: That stupid SEC rule that says an American brokerage won't allow any account with less than $25k to day-trade more than 3 times in a 5-day period. Really annoying but probably delayed the inevitable foreclosures of many r/WallStreetBets homes. You could get around this through the use of some shady overseas broker. But that might be illegal, idk. I wouldn't try your luck.
 
 Learn more at https://www.youtube.com/channel/UCkcnYVAVZQOB-nXHechtXDg (NSFW but hilarious)
 https://www.youtube.com/channel/UCfMiRVQJuTj3NpZZP1tKShQ (Slightly less NSFW but entertaining)
