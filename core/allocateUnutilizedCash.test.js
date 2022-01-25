@@ -19,6 +19,15 @@ const {
 
 
 describe('_idealPositions', () => {
+  const watchlistItem = (symbol, maxPositions, putEnabled) => ({
+    symbol,
+    maxPositions,
+    put: {
+      enabled: putEnabled
+    }
+  })
+
+
   it('Nothing in watchlist - returns empty', () => {
     const watchlist = []
     const positions = [
@@ -34,20 +43,9 @@ describe('_idealPositions', () => {
 
   it('Watchlist has only non-put-enabled or 0-max-position items - returns empty', () => {
     const watchlist = [
-      {
-        symbol: 'AAPL',
-        maxPositions: 0,
-        put: {
-          enabled: false
-        }
-      },
-      {
-        symbol: 'MSFT',
-        maxPositions: 0,
-        put: {
-          enabled: true
-        }
-      },
+      watchlistItem('AAPL', 0, false),
+      watchlistItem('MSFT', 0, true),
+      watchlistItem('TSLA', 27, false),
     ]
     const positions = [
       generatePositionObject('UAL', 7, 'stock', 329)
@@ -61,58 +59,122 @@ describe('_idealPositions', () => {
   })
 
 
-  const oneItemWatchlist = maxPositions => ([
-    {
-      symbol: 'MSFT',
-      maxPositions,
-      put: {
-        enabled: true
-      }
-    },
-  ])
-
-
-  it('One item in watchlist has a stock position less than 100 - returns empty', () => {
-
+  it('Item in watchlist has a stock position less than 100 - returns empty', () => {
+    const watchlist = [ watchlistItem('MSFT', 10, true), ]
+    const positions = [
+      generatePositionObject('MSFT', 98, 'stock', 329)
+    ]
+    const orders = []
+    const optionsToSell = []
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell)
+    expect(result).toEqual([])
   })
 
-  it('One item in watchlist has a stock position of more than 100, less than 200 - returns as having 1 optionable position', () => {
+  it('Item in watchlist has a stock position of more than 100, less than 200 - returns as having 1 optionable position', () => {
+    const watchlist = [ watchlistItem('MSFT', 10, true), ]
+    const positions = [
+      generatePositionObject('MSFT', 157, 'stock', 329)
+    ]
+    const orders = []
+    const optionsToSell = []
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell)
+    expect(result).toEqual([
+      {
+        symbol: 'MSFT',
+        positions: 1
+      },
+    ])
+  })
+
+  it('Item in watchlist has stock positions greater than maxPositions - returns maxPositions value', () => {
+    const watchlist = [ watchlistItem('MSFT', 5, true), ]
+    const positions = [
+      generatePositionObject('MSFT', 650, 'stock', 329)
+    ]
+    const orders = []
+    const optionsToSell = []
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell)
+    expect(result).toEqual([
+      {
+        symbol: 'MSFT',
+        positions: 5
+      },
+    ])
+  })
+
+  it('Item in watchlist has a put position - returns as having 1 optionable', () => {
+    const watchlist = [ watchlistItem('MSFT', 5, true), ]
+    const positions = [
+      generatePositionObject('MSFT', -1, 'put')
+    ]
+    const orders = []
+    const optionsToSell = []
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell)
+    expect(result).toEqual([
+      {
+        symbol: 'MSFT',
+        positions: 1
+      },
+    ])
+  })
+
+  it('Item in watchlist has 3 different put positions, 1 of them long (protective put) - returns as having 2 optionable', () => {
+    const watchlist = [ watchlistItem('MSFT', 5, true), ]
+    const positions = [
+      generatePositionObject('MSFT', -1, 'put'),
+      generatePositionObject('MSFT', -1, 'put'),
+      generatePositionObject('MSFT', 3, 'put'),
+    ]
+    const orders = []
+    const optionsToSell = []
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell)
+    expect(result).toEqual([
+      {
+        symbol: 'MSFT',
+        positions: 2
+      },
+    ])
+  })
+
+  it('item in watchlist has put positions greater than maxPositions - returns maxPositions value', () => {
+    const watchlist = [ watchlistItem('MSFT', 5, true), ]
+    const positions = [
+      generatePositionObject('MSFT', -18, 'put'),
+      generatePositionObject('MSFT', -1, 'put'),
+      generatePositionObject('MSFT', 3, 'put'),
+    ]
+    const orders = []
+    const optionsToSell = []
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell)
+    expect(result).toEqual([
+      {
+        symbol: 'MSFT',
+        positions: 5
+      },
+    ])
+  })
+
+  it('Item in watchlist has a put order (sell to open) - returns as having 1 optionable', () => {
     
   })
 
-  it('One item in watchlist has stock positions greater than maxPositions - returns maxPositions value', () => {
-
-  })
-
-  it('One item in watchlist has a put position - returns as having 1 optionable', () => {
-
-  })
-
-  it('One item in watchlist has put positions greater than maxPositions - returns maxPositions value', () => {
-
-  })
-
-  it('One item in watchlist has a put order (sell to open) - returns as having 1 optionable', () => {
+  it('Item in watchlist has a put order (buy to close) - returns as having 0 optionable', () => {
     
   })
 
-  it('One item in watchlist has a put order (buy to close) - returns as having 0 optionable', () => {
+  it('Item in watchlist has a put order (sell to open, rejected) - returns as having 0 optionable', () => {
     
   })
 
-  it('One item in watchlist has a put order (sell to open, rejected) - returns as having 0 optionable', () => {
-    
-  })
-
-  it('One item in watchlist has put orders greater than maxPositions - returns maxPositions value', () => {
+  it('Item in watchlist has put orders greater than maxPositions - returns maxPositions value', () => {
 
   })
 
-  it('One item in watchlist has optionToSell - returns whatever that optionsToSell value is', () => {
+  it('Item in watchlist has optionToSell - returns whatever that optionsToSell value is', () => {
 
   })
 
-  it('One item in watchlist has a position, an order, a buy-to-close order, and optionToSell - adds all values together', () => {
+  it('Item in watchlist has a position, an order, a buy-to-close order, and optionToSell - adds all values together', () => {
 
   })
 

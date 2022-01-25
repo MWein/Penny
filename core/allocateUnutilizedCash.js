@@ -8,6 +8,10 @@ const positionUtil = require('../tradier/getPositions')
 const orderUtil = require('../tradier/getOrders')
 const purchaseGoalSchema = require('../db_models/purchaseGoalSchema')
 
+const {
+    getUnderlying
+} = require('../utils/determineOptionType')
+
 // TODO REQUIREMENT
 // Need a function that can specifically return the amount available for purchasing
 // That way Penny-Data could use it when this becomes a mono-repo
@@ -18,6 +22,25 @@ const _idealPositions = (watchlist, positions, orders, optionsToSell) => {
     if (!filteredWatchlist.length) {
         return []
     }
+
+    const optionablePositions = positionUtil.filterForOptionableStockPositions(positions)
+    const putPositions = positionUtil.filterForPutPositions(positions)
+
+    return filteredWatchlist.map(item => {
+        const symbol = item.symbol
+        const maxPositions = item.maxPositions
+
+        const numStockOptUnits = Math.floor(optionablePositions.find(x => x.symbol === symbol)?.quantity / 100) || 0
+        const numPutPositions = putPositions
+            .filter(x => getUnderlying(x.symbol) === symbol && x.quantity < 0)
+            .reduce((acc, x) => acc + Math.abs(x.quantity), 0)
+
+        return {
+            symbol,
+            positions: Math.min(maxPositions, numStockOptUnits + numPutPositions)
+        }
+    }).filter(x => x.positions > 0)
+
 
     /*
         Should return an array with each position, and how many Penny
