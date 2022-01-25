@@ -250,7 +250,9 @@ const allocateUnutilizedCash = async () => {
 
     const filledPositions = await _buyPositions(positionsToBuy)
 
-    // TODO Modify table in Mongo
+    await Promise.all(filledPositions.map(async pos => {
+      await purchaseGoalSchema.findByIdAndUpdate(pos._id, {$inc : { filled: pos.quantity }})
+    }))
   } catch (e) {
     logUtil.log({
       type: 'error',
