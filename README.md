@@ -25,7 +25,7 @@ If you use this program on a real account you will lose money. <- This is financ
 
 ## Terms That I Probably Defined Incorrectly
 
-- **Option**: A contract to buy or sell 100 shares of stock at a certain strike on or before the expiration date. The Europeans do it slightly differently but Europe doesn't matter. This is America god d**n it.
+- **Option**: A contract to buy or sell 100 shares of stock at a certain strike on or before the expiration date. The Europeans do it slightly differently but Europe doesn't matter.
 
 - **Underlying**: Stonk.
 
