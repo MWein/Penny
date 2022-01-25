@@ -1,5 +1,5 @@
 // TODO Fix later
-/* eslint-disable indent */
+///* eslint-disable indent */
 
 const cashSecuredPutUtil = require('./cashSecuredPut')
 const settingsUtil = require('../utils/settings')
@@ -161,46 +161,45 @@ const _determinePositionsToBuy = (unutilizedCash, positionGoals, prices) =>
 // Has to be nested loops like this so it waits for a network call before making the next
 // Rate limiting and all that
 const _buyPositions = async positionsToBuy => {
-  const filledOrders = []
-  for (let x = 0; x < positionsToBuy.length; x++) {
-    const currentPosition = positionsToBuy[x]
+  const _buyPositionsHelper = async (symbol, quantity, remainingTries) => {
+    if (remainingTries <= 0 || quantity <= 0) {
+      return
+    }
 
-    const symbol = currentPosition.symbol
-    let quantity = currentPosition.quantity
-    let remainingTries = 10
-
-    while(remainingTries > 0 && quantity > 0) {
-      const orderResp = await sendOrderUtil.buy(symbol, quantity)
-
-      if (orderResp.status !== 'ok') {
-        remainingTries--
+    const orderResp = await sendOrderUtil.buy(symbol, quantity)
+    if (orderResp.status !== 'ok') {
+      const nextCycle = await _buyPositionsHelper(symbol, quantity, remainingTries - 1)
+      return nextCycle
+    }
+    const orderId = orderResp.id
+    let status = 'open'
+    let orderRetriesRemaining = 20
+    // Non-terminal statuses
+    while (['open', 'partially_filled', 'pending'].includes(status) && orderRetriesRemaining > 0) {
+      const order = await orderUtil.getOrder(orderId)
+      if (!order) {
+        orderRetriesRemaining--
         continue
       }
-      const orderId = orderResp.id
-
-      let status = 'open'
-      // Non-terminal statuses
-      while (['open', 'partially_filled', 'pending'].includes(status)) {
-        const order = await orderUtil.getOrder(orderId)
-        if (!order) {
-          continue
-        }
-        status = order.status
-      }
-
-      if (status === 'filled') {
-        filledOrders.push({ symbol, quantity })
-        break
-      } else {
-        quantity--
-        remainingTries--
-      }
+      status = order.status
     }
+    if (status === 'filled') {
+      return { symbol, quantity }
+    } else {
+      const nextCycle = await _buyPositionsHelper(symbol, quantity - 1, remainingTries - 1)
+      return nextCycle
+    }
+  }
 
-    if (remainingTries === 0 || quantity === 0) {
-      // Dont buy the next goal if this order failed 10 times
+  const filledOrders = []
+
+  for (let x = 0; x < positionsToBuy.length; x++) {
+    const currentPosition = positionsToBuy[x]
+    const filledOrder = await _buyPositionsHelper(currentPosition.symbol, currentPosition.quantity, 10)
+    if (!filledOrder) {
       break
     }
+    filledOrders.push(filledOrder)
   }
 
   return filledOrders
@@ -242,13 +241,13 @@ const allocateUnutilizedCash = async () => {
       return
     }
 
-    const unutilizedCash = balances.optionBuyingPower - settings.reserve - buffer
+    // const unutilizedCash = balances.optionBuyingPower - settings.reserve - buffer
 
-    const goalTickers = uniq(positionGoals.map(x => x.symbol))
-    const prices = await priceUtil.getPrices(goalTickers)
-    const positionsToBuy = _determinePositionsToBuy(unutilizedCash, positionGoals, prices)
+    // const goalTickers = uniq(positionGoals.map(x => x.symbol))
+    // const prices = await priceUtil.getPrices(goalTickers)
+    // const positionsToBuy = _determinePositionsToBuy(unutilizedCash, positionGoals, prices)
 
-    const filledPositions = await _buyPositions(positionsToBuy)
+    // const filledPositions = await _buyPositions(positionsToBuy)
 
     // TODO Modify table in Mongo
   } catch (e) {
