@@ -10,6 +10,7 @@ const costBasisUtil = require('../utils/determineCostBasis')
 const {
   _idealPositions,
   _getBuffer,
+  _determinePositionsToBuy,
   allocateUnutilizedCash
 } = require('./allocateUnutilizedCash')
 
@@ -819,7 +820,293 @@ describe('_getBuffer', () => {
 
 
 
-describe.only('allocateUnutilizedCash', () => {
+describe('_determinePositionsToBuy', () => {
+  beforeEach(() => {
+    logUtil.log = jest.fn()
+  })
+
+  it('Logs and returns empty if prices is empty', () => {
+    const positionGoals = [
+      {
+        symbol: 'AAPL',
+        enabled: true,
+        priority: 60,
+        goal: 50,
+        fulfilled: 0,
+      },
+      {
+        symbol: 'MSFT',
+        enabled: true,
+        priority: 20,
+        goal: 50,
+        fulfilled: 0,
+      },
+    ]
+    const prices = []
+    const result = _determinePositionsToBuy(4000, positionGoals, prices)
+    expect(result).toEqual([])
+    expect(logUtil.log).toHaveBeenCalledWith({
+      type: 'error',
+      message: 'Price util failed for _determinePositionsToBuy'
+    })
+  })
+
+  it('Logs and returns empty if prices failed for the highest priority', () => {
+    const positionGoals = [
+      {
+        symbol: 'MSFT',
+        enabled: true,
+        priority: 20,
+        goal: 50,
+        fulfilled: 0,
+      },
+      {
+        symbol: 'AAPL',
+        enabled: true,
+        priority: 60,
+        goal: 50,
+        fulfilled: 0,
+      },
+    ]
+    const prices = [
+      {
+        symbol: 'MSFT',
+        price: 20,
+      }
+    ]
+    const result = _determinePositionsToBuy(4000, positionGoals, prices)
+    expect(result).toEqual([])
+    expect(logUtil.log).toHaveBeenCalledWith({
+      type: 'error',
+      message: 'Price util failed for _determinePositionsToBuy'
+    })
+  })
+
+  it('Logs but returns highest priority if prices failed for the second highest priority, assuming enough cash to close out the first', () => {
+    const positionGoals = [
+      {
+        symbol: 'MSFT',
+        enabled: true,
+        priority: 20,
+        goal: 50,
+        fulfilled: 0,
+      },
+      {
+        symbol: 'AAPL',
+        enabled: true,
+        priority: 60,
+        goal: 50,
+        fulfilled: 0,
+      },
+    ]
+    const prices = [
+      {
+        symbol: 'AAPL',
+        price: 40,
+      }
+    ]
+    const result = _determinePositionsToBuy(4000, positionGoals, prices)
+    expect(result).toEqual([
+      {
+        symbol: 'AAPL',
+        quantity: 50,
+      }
+    ])
+    expect(logUtil.log).toHaveBeenCalledWith({
+      type: 'error',
+      message: 'Price util failed for _determinePositionsToBuy'
+    })
+  })
+
+  it('Returns empty if there isnt enough to buy a single share of the highest priority stock', () => {
+    const positionGoals = [
+      {
+        symbol: 'MSFT',
+        enabled: true,
+        priority: 20,
+        goal: 50,
+        fulfilled: 0,
+      },
+      {
+        symbol: 'AAPL',
+        enabled: true,
+        priority: 60,
+        goal: 50,
+        fulfilled: 0,
+      },
+    ]
+    const prices = [
+      {
+        symbol: 'AAPL',
+        price: 400,
+      }
+    ]
+    const result = _determinePositionsToBuy(50, positionGoals, prices)
+    expect(result).toEqual([])
+    expect(logUtil.log).not.toHaveBeenCalled()
+  })
+
+  it('Returns highest priority stock and number of shares it can afford', () => {
+    const positionGoals = [
+      {
+        symbol: 'MSFT',
+        enabled: true,
+        priority: 20,
+        goal: 50,
+        fulfilled: 0,
+      },
+      {
+        symbol: 'AAPL',
+        enabled: true,
+        priority: 60,
+        goal: 50,
+        fulfilled: 0,
+      },
+    ]
+    const prices = [
+      {
+        symbol: 'AAPL',
+        price: 40,
+      }
+    ]
+    const result = _determinePositionsToBuy(1500, positionGoals, prices)
+    expect(result).toEqual([
+      {
+        symbol: 'AAPL',
+        quantity: 37
+      }
+    ])
+    expect(logUtil.log).not.toHaveBeenCalled()
+  })
+
+  it('Returns highest priority stock and number of shares it can afford, with some already having been fulfilled', () => {
+    const positionGoals = [
+      {
+        symbol: 'MSFT',
+        enabled: true,
+        priority: 20,
+        goal: 50,
+        fulfilled: 0,
+      },
+      {
+        symbol: 'AAPL',
+        enabled: true,
+        priority: 60,
+        goal: 50,
+        fulfilled: 24,
+      },
+    ]
+    const prices = [
+      {
+        symbol: 'AAPL',
+        price: 40,
+      },
+      {
+        symbol: 'MSFT',
+        price: 40,
+      }
+    ]
+    const result = _determinePositionsToBuy(4000, positionGoals, prices)
+    expect(result).toEqual([
+      {
+        symbol: 'AAPL',
+        quantity: 26
+      },
+      {
+        symbol: 'MSFT',
+        quantity: 50
+      },
+    ])
+    expect(logUtil.log).not.toHaveBeenCalled()
+  })
+
+  it('Returns highest and next highest priority if theres enough cash to complete a goal', () => {
+    const positionGoals = [
+      {
+        symbol: 'MSFT',
+        enabled: true,
+        priority: 20,
+        goal: 50,
+        fulfilled: 0,
+      },
+      {
+        symbol: 'AAPL',
+        enabled: true,
+        priority: 60,
+        goal: 50,
+        fulfilled: 0,
+      },
+    ]
+    const prices = [
+      {
+        symbol: 'AAPL',
+        price: 40,
+      },
+      {
+        symbol: 'MSFT',
+        price: 50,
+      },
+    ]
+    const result = _determinePositionsToBuy(2500, positionGoals, prices)
+    expect(result).toEqual([
+      {
+        symbol: 'AAPL',
+        quantity: 50
+      },
+      {
+        symbol: 'MSFT',
+        quantity: 10,
+      }
+    ])
+    expect(logUtil.log).not.toHaveBeenCalled()
+  })
+
+  it('Returns all if theres enough cash to fulfill all positions', () => {
+    const positionGoals = [
+      {
+        symbol: 'MSFT',
+        enabled: true,
+        priority: 20,
+        goal: 50,
+        fulfilled: 0,
+      },
+      {
+        symbol: 'AAPL',
+        enabled: true,
+        priority: 60,
+        goal: 50,
+        fulfilled: 0,
+      },
+    ]
+    const prices = [
+      {
+        symbol: 'AAPL',
+        price: 40,
+      },
+      {
+        symbol: 'MSFT',
+        price: 50,
+      },
+    ]
+    const result = _determinePositionsToBuy(10000, positionGoals, prices)
+    expect(result).toEqual([
+      {
+        symbol: 'AAPL',
+        quantity: 50
+      },
+      {
+        symbol: 'MSFT',
+        quantity: 50,
+      }
+    ])
+    expect(logUtil.log).not.toHaveBeenCalled()
+  })
+})
+
+
+
+
+describe('allocateUnutilizedCash', () => {
   beforeEach(() => {
     cashSecuredPutUtil.getPositionsToSell = jest.fn()
     settingsUtil.getSettings = jest.fn()

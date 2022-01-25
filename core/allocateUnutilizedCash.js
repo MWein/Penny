@@ -9,6 +9,7 @@ const orderUtil = require('../tradier/getOrders')
 const purchaseGoalSchema = require('../db_models/purchaseGoalSchema')
 const priceUtil = require('../tradier/getPrices')
 const costBasisUtil = require('../utils/determineCostBasis')
+const uniq = require('lodash/uniq')
 
 const {
   getUnderlying,
@@ -107,6 +108,55 @@ const _getBuffer = async (idealPositions, positions, orders) => {
 }
 
 
+const _determinePositionsToBuy = (unutilizedCash, positionGoals, prices) =>
+  positionGoals
+    .sort((a, b) => b.priority - a.priority)
+    .reduce((acc, goal) => {
+      if (acc.stop) {
+        return acc
+      }
+
+      const sharePrice = prices.find(x => x.symbol === goal.symbol)?.price
+
+      // If the price util for this one failed, stop = true to halt execution
+      if (!sharePrice) {
+        logUtil.log({
+          type: 'error',
+          message: 'Price util failed for _determinePositionsToBuy'
+        })
+        return {
+          ...acc,
+          stop: true,
+        }
+      }
+
+      const remainingShares = goal.goal - goal.fulfilled
+
+      const affordableShares = Math.min(Math.floor(acc.cashRemaining / sharePrice), remainingShares)
+      const newRemainingShares = Math.max(remainingShares - affordableShares, 0)
+
+      const canContinue = newRemainingShares !== 0
+      const newCashRemaining = acc.cashRemaining - (affordableShares * sharePrice)
+      const newPositions = affordableShares > 0 ? [
+        ...acc.positions,
+        {
+          symbol: goal.symbol,
+          quantity: affordableShares
+        }
+      ] : acc.positions
+
+      return {
+        stop: canContinue,
+        cashRemaining: newCashRemaining,
+        positions: newPositions,
+      }
+    }, {
+      stop: false,
+      cashRemaining: unutilizedCash,
+      positions: []
+    }).positions
+
+
 const allocateUnutilizedCash = async () => {
   try {
     const settings = await settingsUtil.getSettings()
@@ -126,22 +176,27 @@ const allocateUnutilizedCash = async () => {
     const orders = await orderUtil.getOrders()
 
     const {
-        balances,
-        watchlist,
-        optionsToSell,
+      balances,
+      watchlist,
+      optionsToSell,
     } = await cashSecuredPutUtil.getPositionsToSell(settings)
 
     const idealPositons = _idealPositions(watchlist, positions, orders, optionsToSell, settings.defaultVolatility)
     const buffer = await _getBuffer(idealPositons, positions, orders)
     if (buffer === null) {
-        logUtil.log({
-            type: 'error',
-            message: 'AllocateUnutilized function: Buffer failed for some reason'
-        })
-        return
+      logUtil.log({
+        type: 'error',
+        message: 'AllocateUnutilized function: Buffer failed for some reason'
+      })
+      return
     }
 
-    //const unutilizedCash = balances.optionBuyingPower - settings.reserve - buffer
+    const unutilizedCash = balances.optionBuyingPower - settings.reserve - buffer
+
+    const goalTickers = uniq(positionGoals.map(x => x.symbol))
+    const prices = await priceUtil.getPrices(goalTickers)
+
+
 
     // TODO Figure out which stocks to load up on
     // Filter out anything thats fulfilled or unaffordable (based on current prices, obviously)
@@ -166,5 +221,6 @@ const allocateUnutilizedCash = async () => {
 module.exports = {
   _idealPositions,
   _getBuffer,
+  _determinePositionsToBuy,
   allocateUnutilizedCash,
 }
