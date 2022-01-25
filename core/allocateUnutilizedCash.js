@@ -162,11 +162,11 @@ const _buyPositions = async positionsToBuy => {
     }
 
     const orderResp = await sendOrderUtil.buy(symbol, quantity)
-    if (orderResp.status !== 'ok') {
+    if (orderResp?.order?.status !== 'ok') {
       const nextCycle = await _buyPositionsHelper(_id, symbol, quantity, remainingTries - 1)
       return nextCycle
     }
-    const orderId = orderResp.id
+    const orderId = orderResp.order.id
     let status = 'open'
     let orderRetriesRemaining = 20
     // Non-terminal statuses
@@ -251,7 +251,7 @@ const allocateUnutilizedCash = async () => {
     const filledPositions = await _buyPositions(positionsToBuy)
 
     await Promise.all(filledPositions.map(async pos => {
-      await purchaseGoalSchema.findByIdAndUpdate(pos._id, {$inc : { filled: pos.quantity }})
+      await purchaseGoalSchema.findByIdAndUpdate(pos._id, {$inc : { fulfilled: pos.quantity }})
     }))
   } catch (e) {
     logUtil.log({

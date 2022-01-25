@@ -37,7 +37,7 @@ const getOrder = async orderId => {
   if (response.orders === 'null') {
     return null
   }
-  return response.orders.order
+  return response.order
 }
 
 
