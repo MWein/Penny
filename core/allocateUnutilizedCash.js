@@ -168,7 +168,7 @@ const _buyPositions = async positionsToBuy => {
     let quantity = currentPosition.quantity
     let remainingTries = 10
 
-    while(remainingTries > 0) {
+    while(remainingTries > 0 && quantity > 0) {
       const orderResp = await sendOrderUtil.buy(symbol, quantity)
 
       if (orderResp.status !== 'ok') {
@@ -196,7 +196,7 @@ const _buyPositions = async positionsToBuy => {
       }
     }
 
-    if (remainingTries === 0) {
+    if (remainingTries === 0 || quantity === 0) {
       // Dont buy the next goal if this order failed 10 times
       break
     }
@@ -247,20 +247,9 @@ const allocateUnutilizedCash = async () => {
     const prices = await priceUtil.getPrices(goalTickers)
     const positionsToBuy = _determinePositionsToBuy(unutilizedCash, positionGoals, prices)
 
-    await _buyPositions(positionsToBuy)
+    const filledPositions = await _buyPositions(positionsToBuy)
 
-    // TODO Figure out which stocks to load up on
-    // Filter out anything thats fulfilled or unaffordable (based on current prices, obviously)
-    // Sort by priority first, then percent complete, then lowest share price
-
-    // TODO Determine how many of each can be purchased
-    // Stock prices should have a 5% buffer so orders don't get rejected for lack of funds or something
-
-    // Send purchase orders
-
-    // Loop through and confirm orders
-    // If an order fails, try again with 1 less stock
-
+    // TODO Modify table in Mongo
   } catch (e) {
     logUtil.log({
       type: 'error',

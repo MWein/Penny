@@ -12,7 +12,8 @@ const {
   _idealPositions,
   _getBuffer,
   _determinePositionsToBuy,
-  allocateUnutilizedCash
+  _buyPositions,
+  allocateUnutilizedCash,
 } = require('./allocateUnutilizedCash')
 
 const {
@@ -1106,8 +1107,230 @@ describe('_determinePositionsToBuy', () => {
 
 
 describe('_buyPositions', () => {
-  
+  beforeEach(() => {
+    sendOrderUtil.buy = jest.fn()
+    orderUtil.getOrder = jest.fn()
+  })
 
+  it('Does nothing if given an empty array', async () => {
+    const result = await _buyPositions([])
+    expect(result).toEqual([])
+    expect(sendOrderUtil.buy).not.toHaveBeenCalled()
+    expect(orderUtil.getOrder).not.toHaveBeenCalled()
+  })
+
+  it('Buys one position, tries again 10 times with quantity decreasing each time', async () => {
+    sendOrderUtil.buy.mockReturnValue({ status: 'ok', id: 1234 })
+    orderUtil.getOrder.mockReturnValue({ status: 'rejected' })
+    const result = await _buyPositions([
+      {
+        symbol: 'AAPL',
+        quantity: 20
+      }
+    ])
+    expect(result).toEqual([])
+    expect(sendOrderUtil.buy).toHaveBeenCalledTimes(10)
+    expect(orderUtil.getOrder).toHaveBeenCalledTimes(10)
+    expect(orderUtil.getOrder).toHaveBeenCalledWith(1234)
+    expect(sendOrderUtil.buy.mock.calls[0]).toEqual([ 'AAPL', 20 ])
+    expect(sendOrderUtil.buy.mock.calls[1]).toEqual([ 'AAPL', 19 ])
+    expect(sendOrderUtil.buy.mock.calls[2]).toEqual([ 'AAPL', 18 ])
+    expect(sendOrderUtil.buy.mock.calls[3]).toEqual([ 'AAPL', 17 ])
+    expect(sendOrderUtil.buy.mock.calls[4]).toEqual([ 'AAPL', 16 ])
+    expect(sendOrderUtil.buy.mock.calls[5]).toEqual([ 'AAPL', 15 ])
+    expect(sendOrderUtil.buy.mock.calls[6]).toEqual([ 'AAPL', 14 ])
+    expect(sendOrderUtil.buy.mock.calls[7]).toEqual([ 'AAPL', 13 ])
+    expect(sendOrderUtil.buy.mock.calls[8]).toEqual([ 'AAPL', 12 ])
+    expect(sendOrderUtil.buy.mock.calls[9]).toEqual([ 'AAPL', 11 ])
+  })
+
+  it('Buys one position, tries again 5 times with quantity decreasing each time, exits if quantity reaches 0 before it can try 10 times', async () => {
+    sendOrderUtil.buy.mockReturnValue({ status: 'ok', id: 4321 })
+    orderUtil.getOrder.mockReturnValue({ status: 'rejected' })
+    const result = await _buyPositions([
+      {
+        symbol: 'AAPL',
+        quantity: 5
+      }
+    ])
+    expect(result).toEqual([])
+    expect(sendOrderUtil.buy).toHaveBeenCalledTimes(5)
+    expect(orderUtil.getOrder).toHaveBeenCalledTimes(5)
+    expect(orderUtil.getOrder).toHaveBeenCalledWith(4321)
+    expect(sendOrderUtil.buy.mock.calls[0]).toEqual([ 'AAPL', 5 ])
+    expect(sendOrderUtil.buy.mock.calls[1]).toEqual([ 'AAPL', 4 ])
+    expect(sendOrderUtil.buy.mock.calls[2]).toEqual([ 'AAPL', 3 ])
+    expect(sendOrderUtil.buy.mock.calls[3]).toEqual([ 'AAPL', 2 ])
+    expect(sendOrderUtil.buy.mock.calls[4]).toEqual([ 'AAPL', 1 ])
+  })
+
+  it('Buys one position, tries again if orderConfirmation is not ok, does not decrease quantity', async () => {
+    sendOrderUtil.buy.mockReturnValue({ status: 'not ok' })
+    orderUtil.getOrder.mockReturnValue({ status: 'rejected' })
+    const result = await _buyPositions([
+      {
+        symbol: 'AAPL',
+        quantity: 5
+      }
+    ])
+    expect(result).toEqual([])
+    expect(sendOrderUtil.buy).toHaveBeenCalledTimes(10)
+    expect(orderUtil.getOrder).not.toHaveBeenCalled()
+    expect(sendOrderUtil.buy.mock.calls[0]).toEqual([ 'AAPL', 5 ])
+    expect(sendOrderUtil.buy.mock.calls[1]).toEqual([ 'AAPL', 5 ])
+    expect(sendOrderUtil.buy.mock.calls[2]).toEqual([ 'AAPL', 5 ])
+    expect(sendOrderUtil.buy.mock.calls[3]).toEqual([ 'AAPL', 5 ])
+    expect(sendOrderUtil.buy.mock.calls[4]).toEqual([ 'AAPL', 5 ])
+  })
+
+  it('Retries getOrder continuously until order returns', async () => {
+    sendOrderUtil.buy.mockReturnValue({ status: 'ok', id: 4741 })
+    orderUtil.getOrder.mockReturnValueOnce(null)
+    orderUtil.getOrder.mockReturnValueOnce(null)
+    orderUtil.getOrder.mockReturnValueOnce(null)
+    orderUtil.getOrder.mockReturnValueOnce(null)
+    orderUtil.getOrder.mockReturnValueOnce(null)
+    orderUtil.getOrder.mockReturnValueOnce(null)
+    orderUtil.getOrder.mockReturnValue({ status: 'filled' })
+    await _buyPositions([
+      {
+        symbol: 'AAPL',
+        quantity: 5
+      }
+    ])
+    expect(sendOrderUtil.buy).toHaveBeenCalledTimes(1)
+    expect(orderUtil.getOrder).toHaveBeenCalledTimes(7)
+    expect(sendOrderUtil.buy.mock.calls[0]).toEqual([ 'AAPL', 5 ])
+  })
+
+
+  it('With two positions, does not attempt to buy the second if the first one fails for quantity drop', async () => {
+    sendOrderUtil.buy.mockReturnValue({ status: 'ok', id: 4321 })
+    orderUtil.getOrder.mockReturnValue({ status: 'rejected' })
+    const result = await _buyPositions([
+      {
+        symbol: 'AAPL',
+        quantity: 5
+      },
+      {
+        symbol: 'MSFT',
+        quantity: 5
+      },
+    ])
+    expect(result).toEqual([])
+    expect(sendOrderUtil.buy).not.toHaveBeenCalledWith('MSFT', 5)
+    expect(sendOrderUtil.buy).toHaveBeenCalledTimes(5)
+    expect(orderUtil.getOrder).toHaveBeenCalledTimes(5)
+    expect(orderUtil.getOrder).toHaveBeenCalledWith(4321)
+    expect(sendOrderUtil.buy.mock.calls[0]).toEqual([ 'AAPL', 5 ])
+    expect(sendOrderUtil.buy.mock.calls[1]).toEqual([ 'AAPL', 4 ])
+    expect(sendOrderUtil.buy.mock.calls[2]).toEqual([ 'AAPL', 3 ])
+    expect(sendOrderUtil.buy.mock.calls[3]).toEqual([ 'AAPL', 2 ])
+    expect(sendOrderUtil.buy.mock.calls[4]).toEqual([ 'AAPL', 1 ])
+  })
+
+  it('With two positions, does not attempt to buy the second if the first one fails for failure count', async () => {
+    sendOrderUtil.buy.mockReturnValue({ status: 'ok', id: 4321 })
+    orderUtil.getOrder.mockReturnValue({ status: 'rejected' })
+    const result = await _buyPositions([
+      {
+        symbol: 'AAPL',
+        quantity: 20
+      },
+      {
+        symbol: 'MSFT',
+        quantity: 5
+      },
+    ])
+    expect(result).toEqual([])
+    expect(sendOrderUtil.buy).not.toHaveBeenCalledWith('MSFT', 5)
+    expect(sendOrderUtil.buy).toHaveBeenCalledTimes(10)
+    expect(orderUtil.getOrder).toHaveBeenCalledTimes(10)
+    expect(orderUtil.getOrder).toHaveBeenCalledWith(4321)
+    expect(sendOrderUtil.buy.mock.calls[0]).toEqual([ 'AAPL', 20 ])
+    expect(sendOrderUtil.buy.mock.calls[1]).toEqual([ 'AAPL', 19 ])
+    expect(sendOrderUtil.buy.mock.calls[2]).toEqual([ 'AAPL', 18 ])
+    expect(sendOrderUtil.buy.mock.calls[3]).toEqual([ 'AAPL', 17 ])
+    expect(sendOrderUtil.buy.mock.calls[4]).toEqual([ 'AAPL', 16 ])
+  })
+
+  it('Partial happy path, returns actual quantity purchased', async () => {
+    sendOrderUtil.buy.mockReturnValue({ status: 'ok', id: 4321 })
+    orderUtil.getOrder.mockReturnValueOnce({ status: 'rejected' })
+    orderUtil.getOrder.mockReturnValueOnce({ status: 'rejected' })
+    orderUtil.getOrder.mockReturnValueOnce({ status: 'filled' })
+    const result = await _buyPositions([
+      {
+        symbol: 'AAPL',
+        quantity: 20
+      },
+    ])
+    expect(result).toEqual([
+      {
+        symbol: 'AAPL',
+        quantity: 18,
+      },
+    ])
+    expect(sendOrderUtil.buy).toHaveBeenCalledTimes(3)
+    expect(orderUtil.getOrder).toHaveBeenCalledTimes(3)
+    expect(orderUtil.getOrder).toHaveBeenCalledWith(4321)
+    expect(sendOrderUtil.buy.mock.calls[0]).toEqual([ 'AAPL', 20 ])
+    expect(sendOrderUtil.buy.mock.calls[1]).toEqual([ 'AAPL', 19 ])
+    expect(sendOrderUtil.buy.mock.calls[2]).toEqual([ 'AAPL', 18 ])
+  })
+
+  it('Happy path with one position', async () => {
+    sendOrderUtil.buy.mockReturnValueOnce({ status: 'ok', id: 4321 })
+    orderUtil.getOrder.mockReturnValue({ status: 'filled' })
+    const result = await _buyPositions([
+      {
+        symbol: 'AAPL',
+        quantity: 20
+      },
+    ])
+    expect(result).toEqual([
+      {
+        symbol: 'AAPL',
+        quantity: 20,
+      },
+    ])
+    expect(sendOrderUtil.buy).toHaveBeenCalledTimes(1)
+    expect(orderUtil.getOrder).toHaveBeenCalledTimes(1)
+    expect(orderUtil.getOrder).toHaveBeenCalledWith(4321)
+    expect(sendOrderUtil.buy).toHaveBeenCalledWith('AAPL', 20)
+  })
+
+  it('Happy path with two positions', async () => {
+    sendOrderUtil.buy.mockReturnValueOnce({ status: 'ok', id: 4321 })
+    sendOrderUtil.buy.mockReturnValueOnce({ status: 'ok', id: 1234 })
+    orderUtil.getOrder.mockReturnValue({ status: 'filled' })
+    const result = await _buyPositions([
+      {
+        symbol: 'AAPL',
+        quantity: 20
+      },
+      {
+        symbol: 'MSFT',
+        quantity: 5
+      },
+    ])
+    expect(result).toEqual([
+      {
+        symbol: 'AAPL',
+        quantity: 20,
+      },
+      {
+        symbol: 'MSFT',
+        quantity: 5,
+      },
+    ])
+    expect(sendOrderUtil.buy).toHaveBeenCalledTimes(2)
+    expect(orderUtil.getOrder).toHaveBeenCalledTimes(2)
+    expect(orderUtil.getOrder).toHaveBeenCalledWith(4321)
+    expect(orderUtil.getOrder).toHaveBeenCalledWith(1234)
+    expect(sendOrderUtil.buy).toHaveBeenCalledWith('AAPL', 20)
+    expect(sendOrderUtil.buy).toHaveBeenCalledWith('MSFT', 5)
+  })
 })
 
 
