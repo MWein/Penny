@@ -819,14 +819,15 @@ describe('_getBuffer', () => {
 
 
 
-describe('allocateUnutilizedCash', () => {
+describe.only('allocateUnutilizedCash', () => {
   beforeEach(() => {
     cashSecuredPutUtil.getPositionsToSell = jest.fn()
     settingsUtil.getSettings = jest.fn()
     logUtil.log = jest.fn()
     positionUtil.getPositions = jest.fn()
     orderUtil.getOrders = jest.fn()
-
+    priceUtil.getPrices = jest.fn()
+    costBasisUtil.determineCostBasisPerShare = jest.fn()
     purchaseGoalSchema.find = jest.fn()
   })
 
@@ -914,5 +915,48 @@ describe('allocateUnutilizedCash', () => {
     expect(orderUtil.getOrders).not.toHaveBeenCalled()
   })
 
+  it('If _getBuffer function returns null, log and exit', async () => {
+    purchaseGoalSchema.find.mockReturnValue([
+      {
+        symbol: 'MSFT',
+        enabled: true,
+        priority: 0,
+        goal: 100,
+        fulfilled: 37,
+      },
+    ])
+    settingsUtil.getSettings.mockReturnValue({
+      allocateUnutilizedCash: true,
+      reserve: 100,
+      defaultVolatility: 0.05,
+    })
+    positionUtil.getPositions.mockReturnValue([])
+    orderUtil.getOrders.mockReturnValue([])
+    priceUtil.getPrices.mockReturnValue([])
+    costBasisUtil.determineCostBasisPerShare.mockReturnValue(0)
+    cashSecuredPutUtil.getPositionsToSell.mockReturnValue({
+      //balances, // Dont need for this test
+      watchlist: [
+        {
+          symbol: 'MSFT',
+          maxPositions: 1,
+          put: {
+            enabled: true
+          }
+        }
+      ],
+      optionsToSell: [
+        {
+          optionSymbol: generateSymbol('MSFT', 'put'),
+          positions: 1
+        }
+      ],
+    })
+    await allocateUnutilizedCash()
+    expect(logUtil.log).toHaveBeenCalledWith({
+      type: 'error',
+      message: 'AllocateUnutilized function: Buffer failed for some reason'
+    })
+  })
 
 })

@@ -122,37 +122,26 @@ const allocateUnutilizedCash = async () => {
       return
     }
 
-    // TODO Check if anything is in the watchlist
+    const positions = await positionUtil.getPositions()
+    const orders = await orderUtil.getOrders()
 
-    // const positions = await positionUtil.getPositions()
-    // const orders = await orderUtil.getOrders()
+    const {
+        balances,
+        watchlist,
+        optionsToSell,
+    } = await cashSecuredPutUtil.getPositionsToSell(settings)
 
-    // const {
-    //     balances,
-    //     watchlist,
-    //     optionsToSell
-    // } = await cashSecuredPutUtil.getPositionsToSell(settings)
+    const idealPositons = _idealPositions(watchlist, positions, orders, optionsToSell, settings.defaultVolatility)
+    const buffer = await _getBuffer(idealPositons, positions, orders)
+    if (buffer === null) {
+        logUtil.log({
+            type: 'error',
+            message: 'AllocateUnutilized function: Buffer failed for some reason'
+        })
+        return
+    }
 
-
-    // TODO Build current ideal positions object
-    // _idealPositions
-
-    // TODO Get current prices for each position + 10%
-    /*
-        Get prices for each position right now, add 10-15% (should be a setting).
-        Buffer override of some kind should be added to the watchlist schema,
-        so a particular symbol with high volatility can be accounted for
-        without applying the same standard to less volatile stonks.
-
-        This is to prevent a situation where a symbol increases in value,
-        but still allow Penny to have enough free money to continue trading it.
-        
-        ALSO ALSO add the cost of buying buy_to_close orders for each put currently uncovered by one
-        */
-
-
-    // TODO Calc unutilized cash
-    // Current buying power - reserve - buffer - wouldBePurchaseValue
+    //const unutilizedCash = balances.optionBuyingPower - settings.reserve - buffer
 
     // TODO Figure out which stocks to load up on
     // Filter out anything thats fulfilled or unaffordable (based on current prices, obviously)
@@ -162,6 +151,9 @@ const allocateUnutilizedCash = async () => {
     // Stock prices should have a 5% buffer so orders don't get rejected for lack of funds or something
 
     // Send purchase orders
+
+    // Loop through and confirm orders
+    // If an order fails, try again with 1 less stock
 
   } catch (e) {
     logUtil.log({
