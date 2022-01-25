@@ -156,14 +156,14 @@ const _determinePositionsToBuy = (unutilizedCash, positionGoals, prices) =>
 // Has to be nested loops like this so it waits for a network call before making the next
 // Rate limiting and all that
 const _buyPositions = async positionsToBuy => {
-  const _buyPositionsHelper = async (symbol, quantity, remainingTries) => {
+  const _buyPositionsHelper = async (_id, symbol, quantity, remainingTries) => {
     if (remainingTries <= 0 || quantity <= 0) {
       return
     }
 
     const orderResp = await sendOrderUtil.buy(symbol, quantity)
     if (orderResp.status !== 'ok') {
-      const nextCycle = await _buyPositionsHelper(symbol, quantity, remainingTries - 1)
+      const nextCycle = await _buyPositionsHelper(_id, symbol, quantity, remainingTries - 1)
       return nextCycle
     }
     const orderId = orderResp.id
@@ -179,9 +179,9 @@ const _buyPositions = async positionsToBuy => {
       status = order.status
     }
     if (status === 'filled') {
-      return { symbol, quantity }
+      return { _id, symbol, quantity }
     } else {
-      const nextCycle = await _buyPositionsHelper(symbol, quantity - 1, remainingTries - 1)
+      const nextCycle = await _buyPositionsHelper(_id, symbol, quantity - 1, remainingTries - 1)
       return nextCycle
     }
   }
@@ -190,7 +190,7 @@ const _buyPositions = async positionsToBuy => {
 
   for (let x = 0; x < positionsToBuy.length; x++) {
     const currentPosition = positionsToBuy[x]
-    const filledOrder = await _buyPositionsHelper(currentPosition.symbol, currentPosition.quantity, 10)
+    const filledOrder = await _buyPositionsHelper(currentPosition._id, currentPosition.symbol, currentPosition.quantity, 10)
     if (!filledOrder) {
       break
     }

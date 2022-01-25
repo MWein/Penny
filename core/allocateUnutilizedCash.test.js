@@ -1157,6 +1157,7 @@ describe('_buyPositions', () => {
     orderUtil.getOrder.mockReturnValue({ status: 'rejected' })
     const result = await _buyPositions([
       {
+        _id: 1234,
         symbol: 'AAPL',
         quantity: 20
       }
@@ -1173,6 +1174,7 @@ describe('_buyPositions', () => {
     orderUtil.getOrder.mockReturnValue({ status: 'rejected' })
     const result = await _buyPositions([
       {
+        _id: 1234,
         symbol: 'AAPL',
         quantity: 5
       }
@@ -1188,6 +1190,7 @@ describe('_buyPositions', () => {
     sendOrderUtil.buy.mockReturnValue({ status: 'not ok' })
     const result = await _buyPositions([
       {
+        _id: 1234,
         symbol: 'AAPL',
         quantity: 5
       }
@@ -1209,6 +1212,7 @@ describe('_buyPositions', () => {
     orderUtil.getOrder.mockReturnValue({ status: 'filled' })
     await _buyPositions([
       {
+        _id: 1234,
         symbol: 'AAPL',
         quantity: 5
       }
@@ -1223,10 +1227,12 @@ describe('_buyPositions', () => {
     orderUtil.getOrder.mockReturnValue({ status: 'rejected' })
     const result = await _buyPositions([
       {
+        _id: 1234,
         symbol: 'AAPL',
         quantity: 5
       },
       {
+        _id: 4321,
         symbol: 'MSFT',
         quantity: 5
       },
@@ -1244,10 +1250,12 @@ describe('_buyPositions', () => {
     orderUtil.getOrder.mockReturnValue({ status: 'rejected' })
     const result = await _buyPositions([
       {
+        _id: 1234,
         symbol: 'AAPL',
         quantity: 20
       },
       {
+        _id: 4321,
         symbol: 'MSFT',
         quantity: 5
       },
@@ -1267,12 +1275,14 @@ describe('_buyPositions', () => {
     orderUtil.getOrder.mockReturnValueOnce({ status: 'filled' })
     const result = await _buyPositions([
       {
+        _id: 1234,
         symbol: 'AAPL',
         quantity: 20
       },
     ])
     expect(result).toEqual([
       {
+        _id: 1234,
         symbol: 'AAPL',
         quantity: 18,
       },
@@ -1288,12 +1298,14 @@ describe('_buyPositions', () => {
     orderUtil.getOrder.mockReturnValue({ status: 'filled' })
     const result = await _buyPositions([
       {
+        _id: 1234,
         symbol: 'AAPL',
         quantity: 20
       },
     ])
     expect(result).toEqual([
       {
+        _id: 1234,
         symbol: 'AAPL',
         quantity: 20,
       },
@@ -1310,20 +1322,24 @@ describe('_buyPositions', () => {
     orderUtil.getOrder.mockReturnValue({ status: 'filled' })
     const result = await _buyPositions([
       {
+        _id: 1234,
         symbol: 'AAPL',
         quantity: 20
       },
       {
+        _id: 4321,
         symbol: 'MSFT',
         quantity: 5
       },
     ])
     expect(result).toEqual([
       {
+        _id: 1234,
         symbol: 'AAPL',
         quantity: 20,
       },
       {
+        _id: 4321,
         symbol: 'MSFT',
         quantity: 5,
       },
