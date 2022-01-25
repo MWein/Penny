@@ -1203,7 +1203,6 @@ describe('_buyPositions', () => {
     expect(sendOrderUtil.buy.mock.calls[0]).toEqual([ 'AAPL', 5 ])
   })
 
-
   it('With two positions, does not attempt to buy the second if the first one fails for quantity drop', async () => {
     sendOrderUtil.buy.mockReturnValue({ status: 'ok', id: 4321 })
     orderUtil.getOrder.mockReturnValue({ status: 'rejected' })
