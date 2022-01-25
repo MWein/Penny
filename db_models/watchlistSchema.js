@@ -10,6 +10,10 @@ const WatchlistSchema = mongoose.Schema({
     required: true,
     default: 0,
   },
+  automaticAllocationBuffer: {
+    type: Number,
+    required: false,
+  },
   call: {
     enabled: {
       type: Boolean,
