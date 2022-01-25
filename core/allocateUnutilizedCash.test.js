@@ -7,8 +7,63 @@ const purchaseGoalSchema = require('../db_models/purchaseGoalSchema')
 
 
 const {
+  _idealPositions,
   allocateUnutilizedCash
 } = require('./allocateUnutilizedCash')
+
+const {
+  generateOrderObject,
+  generatePositionObject,
+} = require('../utils/testHelpers')
+
+
+
+describe('_idealPositions', () => {
+  it('Case 1 - Nothing in watchlist - returns empty', () => {
+    const watchlist = []
+    const positions = [
+      generatePositionObject('UAL', 7, 'stock', 329)
+    ]
+    const orders = [
+      generateOrderObject('AAPL', 1, 'put', 'sell_to_open')
+    ]
+    const optionsToSell = []
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell)
+    expect(result).toEqual([])
+  })
+
+  it('Case 2 - Watchlist has only non-put-enabled or 0-max-position items - returns empty', () => {
+    const watchlist = [
+      {
+        symbol: 'AAPL',
+        maxPositions: 0,
+        put: {
+          enabled: false
+        }
+      },
+      {
+        symbol: 'MSFT',
+        maxPositions: 0,
+        put: {
+          enabled: true
+        }
+      },
+    ]
+    const positions = [
+      generatePositionObject('UAL', 7, 'stock', 329)
+    ]
+    const orders = [
+      generateOrderObject('AAPL', 1, 'put', 'sell_to_open')
+    ]
+    const optionsToSell = []
+    const result = _idealPositions(watchlist, positions, orders, optionsToSell)
+    expect(result).toEqual([])
+  })
+
+})
+
+
+
 
 
 describe('allocateUnutilizedCash', () => {

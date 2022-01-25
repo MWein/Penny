@@ -13,7 +13,12 @@ const purchaseGoalSchema = require('../db_models/purchaseGoalSchema')
 // That way Penny-Data could use it when this becomes a mono-repo
 
 
-const _idealPositions = (positions, orders, optionsToSell) => {
+const _idealPositions = (watchlist, positions, orders, optionsToSell) => {
+    const filteredWatchlist = watchlist.filter(item => item.put.enabled && item.maxPositions > 0)
+    if (!filteredWatchlist.length) {
+        return []
+    }
+
     /*
         Should return an array with each position, and how many Penny
         can sell with the current amount of money Penny has right now.
@@ -50,6 +55,8 @@ const allocateUnutilizedCash = async () => {
             logUtil.log('No position goals to trade on')
             return
         }
+
+        // TODO Check if anything is in the watchlist
 
         const positions = await positionUtil.getPositions()
         const orders = await orderUtil.getOrders()
@@ -104,5 +111,6 @@ const allocateUnutilizedCash = async () => {
 }
 
 module.exports = {
+  _idealPositions,
   allocateUnutilizedCash,
 }
