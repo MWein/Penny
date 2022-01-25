@@ -4,10 +4,11 @@ const logUtil = require('../utils/log')
 const positionUtil = require('../tradier/getPositions')
 const orderUtil = require('../tradier/getOrders')
 const purchaseGoalSchema = require('../db_models/purchaseGoalSchema')
-
+const priceUtil = require('../tradier/getPrices')
 
 const {
   _idealPositions,
+  _getBuffer,
   allocateUnutilizedCash
 } = require('./allocateUnutilizedCash')
 
@@ -429,6 +430,90 @@ describe('_idealPositions', () => {
 })
 
 
+
+describe('_getBuffer', () => {
+  beforeEach(() => {
+    priceUtil.getPrices = jest.fn()
+  })
+
+  it('Returns 0 if given empty array, does not call priceUtil', async () => {
+    priceUtil.getPrices.mockReturnValue([])
+    const result = await _getBuffer([])
+    expect(result).toEqual(0)
+    expect(priceUtil.getPrices).not.toHaveBeenCalled()
+  })
+
+  it('Calls priceUtil for each ideal position given. Returns null if getPrices returns empty', async () => {
+    priceUtil.getPrices.mockReturnValue([])
+    const idealPositions = [
+      {
+        symbol: 'MSFT',
+        volatility: 0.2,
+        positions: 1
+      },
+      {
+        symbol: 'AAPL',
+        volatility: 0.5,
+        positions: 1
+      },
+    ]
+    const result = await _getBuffer(idealPositions)
+    expect(result).toEqual(null)
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT', 'AAPL' ])
+  })
+
+  it('Calls priceUtil for each ideal position given. Returns null if one is missing from getPrices return', async () => {
+    priceUtil.getPrices.mockReturnValue([
+      {
+        symbol: 'MSFT',
+        price: 100,
+      },
+    ])
+    const idealPositions = [
+      {
+        symbol: 'MSFT',
+        volatility: 0.2,
+        positions: 1
+      },
+      {
+        symbol: 'AAPL',
+        volatility: 0.5,
+        positions: 1
+      },
+    ]
+    const result = await _getBuffer(idealPositions)
+    expect(result).toEqual(null)
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT', 'AAPL' ])
+  })
+
+  it('Returns a buffer calculated from the price and volatility, rounded to the nearest 100th (price * 100 * numPositions * volatility)', async () => {
+    priceUtil.getPrices.mockReturnValue([
+      {
+        symbol: 'MSFT',
+        price: 296.10,
+      },
+      {
+        symbol: 'AAPL',
+        price: 159.75,
+      }
+    ])
+    const idealPositions = [
+      {
+        symbol: 'MSFT',
+        volatility: 0.2,
+        positions: 4
+      },
+      {
+        symbol: 'AAPL',
+        volatility: 0.15,
+        positions: 1
+      },
+    ]
+    const result = await _getBuffer(idealPositions)
+    expect(result).toEqual(26084.25)
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT', 'AAPL' ])
+  })
+})
 
 
 

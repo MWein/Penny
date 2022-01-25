@@ -7,6 +7,7 @@ const logUtil = require('../utils/log')
 const positionUtil = require('../tradier/getPositions')
 const orderUtil = require('../tradier/getOrders')
 const purchaseGoalSchema = require('../db_models/purchaseGoalSchema')
+const priceUtil = require('../tradier/getPrices')
 
 const {
     getUnderlying
@@ -46,6 +47,22 @@ const _idealPositions = (watchlist, positions, orders, optionsToSell, defaultVol
             positions: Math.min(maxPositions, numStockOptUnits + numPutPositions + numPutOrders + numOptsToSell)
         }
     }).filter(x => x.positions > 0)
+}
+
+
+const _getBuffer = async idealPositions => {
+    if (!idealPositions.length) {
+        return 0
+    }
+
+    const symbols = idealPositions.map(x => x.symbol)
+    const prices = await priceUtil.getPrices(symbols)
+
+    return Number(idealPositions.reduce((acc, pos) => {
+        const price = prices.find(x => x.symbol === pos.symbol)?.price
+        const bufferForSymbol = price * pos.positions * 100 * pos.volatility
+        return acc + bufferForSymbol
+    }, 0).toFixed(2)) || null
 }
 
 
@@ -115,5 +132,6 @@ const allocateUnutilizedCash = async () => {
 
 module.exports = {
   _idealPositions,
+  _getBuffer,
   allocateUnutilizedCash,
 }
