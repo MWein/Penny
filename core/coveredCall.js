@@ -7,6 +7,7 @@ const market = require('../tradier/market')
 const { getUnderlying } = require('../utils/determineOptionType')
 const logUtil = require('../utils/log')
 const costBasisUtil = require('../utils/determineCostBasis')
+const watchlistUtil = require('../utils/watchlist')
 
 
 // Note: This function assumes that positions were split between stocks and options properly
@@ -49,56 +50,78 @@ const _determineCoverableTickers = async () => {
 }
 
 
-const _correctCostPerShare = async position => {
-  if (position.costPerShare === 0) {
-    const costPerShare = await costBasisUtil.determineCostBasisPerShare(position.symbol)
-    return {
-      ...position,
-      costPerShare
+const _getMinimumStrike = async (position, stockSettings) => {
+  if (stockSettings.call.minStrikeMode === 'auto') {
+    if (position.costPerShare === 0) {
+      const costPerShare = await costBasisUtil.determineCostBasisPerShare(stockSettings.symbol)
+      return costPerShare
     }
+    return position.costPerShare
+  } else if (stockSettings.call.minStrikeMode === 'custom') {
+    return stockSettings.call.minStrike
   }
-  return position
+  return null
 }
 
 
+
 const sellCoveredCalls = async () => {
-  const callsEnabled = await settings.getSetting('callsEnabled')
-  if (!callsEnabled) {
-    logUtil.log('Calls Disabled')
-    return
-  }
-
-  const open = await market.isMarketOpen()
-  if (!open) {
-    logUtil.log('Market Closed')
-    return
-  }
-
-  const coverableTickers = await _determineCoverableTickers()
-  if (coverableTickers.length === 0) {
-    logUtil.log('No Covered Call Opportunities')
-  }
-
-  // In a for-loop so each request isn't sent up all at once
-  for (let x = 0; x < coverableTickers.length; x++) {
-    const currentPosition = coverableTickers[x]
-
-    // Get cost basis for anything with a $0 as costPerShare to compensate for that stupid bug
-    // Tradier shows cost basis of $0 for anything that was aquired via assignment
-    const correctedPosition = await _correctCostPerShare(currentPosition)
-
-    const best = await bestOption.selectBestOption(correctedPosition.symbol, 'call', correctedPosition.costPerShare)
-    if (best) {
-      await sendOrders.sellToOpen(correctedPosition.symbol, best.symbol, correctedPosition.quantity)
+  try {
+    const callsEnabled = await settings.getSetting('callsEnabled')
+    if (!callsEnabled) {
+      logUtil.log('Calls Disabled')
+      return
     }
-  }
 
-  logUtil.log('Done')
+    const open = await market.isMarketOpen()
+    if (!open) {
+      logUtil.log('Market Closed')
+      return
+    }
+
+    const coverableTickers = await _determineCoverableTickers()
+    if (coverableTickers.length === 0) {
+      logUtil.log('No Covered Call Opportunities')
+      return
+    }
+
+    const watchlist = await watchlistUtil.getWatchlist()
+
+    // In a for-loop so each request isn't sent up all at once
+    for (let x = 0; x < coverableTickers.length; x++) {
+      const currentPosition = coverableTickers[x]
+
+      // Skip if not in watchlist
+      const stockSettings = watchlist.find(x => x.symbol === currentPosition.symbol)
+      if (!stockSettings) {
+        continue
+      }
+
+      // Skip if calls disabled
+      if (!stockSettings.call.enabled) {
+        continue
+      }
+
+      const minimumStrike = await _getMinimumStrike(currentPosition, stockSettings)
+
+      const best = await bestOption.selectBestOption(currentPosition.symbol, 'call', minimumStrike, stockSettings.call.targetDelta)
+      if (best) {
+        await sendOrders.sellToOpen(currentPosition.symbol, best.symbol, currentPosition.quantity)
+      }
+    }
+
+    logUtil.log('Done')
+  } catch (e) {
+    logUtil.log({
+      type: 'error',
+      message: e.toString()
+    })
+  }
 }
 
 module.exports = {
   _generatePermittedPositionsArray,
   _determineCoverableTickers,
-  _correctCostPerShare,
+  _getMinimumStrike,
   sellCoveredCalls,
 }

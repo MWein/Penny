@@ -76,8 +76,8 @@ describe('getSettings', () => {
         value: false,
       },
       {
-        key: 'maxAllocation',
-        value: 40000,
+        key: 'closeExpiringPuts',
+        value: true,
       },
       {
         key: 'reserve',
@@ -88,28 +88,26 @@ describe('getSettings', () => {
         value: 0.70
       },
       {
-        key: 'maxPositions',
-        value: 6,
-      },
-      {
-        key: 'customTickers',
-        value: [ 'GOOG', 'MSFT' ],
-      },
-      {
-        key: 'bannedTickers',
-        value: [ 'AAL', 'SFIX' ],
+        key: 'priorityList',
+        value: [ 'AAPL', 'MSFT' ],
       },
     ])
     const result = await getSettings()
     expect(result).toEqual({
       callsEnabled: false,
       putsEnabled: false,
-      maxAllocation: 40000,
-      maxPositions: 6,
+      closeExpiringPuts: true,
+      allocateUnutilizedCash: false,
+      defaultVolatility: 0.2,
       reserve: 20,
       profitTarget: 0.70,
-      customTickers: [ 'GOOG', 'MSFT' ],
-      bannedTickers: [ 'AAL', 'SFIX' ],
+      priorityList: [ 'AAPL', 'MSFT' ]
     })
+  })
+
+  it('Returns defaults if Mongo is empty', async () => {
+    settingSchema.find.mockReturnValue([])
+    const result = await getSettings()
+    expect(result).toEqual(defaultSettings)
   })
 })

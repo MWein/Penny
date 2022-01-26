@@ -3,12 +3,12 @@ const settingSchema = require('../db_models/settingSchema')
 const defaultSettings = {
   callsEnabled: true,
   putsEnabled: true,
-  maxAllocation: 4000, // The maximum amount of money to put down on a single ticker
-  maxPositions: 5, // The maximum number of positions any one position can have
+  closeExpiringPuts: false,
+  allocateUnutilizedCash: false,
+  defaultVolatility: 0.20, // A safety buffer to be used with stocks when calculating unutilized funds
   reserve: 0, // Money that Penny shouldn't touch. BuyingPower - Reserve. For planned withdrawals.
   profitTarget: 0.75, // Profit to set Buy-To-Close orders to
-  customTickers: [],
-  bannedTickers: [],
+  priorityList: [],
 }
 
 const getSettings = async () => {

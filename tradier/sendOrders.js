@@ -1,6 +1,36 @@
 const network = require('../utils/network')
 const logUtil = require('../utils/log')
 
+
+const buy = async (symbol, quantity) => {
+  const url = `accounts/${process.env.ACCOUNTNUM}/orders`
+
+  const body = {
+    account_id: process.env.ACCOUNTNUM,
+    class: 'equity',
+    symbol,
+    side: 'buy',
+    quantity,
+    type: 'market',
+    duration: 'day',
+  }
+
+  try {
+    const result = await network.post(url, body, false)
+    logUtil.log(`Buy ${quantity} ${symbol}`)
+    return result
+  } catch (e) {
+    logUtil.log({
+      type: 'error',
+      message: `Buy ${quantity} ${symbol} Failed`,
+    })
+    return {
+      status: 'not ok'
+    }
+  }
+}
+
+
 const sellToOpen = async (symbol, option_symbol, quantity) => {
   const url = `accounts/${process.env.ACCOUNTNUM}/orders`
 
@@ -107,6 +137,7 @@ const cancelOrders = async orderIDs => {
 
 
 module.exports = {
+  buy,
   sellToOpen,
   buyToClose,
   buyToCloseMarket,

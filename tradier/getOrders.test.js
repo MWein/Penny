@@ -3,6 +3,7 @@ const {
   filterForCoveredCallOrders,
   filterForCashSecuredPutOrders,
   filterForOptionBuyToCloseOrders,
+  getOrder,
   getOrders,
 } = require('./getOrders')
 const { generateOrderObject } = require('../utils/testHelpers')
@@ -42,6 +43,40 @@ describe('Order filter functions', () => {
       generateOrderObject('TSLA', 50, 'call', 'buy_to_close', 'open'),
       generateOrderObject('IBKR', 50, 'put', 'buy_to_close', 'open'),
     ])
+  })
+})
+
+
+describe('getOrder', () => {
+  beforeEach(() => {
+    network.get = jest.fn()
+  })
+
+  it('Creates the URL using the account number env and orderID', async () => {
+    process.env.ACCOUNTNUM = 'somethingsomthing'
+    network.get.mockReturnValue({
+      order: 'null'
+    })
+    await getOrder(1234)
+    expect(network.get).toHaveBeenCalledWith('accounts/somethingsomthing/orders/1234')
+  })
+
+  it('Returns null if Tradier returns null', async () => {
+    network.get.mockReturnValue({
+      order: 'null'
+    })
+    const orders = await getOrder(1234)
+    expect(orders).toEqual(null)
+  })
+
+  it('Returns order', async () => {
+    const response = {
+      order: generateOrderObject('AAPL', 50, 'stock', 'buy', 'open', 228175)
+    }
+    network.get.mockReturnValue(response)
+
+    const orders = await getOrder(1234)
+    expect(orders).toEqual(response.order)
   })
 })
 

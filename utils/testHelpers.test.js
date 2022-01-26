@@ -1,5 +1,5 @@
 const {
-  _generateSymbol,
+  generateSymbol,
   generateOrderObject,
   generatePositionObject,
 } = require('./testHelpers')
@@ -10,21 +10,21 @@ const {
 } = require('./determineOptionType')
 
 
-describe('_generateSymbol', () => {
+describe('generateSymbol', () => {
   it('Returns the symbol if type is stock', () => {
-    expect(_generateSymbol('AAPL', 'stock')).toEqual('AAPL')
+    expect(generateSymbol('AAPL', 'stock')).toEqual('AAPL')
   })
 
   it('Returns call symbol', () => {
-    expect(_generateSymbol('TSLA', 'call')).toEqual('TSLA1234C3214')
+    expect(generateSymbol('TSLA', 'call')).toEqual('TSLA1234C3214')
   })
 
   it('Returns put symbol', () => {
-    expect(_generateSymbol('FB', 'put')).toEqual('FB1234P3214')
+    expect(generateSymbol('FB', 'put')).toEqual('FB1234P3214')
   })
 
   it('Returns call symbol with custom strike and expiration', () => {
-    const symbol = _generateSymbol('AAPL', 'call', '2022-01-07', 1290)
+    const symbol = generateSymbol('AAPL', 'call', '2022-01-07', 1290)
     expect(symbol).toEqual('AAPL220107C01290000')
     // Make sure it works the other way around too
     expect(getExpiration(symbol)).toEqual('2022-01-07')
@@ -32,7 +32,7 @@ describe('_generateSymbol', () => {
   })
 
   it('Returns put symbol with custom strike and expiration, ', () => {
-    const symbol = _generateSymbol('GME', 'put', '2021-04-18', 15.5)
+    const symbol = generateSymbol('GME', 'put', '2021-04-18', 15.5)
     expect(symbol).toEqual('GME210418P00015500')
     // Make sure it works the other way around too
     expect(getExpiration(symbol)).toEqual('2021-04-18')

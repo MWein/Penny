@@ -32,17 +32,6 @@ describe('_selectOptionWithBestWeeklyPerc', () => {
     const bestOption = _selectOptionWithBestWeeklyPerc(chain)
     expect(bestOption).toEqual({ weeksOut: 4, weeklyPercReturn: 3 })
   })
-
-  it('Returns null if none of the options have a weekly perc rate of 1% or better', () => {
-    const chain = [
-      { weeksOut: 1, weeklyPercReturn: 0.1 },
-      { weeksOut: 2, weeklyPercReturn: 0.11 },
-      { weeksOut: 3, weeklyPercReturn: 0.2 },
-      { weeksOut: 4, weeklyPercReturn: 0.9 },
-    ]
-    const bestOption = _selectOptionWithBestWeeklyPerc(chain)
-    expect(bestOption).toEqual(null)
-  })
 })
 
 
@@ -51,46 +40,37 @@ describe('selectBestOption', () => {
     selectBest.selectBestStrikeForDay = jest.fn()
   })
 
-  it('If not given optional inputs, no min and 4 expirations. Passes type; call', async () => {
+  it('If not given optional inputs, no min and 2 expirations. Default 0.3 delta target. Passes type; call', async () => {
     selectBest.selectBestStrikeForDay.mockReturnValue({})
     await selectBestOption('AAPL', 'call')
-    expect(selectBest.selectBestStrikeForDay).toHaveBeenCalledTimes(4)
+    expect(selectBest.selectBestStrikeForDay).toHaveBeenCalledTimes(2)
     expect(selectBest.selectBestStrikeForDay.mock.calls[0][1]).toEqual('call')
     expect(selectBest.selectBestStrikeForDay.mock.calls[0][3]).toEqual(null)
+    expect(selectBest.selectBestStrikeForDay.mock.calls[0][4]).toEqual(0.3)
   })
 
-  it('If not given optional inputs, no min and 4 expirations. Passes type; put', async () => {
+  it('If not given optional inputs, no min and 2 expirations. Default 0.3 delta target. Passes type; put', async () => {
     selectBest.selectBestStrikeForDay.mockReturnValue({})
     await selectBestOption('AAPL', 'put')
-    expect(selectBest.selectBestStrikeForDay).toHaveBeenCalledTimes(4)
+    expect(selectBest.selectBestStrikeForDay).toHaveBeenCalledTimes(2)
     expect(selectBest.selectBestStrikeForDay.mock.calls[0][1]).toEqual('put')
     expect(selectBest.selectBestStrikeForDay.mock.calls[0][3]).toEqual(null)
+    expect(selectBest.selectBestStrikeForDay.mock.calls[0][4]).toEqual(0.3)
   })
 
-  it('If not given maxWeeksOut, defaults to 4 expirations', async () => {
+  it('Symbol, minStrike, and targetDelta is passed to selectBestStrikeForDay', async () => {
     selectBest.selectBestStrikeForDay.mockReturnValue({})
-    await selectBestOption('AAPL', 'call', 30)
-    expect(selectBest.selectBestStrikeForDay).toHaveBeenCalledTimes(4)
-  })
-
-  it('If given maxWeeksOut, number of calls should match', async () => {
-    selectBest.selectBestStrikeForDay.mockReturnValue({})
-    await selectBestOption('AAPL', 'call', 30, 6)
-    expect(selectBest.selectBestStrikeForDay).toHaveBeenCalledTimes(6)
-  })
-
-  it('Symbol and minStrike is passed to selectBestStrikeForDay', async () => {
-    selectBest.selectBestStrikeForDay.mockReturnValue({})
-    await selectBestOption('AAPL', 'call', 30, 1)
+    await selectBestOption('AAPL', 'call', 30, 0.5)
     expect(selectBest.selectBestStrikeForDay.mock.calls[0][0]).toEqual('AAPL')
     // Skipping the date one so I don't have to use fake timers
     expect(selectBest.selectBestStrikeForDay.mock.calls[0][3]).toEqual(30)
+    expect(selectBest.selectBestStrikeForDay.mock.calls[0][4]).toEqual(0.5)
   })
 
   it('Returns null if nothing is returned', async () => {
     selectBest.selectBestStrikeForDay.mockReturnValueOnce({})
     selectBest.selectBestStrikeForDay.mockReturnValueOnce({})
-    const bestOption = await selectBestOption('AAPL', 'call', 30, 2)
+    const bestOption = await selectBestOption('AAPL', 'call', 30)
     expect(bestOption).toEqual(null)
   })
 
@@ -105,7 +85,7 @@ describe('selectBestOption', () => {
       strike: 42,
       premium: 85, // Weekly rate = 42.5, weekly perc = 1%
     })
-    const bestOption = await selectBestOption('AAPL', 'call', 30, 2)
+    const bestOption = await selectBestOption('AAPL', 'call', 30, 0.3)
     expect(bestOption).toEqual({
       symbol: 'AAPL1234',
       strike: 42,
@@ -127,7 +107,7 @@ describe('selectBestOption', () => {
       strike: 42,
       premium: 172, // Weekly rate = 86, weekly perc = 2.048%
     })
-    const bestOption = await selectBestOption('AAPL', 'call', 30, 2)
+    const bestOption = await selectBestOption('AAPL', 'call', 30, 0.3)
     expect(bestOption).toEqual({
       symbol: 'AAPL4321',
       strike: 42,
