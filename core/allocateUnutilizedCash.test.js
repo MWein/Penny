@@ -1307,6 +1307,7 @@ describe('allocateUnutilizedCash', () => {
     costBasisUtil.determineCostBasisPerShare = jest.fn()
     sendOrderUtil.buy = jest.fn()
     purchaseGoalSchema.find = jest.fn()
+    purchaseGoalSchema.findByIdAndUpdate = jest.fn()
     market.isMarketOpen = jest.fn().mockReturnValue(true)
   })
 
@@ -1449,4 +1450,146 @@ describe('allocateUnutilizedCash', () => {
     })
   })
 
+  it('Happy path, one position', async () => {
+    purchaseGoalSchema.find.mockReturnValue([
+      {
+        _id: 'someid',
+        symbol: 'MSFT',
+        enabled: true,
+        priority: 0,
+        goal: 100,
+        fulfilled: 37,
+      },
+    ])
+    settingsUtil.getSettings.mockReturnValue({
+      allocateUnutilizedCash: true,
+      reserve: 100,
+      defaultVolatility: 0.05,
+    })
+    positionUtil.getPositions.mockReturnValue([])
+    orderUtil.getOrders.mockReturnValue([])
+    priceUtil.getPrices.mockReturnValue([
+      {
+        symbol: 'MSFT',
+        price: 200,
+      }
+    ])
+    costBasisUtil.determineCostBasisPerShare.mockReturnValue(0)
+    cashSecuredPutUtil.getPositionsToSell.mockReturnValue({
+      balances: {
+        optionBuyingPower: 4000,
+      },
+      watchlist: [
+        {
+          symbol: 'MSFT',
+          maxPositions: 1,
+          put: {
+            enabled: true
+          }
+        }
+      ],
+      optionsToSell: [
+        {
+          optionSymbol: generateSymbol('MSFT', 'put'),
+          positions: 1
+        }
+      ],
+    })
+    sendOrderUtil.buy.mockReturnValue({
+      order: {
+        id: 1111,
+        status: 'ok',
+      }
+    })
+    orderUtil.getOrder.mockReturnValue({
+      status: 'filled'
+    })
+    await allocateUnutilizedCash()
+    expect(logUtil.log).not.toHaveBeenCalled()
+    expect(sendOrderUtil.buy).toHaveBeenCalledWith('MSFT', 14)
+    expect(orderUtil.getOrder).toHaveBeenCalledWith(1111)
+    expect(purchaseGoalSchema.findByIdAndUpdate).toHaveBeenCalledWith('someid', {$inc : { fulfilled: 14 }})
+  })
+
+  it('Happy path, multiple positions', async () => {
+    purchaseGoalSchema.find.mockReturnValue([
+      {
+        _id: 'someid',
+        symbol: 'MSFT',
+        enabled: true,
+        priority: 0,
+        goal: 100,
+        fulfilled: 99,
+      },
+      {
+        _id: 'someotherid',
+        symbol: 'AAPL',
+        enabled: true,
+        priority: 0,
+        goal: 100,
+        fulfilled: 0,
+      },
+    ])
+    settingsUtil.getSettings.mockReturnValue({
+      allocateUnutilizedCash: true,
+      reserve: 100,
+      defaultVolatility: 0.05,
+    })
+    positionUtil.getPositions.mockReturnValue([])
+    orderUtil.getOrders.mockReturnValue([])
+    priceUtil.getPrices.mockReturnValue([
+      {
+        symbol: 'MSFT',
+        price: 200,
+      },
+      {
+        symbol: 'AAPL',
+        price: 200,
+      },
+    ])
+    costBasisUtil.determineCostBasisPerShare.mockReturnValue(0)
+    cashSecuredPutUtil.getPositionsToSell.mockReturnValue({
+      balances: {
+        optionBuyingPower: 4000,
+      },
+      watchlist: [
+        {
+          symbol: 'MSFT',
+          maxPositions: 1,
+          put: {
+            enabled: true
+          }
+        }
+      ],
+      optionsToSell: [
+        {
+          optionSymbol: generateSymbol('MSFT', 'put'),
+          positions: 1
+        }
+      ],
+    })
+    sendOrderUtil.buy.mockReturnValueOnce({
+      order: {
+        id: 1111,
+        status: 'ok',
+      }
+    })
+    sendOrderUtil.buy.mockReturnValueOnce({
+      order: {
+        id: 2222,
+        status: 'ok',
+      }
+    })
+    orderUtil.getOrder.mockReturnValue({
+      status: 'filled'
+    })
+    await allocateUnutilizedCash()
+    expect(logUtil.log).not.toHaveBeenCalled()
+    expect(sendOrderUtil.buy).toHaveBeenCalledWith('MSFT', 1)
+    expect(sendOrderUtil.buy).toHaveBeenCalledWith('AAPL', 13)
+    expect(orderUtil.getOrder).toHaveBeenCalledWith(1111)
+    expect(orderUtil.getOrder).toHaveBeenCalledWith(2222)
+    expect(purchaseGoalSchema.findByIdAndUpdate).toHaveBeenCalledWith('someid', {$inc : { fulfilled: 1 }})
+    expect(purchaseGoalSchema.findByIdAndUpdate).toHaveBeenCalledWith('someotherid', {$inc : { fulfilled: 13 }})
+  })
 })
