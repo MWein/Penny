@@ -3,10 +3,8 @@ const CronJob = require('cron').CronJob
 const mongoose = require('mongoose')
 
 const { sellCoveredCalls } = require('./core/coveredCall')
-const { updateGainLossCollection } = require('./utils/updateGainLoss')
 const { createGTCOrders } = require('./core/gtcOrders')
 const { log, clearOldLogs } = require('./utils/log')
-const { savePositionsCron } = require('./utils/savePositionsCron')
 const { closeExpiringPuts } = require('./core/closeExpiringPuts')
 const { sellCashSecuredPuts } = require('./core/cashSecuredPut')
 const { allocateUnutilizedCash } = require('./core/allocateUnutilizedCash')
@@ -16,10 +14,6 @@ const housekeeping = async () => {
   try {
     log('Clearing Old Logs')
     await clearOldLogs()
-    log('Updating Gain Loss Collection')
-    await updateGainLossCollection()
-    log('Updating Positions Table')
-    await savePositionsCron()
   } catch (e) {
     log({
       type: 'ERROR housekeeping',
