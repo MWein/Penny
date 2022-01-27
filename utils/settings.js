@@ -5,7 +5,7 @@ const defaultSettings = {
   putsEnabled: true,
   closeExpiringPuts: false,
   allocateUnutilizedCash: false,
-  defaultVolatility: 0.20, // A safety buffer to be used with stocks when calculating unutilized funds
+  defaultVolatility: 0.05, // A safety buffer to be used with stocks when calculating unutilized funds
   reserve: 0, // Money that Penny shouldn't touch. BuyingPower - Reserve. For planned withdrawals.
   profitTarget: 0.75, // Profit to set Buy-To-Close orders to
   priorityList: [],
@@ -43,3 +43,25 @@ module.exports = {
   getSetting,
   getSettings,
 }
+
+
+
+
+
+
+const newWatchlist = [
+  {
+    symbol: 'SPY',
+    maxPositions: 1,
+    volatility: 0.05,
+    call: {
+      enabled: true,
+      targetDelta: 0.5,
+      minStrikeMode: 'auto'
+    },
+    put: {
+      enabled: true,
+      targetDelta: 0.5
+    }
+  }
+]
