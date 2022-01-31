@@ -10,6 +10,11 @@ describe('nextStrikeExpirations', () => {
   beforeEach(() => {
     networkUtil.get = jest.fn()
     logUtil.log = jest.fn()
+    jest.useFakeTimers().setSystemTime(new Date('2021-10-12').getTime())
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
   })
 
   it('Logs and returns empty array if an error occurs', async () => {
@@ -63,10 +68,50 @@ describe('nextStrikeExpirations', () => {
     expect(qqqResult).toEqual([ '2021-01-01' ])
   })
 
+  it('Excludes current date for SPY, QQQ, and IWM', async () => {
+    networkUtil.get.mockReturnValue({
+      expirations: {
+        date: [
+          '2021-10-12', // Date mocked above
+          '2021-01-01',
+          '2022-01-01'
+        ]
+      }
+    })
+
+    const spyResult = await nextStrikeExpirations('SPY', 50)
+    expect(spyResult).toEqual([ '2021-01-01' ])
+
+    const iwmResult = await nextStrikeExpirations('IWM', 50)
+    expect(iwmResult).toEqual([ '2021-01-01' ])
+
+    const qqqResult = await nextStrikeExpirations('QQQ', 50)
+    expect(qqqResult).toEqual([ '2021-01-01' ])
+  })
+
   it('By default, only returns the first 2 expirations', async () => {
     networkUtil.get.mockReturnValue({
       expirations: {
         date: [
+          '2021-01-01',
+          '2022-01-01',
+          '2023-01-01',
+          '2024-01-01',
+        ]
+      }
+    })
+    const result = await nextStrikeExpirations('AAPL')
+    expect(result).toEqual([
+      '2021-01-01',
+      '2022-01-01',
+    ])
+  })
+
+  it('Excludes current date', async () => {
+    networkUtil.get.mockReturnValue({
+      expirations: {
+        date: [
+          '2021-10-12', // Date mocked above
           '2021-01-01',
           '2022-01-01',
           '2023-01-01',

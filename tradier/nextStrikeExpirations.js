@@ -12,7 +12,8 @@ const nextStrikeExpirations = async (symbol, limit = 2) => {
     
     // Tradier has this annoying tendency to return a single object rather than an array if there is one return value
     // This should never happen with expirations, so I'm not doing the usual Array.isArray thing
-    const dates = response.expirations.date
+    const currentDate = new Date().toISOString().split('T')[0]
+    const dates = response.expirations.date.filter(x => x != currentDate)
 
     // These symbols have multiple expirations per week
     if ([ 'SPY', 'IWM', 'QQQ' ].includes(symbol)) {
