@@ -146,7 +146,7 @@ describe('nextStrikeExpirations', () => {
       }
     })
     await nextStrikeExpirations('AAPL', 1)
-    expect(networkUtil.get).toHaveBeenCalledWith('/v1/markets/options/expirations?symbol=AAPL')
+    expect(networkUtil.get).toHaveBeenCalledWith('/markets/options/expirations?symbol=AAPL')
   })
 
   it('Returns only the next expiration regardless of the limit if given SPY, QQQ, or IWM', async () => {
