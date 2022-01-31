@@ -1,4 +1,4 @@
-const nextStrikeDates = require('../utils/nextStrikeDates')
+const nextStrikeUtil = require('./nextStrikeExpirations')
 const selectBest = require('./selectBestOptionForDay')
 
 
@@ -22,7 +22,7 @@ const _selectOptionWithBestWeeklyPerc = options => {
 
 const selectBestOption = async (symbol, type, minStrike = null, targetDelta = 0.3) => {
   // TODO Change nextStrikeDates to use Tradier's expiration dates function
-  const expirationDates = nextStrikeDates(2)
+  const expirationDates = await nextStrikeUtil.nextStrikeExpirations(symbol)
 
   // Week is used to calculate the weekly rate
   // Premium / week = weekly rate
