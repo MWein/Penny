@@ -2,6 +2,8 @@ const {
   _selectOptionWithBestWeeklyPerc,
   selectBestOption,
 } = require('./selectBestOption')
+
+const nextStrikeUtil = require('./nextStrikeExpirations')
 const selectBest = require('./selectBestOptionForDay')
 
 
@@ -38,36 +40,50 @@ describe('_selectOptionWithBestWeeklyPerc', () => {
 describe('selectBestOption', () => {
   beforeEach(() => {
     selectBest.selectBestStrikeForDay = jest.fn()
+    nextStrikeUtil.nextStrikeExpirations = jest.fn()
   })
 
   it('If not given optional inputs, no min and 2 expirations. Default 0.3 delta target. Passes type; call', async () => {
     selectBest.selectBestStrikeForDay.mockReturnValue({})
+    nextStrikeUtil.nextStrikeExpirations.mockReturnValue([
+      '2021-01-01',
+      '2021-02-01'
+    ])
     await selectBestOption('AAPL', 'call')
+    expect(nextStrikeUtil.nextStrikeExpirations).toHaveBeenCalledWith('AAPL')
     expect(selectBest.selectBestStrikeForDay).toHaveBeenCalledTimes(2)
-    expect(selectBest.selectBestStrikeForDay.mock.calls[0][1]).toEqual('call')
-    expect(selectBest.selectBestStrikeForDay.mock.calls[0][3]).toEqual(null)
-    expect(selectBest.selectBestStrikeForDay.mock.calls[0][4]).toEqual(0.3)
+    expect(selectBest.selectBestStrikeForDay).toHaveBeenCalledWith('AAPL', 'call', '2021-01-01', null, 0.3)
+    expect(selectBest.selectBestStrikeForDay).toHaveBeenCalledWith('AAPL', 'call', '2021-02-01', null, 0.3)
   })
 
   it('If not given optional inputs, no min and 2 expirations. Default 0.3 delta target. Passes type; put', async () => {
     selectBest.selectBestStrikeForDay.mockReturnValue({})
+    nextStrikeUtil.nextStrikeExpirations.mockReturnValue([
+      '2021-01-01',
+      '2021-02-01'
+    ])
     await selectBestOption('AAPL', 'put')
     expect(selectBest.selectBestStrikeForDay).toHaveBeenCalledTimes(2)
-    expect(selectBest.selectBestStrikeForDay.mock.calls[0][1]).toEqual('put')
-    expect(selectBest.selectBestStrikeForDay.mock.calls[0][3]).toEqual(null)
-    expect(selectBest.selectBestStrikeForDay.mock.calls[0][4]).toEqual(0.3)
+    expect(selectBest.selectBestStrikeForDay).toHaveBeenCalledWith('AAPL', 'put', '2021-01-01', null, 0.3)
+    expect(selectBest.selectBestStrikeForDay).toHaveBeenCalledWith('AAPL', 'put', '2021-02-01', null, 0.3)
   })
 
   it('Symbol, minStrike, and targetDelta is passed to selectBestStrikeForDay', async () => {
     selectBest.selectBestStrikeForDay.mockReturnValue({})
+    nextStrikeUtil.nextStrikeExpirations.mockReturnValue([
+      '2021-01-01',
+      '2021-02-01'
+    ])
     await selectBestOption('AAPL', 'call', 30, 0.5)
-    expect(selectBest.selectBestStrikeForDay.mock.calls[0][0]).toEqual('AAPL')
-    // Skipping the date one so I don't have to use fake timers
-    expect(selectBest.selectBestStrikeForDay.mock.calls[0][3]).toEqual(30)
-    expect(selectBest.selectBestStrikeForDay.mock.calls[0][4]).toEqual(0.5)
+    expect(selectBest.selectBestStrikeForDay).toHaveBeenCalledWith('AAPL', 'call', '2021-01-01', 30, 0.5)
+    expect(selectBest.selectBestStrikeForDay).toHaveBeenCalledWith('AAPL', 'call', '2021-02-01', 30, 0.5)
   })
 
   it('Returns null if nothing is returned', async () => {
+    nextStrikeUtil.nextStrikeExpirations.mockReturnValue([
+      '2021-01-01',
+      '2021-02-01'
+    ])
     selectBest.selectBestStrikeForDay.mockReturnValueOnce({})
     selectBest.selectBestStrikeForDay.mockReturnValueOnce({})
     const bestOption = await selectBestOption('AAPL', 'call', 30)
@@ -75,6 +91,10 @@ describe('selectBestOption', () => {
   })
 
   it('Returns the option with the highest weekly rate. First one', async () => {
+    nextStrikeUtil.nextStrikeExpirations.mockReturnValue([
+      '2021-01-01',
+      '2021-02-01'
+    ])
     selectBest.selectBestStrikeForDay.mockReturnValueOnce({
       symbol: 'AAPL1234',
       strike: 42,
@@ -97,6 +117,10 @@ describe('selectBestOption', () => {
   })
 
   it('Returns the option with the highest weekly rate. Second one', async () => {
+    nextStrikeUtil.nextStrikeExpirations.mockReturnValue([
+      '2021-01-01',
+      '2021-02-01'
+    ])
     selectBest.selectBestStrikeForDay.mockReturnValueOnce({
       symbol: 'AAPL1234',
       strike: 42,
