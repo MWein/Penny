@@ -210,6 +210,26 @@ describe('_preStartFilterWatchlistItems', () => {
     expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT' ])
   })
 
+  it('Gets prices for items that make it through the first pass filter. Adjusts maximumPositions if there are put positions. Ignores long puts.', async () => {
+    priceUtil.getPrices.mockReturnValue([
+      { symbol: 'MSFT', price: 5 },
+    ])
+    positionUtil.getPositions.mockReturnValue([
+      generatePositionObject('MSFT', -3, 'put'),
+      generatePositionObject('AAPL', -1, 'put'),
+      generatePositionObject('AAPL', 1, 'put'),
+      generatePositionObject('AAPL', 3, 'put'),
+    ])
+    orderUtil.getOrders.mockReturnValue([])
+    const result = await _preStartFilterWatchlistItems([
+      _mockPutWatchlistItem('MSFT', 5, true, 0.3)
+    ], 1000)
+    expect(result).toEqual([
+      _mockPutWatchlistItem('MSFT', 2, true, 0.3)
+    ])
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT' ])
+  })
+
   it('Gets prices for items that make it through the first pass filter. Adjusts maximumPositions if there are stock and put positions.', async () => {
     priceUtil.getPrices.mockReturnValue([
       { symbol: 'MSFT', price: 5 },
@@ -217,6 +237,7 @@ describe('_preStartFilterWatchlistItems', () => {
     positionUtil.getPositions.mockReturnValue([
       generatePositionObject('MSFT', 300, 'stock'),
       generatePositionObject('MSFT', -1, 'put'),
+      generatePositionObject('MSFT', 1, 'put'), // Should ignore
     ])
     orderUtil.getOrders.mockReturnValue([])
     const result = await _preStartFilterWatchlistItems([
@@ -235,6 +256,24 @@ describe('_preStartFilterWatchlistItems', () => {
     positionUtil.getPositions.mockReturnValue([])
     orderUtil.getOrders.mockReturnValue([
       generateOrderObject('MSFT', 2, 'put', 'sell_to_open'),
+    ])
+    const result = await _preStartFilterWatchlistItems([
+      _mockPutWatchlistItem('MSFT', 5, true, 0.3)
+    ], 1000)
+    expect(result).toEqual([
+      _mockPutWatchlistItem('MSFT', 3, true, 0.3)
+    ])
+    expect(priceUtil.getPrices).toHaveBeenCalledWith([ 'MSFT' ])
+  })
+
+  it('Gets prices for items that make it through the first pass filter. Adjusts maximumPositions if there are put orders. Ignores long put orders', async () => {
+    priceUtil.getPrices.mockReturnValue([
+      { symbol: 'MSFT', price: 5 },
+    ])
+    positionUtil.getPositions.mockReturnValue([])
+    orderUtil.getOrders.mockReturnValue([
+      generateOrderObject('MSFT', 2, 'put', 'sell_to_open'),
+      generateOrderObject('MSFT', 2, 'put', 'buy_to_open'),
     ])
     const result = await _preStartFilterWatchlistItems([
       _mockPutWatchlistItem('MSFT', 5, true, 0.3)
@@ -265,10 +304,12 @@ describe('_preStartFilterWatchlistItems', () => {
   it('All rules', async () => {
     positionUtil.getPositions.mockReturnValue([
       generatePositionObject('MSFT', -3, 'put'),
+      generatePositionObject('MSFT', 3, 'put'), // Should ignore
       generatePositionObject('AAPL', 400, 'stock'),
     ])
     orderUtil.getOrders.mockReturnValue([
       generateOrderObject('MSFT', 2, 'put', 'sell_to_open'),
+      generateOrderObject('MSFT', 2, 'put', 'buy_to_open'), // Should ignore
     ])
     priceUtil.getPrices.mockReturnValue([
       { symbol: 'MSFT', price: 5 },
