@@ -5,11 +5,11 @@ const network = require('../utils/network')
 const filterForOptionableStockPositions = positions =>
   positions.filter(pos => !isOption(pos.symbol) && pos.quantity >= 100)
 
-const filterForPutPositions = positions =>
-  positions.filter(pos => determineOptionTypeFromSymbol(pos.symbol) === 'put')
+const filterForShortPutPositions = positions =>
+  positions.filter(pos => determineOptionTypeFromSymbol(pos.symbol) === 'put' && pos.quantity < 0)
 
-const filterForCallPositions = positions =>
-  positions.filter(pos => determineOptionTypeFromSymbol(pos.symbol) === 'call')
+const filterForShortCallPositions = positions =>
+  positions.filter(pos => determineOptionTypeFromSymbol(pos.symbol) === 'call' && pos.quantity < 0)
 
 
 const getPositions = async () => {
@@ -27,7 +27,7 @@ const getPositions = async () => {
 
 module.exports = {
   filterForOptionableStockPositions,
-  filterForPutPositions,
-  filterForCallPositions,
+  filterForShortPutPositions,
+  filterForShortCallPositions,
   getPositions
 }

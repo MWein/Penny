@@ -108,7 +108,7 @@ describe('_generatePermittedPositionsArray', () => {
     ])
   })
 
-  it('Returns array of stocks with permitted call number', () => {
+  it('Returns empty if number of permitted calls is met or exceeded for each stock', () => {
     const optionableStocks = [
       generatePositionObject('AAPL', 100, 'stock', 207.01),
       generatePositionObject('AMZN', 120, 'stock', 1870.70),
@@ -182,6 +182,26 @@ describe('_determineCoverableTickers', () => {
       generatePositionObject('TSLA', 200, 'stock', 1870.70),
       generatePositionObject('TSLA', -1, 'call', 1870.70),
       generatePositionObject('TSLA', -1, 'put', 1870.70),
+    ])
+    orders.getOrders.mockReturnValue([
+      generateOrderObject('AAPL', 1, 'call', 'sell_to_open', 'pending'),
+    ])
+    const result = await _determineCoverableTickers()
+    expect(result).toEqual([
+      {
+        symbol: 'TSLA',
+        quantity: 1,
+        costPerShare: 9.35,
+      },
+    ])
+  })
+
+  it('Ignores long call positions', async () => {
+    positions.getPositions.mockReturnValue([
+      generatePositionObject('AAPL', 100, 'stock', 207.01),
+      generatePositionObject('TSLA', 200, 'stock', 1870.70),
+      generatePositionObject('TSLA', -1, 'call', 1870.70),
+      generatePositionObject('TSLA', 1, 'call', 1870.70),
     ])
     orders.getOrders.mockReturnValue([
       generateOrderObject('AAPL', 1, 'call', 'sell_to_open', 'pending'),

@@ -41,8 +41,8 @@ describe('_getPutsExpiringToday', () => {
 
   it('Returns empty if no puts expiring today, should not call prices', async () => {
     const mockPositions = [
-      generatePositionObject('TSLA', 3, 'put', 100, '2021-01-01', 1234, '2021-10-15'),
-      generatePositionObject('ASAN', 3, 'put', 100, '2021-01-01', 1234, '2021-10-14'),
+      generatePositionObject('TSLA', -3, 'put', 100, '2021-01-01', 1234, '2021-10-15'),
+      generatePositionObject('ASAN', -3, 'put', 100, '2021-01-01', 1234, '2021-10-14'),
     ]
     positionsUtil.getPositions.mockReturnValue(mockPositions)
     pricesUtil.getPrices.mockReturnValue([
@@ -62,8 +62,8 @@ describe('_getPutsExpiringToday', () => {
 
   it('Does not return an item if prices doesnt return it', async () => {
     const mockPositions = [
-      generatePositionObject('TSLA', 3, 'put', 100, '2021-01-01', 1234, '2021-10-12'),
-      generatePositionObject('ASAN', 3, 'put', 100, '2021-01-01', 1234, '2021-10-12'),
+      generatePositionObject('TSLA', -3, 'put', 100, '2021-01-01', 1234, '2021-10-12'),
+      generatePositionObject('ASAN', -3, 'put', 100, '2021-01-01', 1234, '2021-10-12'),
     ]
     positionsUtil.getPositions.mockReturnValue(mockPositions)
     pricesUtil.getPrices.mockReturnValue([
@@ -83,7 +83,7 @@ describe('_getPutsExpiringToday', () => {
         expiration: '2021-10-12',
         id: 1234,
         price: 100,
-        quantity: 3,
+        quantity: -3,
       }
     ])
 
@@ -93,10 +93,10 @@ describe('_getPutsExpiringToday', () => {
 
   it('Filters for puts expiring today, should only call quotes for puts, and prices for expiring puts', async () => {
     const mockPositions = [
-      generatePositionObject('AAPL', 3, 'call', 100, '2021-01-01', 1234, '2021-10-12'),
-      generatePositionObject('TSLA', 3, 'put', 100, '2021-01-01', 1234, '2021-10-12'),
-      generatePositionObject('SFIX', 3, 'call', 100, '2021-01-01', 1234, '2021-10-12'),
-      generatePositionObject('ASAN', 3, 'put', 100, '2021-01-01', 1234, '2021-10-14'),
+      generatePositionObject('AAPL', -3, 'call', 100, '2021-01-01', 1234, '2021-10-12'),
+      generatePositionObject('TSLA', -3, 'put', 100, '2021-01-01', 1234, '2021-10-12'),
+      generatePositionObject('SFIX', -3, 'call', 100, '2021-01-01', 1234, '2021-10-12'),
+      generatePositionObject('ASAN', -3, 'put', 100, '2021-01-01', 1234, '2021-10-14'),
     ]
     positionsUtil.getPositions.mockReturnValue(mockPositions)
     pricesUtil.getPrices.mockReturnValue([
@@ -120,7 +120,49 @@ describe('_getPutsExpiringToday', () => {
         expiration: '2021-10-12',
         id: 1234,
         price: 100,
-        quantity: 3,
+        quantity: -3,
+      }
+    ])
+
+    expect(pricesUtil.getPrices).toHaveBeenCalledWith([ 'TSLA211012P3214' ])
+  })
+
+
+  it('Filters for puts expiring today, should only call quotes for puts, and prices for expiring puts. Ignores long puts', async () => {
+    const mockPositions = [
+      generatePositionObject('AAPL', -3, 'call', 100, '2021-01-01', 1234, '2021-10-12'),
+      generatePositionObject('TSLA', -3, 'put', 100, '2021-01-01', 1234, '2021-10-12'),
+      generatePositionObject('SFIX', -3, 'call', 100, '2021-01-01', 1234, '2021-10-12'),
+      generatePositionObject('ASAN', -3, 'put', 100, '2021-01-01', 1234, '2021-10-14'),
+      generatePositionObject('TQQQ', 3, 'put', 100, '2021-01-01', 1234, '2021-10-12'),
+    ]
+    positionsUtil.getPositions.mockReturnValue(mockPositions)
+    pricesUtil.getPrices.mockReturnValue([
+      {
+        symbol: 'TSLA211012P3214',
+        price: 100
+      },
+      {
+        symbol: 'ASAN211014P3214',
+        price: 100
+      },
+      {
+        symbol: 'TQQQ211014P3214',
+        price: 100
+      },
+    ])
+
+    const result = await _getPutsExpiringToday()
+
+    expect(result).toEqual([
+      {
+        symbol: 'TSLA211012P3214',
+        cost_basis: 100,
+        date_acquired: '2021-01-01',
+        expiration: '2021-10-12',
+        id: 1234,
+        price: 100,
+        quantity: -3,
       }
     ])
 
@@ -268,8 +310,8 @@ describe('closeExpiringPuts', () => {
 
   it('Cancels orders for expiring puts, creates new market orders', async () => {
     positionsUtil.getPositions.mockReturnValue([
-      generatePositionObject('TSLA', 3, 'put', -200, '2021-01-01', 1234, '2021-10-12'),
-      generatePositionObject('ASAN', 3, 'put', -200, '2021-01-01', 4321, '2021-10-12'),
+      generatePositionObject('TSLA', -3, 'put', -200, '2021-01-01', 1234, '2021-10-12'),
+      generatePositionObject('ASAN', -3, 'put', -200, '2021-01-01', 4321, '2021-10-12'),
     ])
     ordersUtil.getOrders.mockReturnValue([
       generateOrderObject('TSLA', 3, 'put', 'buy_to_close', 'open', 741, '2021-10-12'),

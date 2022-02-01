@@ -18,7 +18,7 @@ const {
 
 const _idealPositions = (watchlist, positions, orders, optionsToSell, defaultVolatility) => {
   const optionablePositions = positionUtil.filterForOptionableStockPositions(positions)
-  const putPositions = positionUtil.filterForPutPositions(positions)
+  const putPositions = positionUtil.filterForShortPutPositions(positions)
   const putOrders = orderUtil.filterForCashSecuredPutOrders(orders)
 
   return watchlist
@@ -30,10 +30,10 @@ const _idealPositions = (watchlist, positions, orders, optionsToSell, defaultVol
 
       const numStockOptUnits = Math.floor(optionablePositions.find(x => x.symbol === symbol)?.quantity / 100) || 0
       const numPutPositions = putPositions
-        .filter(x => getUnderlying(x.symbol) === symbol && x.quantity < 0)
+        .filter(x => getUnderlying(x.symbol) === symbol)
         .reduce((acc, x) => acc + Math.abs(x.quantity), 0)
       const numPutOrders = putOrders
-        .filter(x => getUnderlying(x.symbol) === symbol && x.quantity < 0)
+        .filter(x => getUnderlying(x.symbol) === symbol)
         .reduce((acc, x) => acc + Math.abs(x.quantity), 0)
       const numOptsToSell = optionsToSell
         .filter(x => getUnderlying(x.optionSymbol) === symbol)
@@ -67,7 +67,7 @@ const _getBuffer = async (idealPositions, positions, orders) => {
   const prices = await priceUtil.getPrices(symbols)
 
   const optionablePositions = positionUtil.filterForOptionableStockPositions(positions)
-  const putPositions = positionUtil.filterForPutPositions(positions)
+  const putPositions = positionUtil.filterForShortPutPositions(positions)
   const putOrders = orderUtil.filterForCashSecuredPutOrders(orders)
 
   let buffer = 0
@@ -78,9 +78,9 @@ const _getBuffer = async (idealPositions, positions, orders) => {
 
     const stockPosition = optionablePositions.find(x => x.symbol === idealPosition.symbol)
     const puts = putPositions
-      .filter(x => getUnderlying(x.symbol) === idealPosition.symbol && x.quantity < 0)
+      .filter(x => getUnderlying(x.symbol) === idealPosition.symbol)
     const orders = putOrders
-      .filter(x => getUnderlying(x.symbol) === idealPosition.symbol && x.quantity < 0)
+      .filter(x => getUnderlying(x.symbol) === idealPosition.symbol)
 
     const allPutStrikes = puts.map(pos => getStrike(pos.symbol))
     const allPutOrderStrikes = orders.map(ord => getStrike(ord.option_symbol))

@@ -36,7 +36,7 @@ const _preStartFilterWatchlistItems = async (watchlistItems, buyingPower) => {
   const orders = await orderUtil.getOrders()
 
   const stockPositions = positionUtil.filterForOptionableStockPositions(positions)
-  const putPositions = positionUtil.filterForPutPositions(positions)
+  const putPositions = positionUtil.filterForShortPutPositions(positions)
   const relevantPositions = [ ...stockPositions, ...putPositions ]
   const putOptionOrders = orderUtil.filterForCashSecuredPutOrders(orders)
 

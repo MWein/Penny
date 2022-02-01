@@ -14,7 +14,7 @@ const _getOldOptionsPositions = (positions, orders) => {
   const date = new Date().toISOString().slice(0, 10)
   const gtcOrders = order.filterForOptionBuyToCloseOrders(orders)
 
-  const nonDTROptionPositions = positions.filter(pos => isOption(pos.symbol) && pos.date_acquired.slice(0, 10) !== date)
+  const nonDTROptionPositions = positions.filter(pos => isOption(pos.symbol) && pos.date_acquired.slice(0, 10) !== date && pos.quantity < 0)
 
   const unBuyToClosedPostions = nonDTROptionPositions.map(pos => {
     const numGtcPositions = gtcOrders.filter(ord => ord.option_symbol === pos.symbol)
