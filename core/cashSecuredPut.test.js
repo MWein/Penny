@@ -197,8 +197,8 @@ describe('_preStartFilterWatchlistItems', () => {
       { symbol: 'MSFT', price: 5 },
     ])
     positionUtil.getPositions.mockReturnValue([
-      generatePositionObject('MSFT', 3, 'put'),
-      generatePositionObject('AAPL', 1, 'put'),
+      generatePositionObject('MSFT', -3, 'put'),
+      generatePositionObject('AAPL', -1, 'put'),
     ])
     orderUtil.getOrders.mockReturnValue([])
     const result = await _preStartFilterWatchlistItems([
@@ -216,7 +216,7 @@ describe('_preStartFilterWatchlistItems', () => {
     ])
     positionUtil.getPositions.mockReturnValue([
       generatePositionObject('MSFT', 300, 'stock'),
-      generatePositionObject('MSFT', 1, 'put'),
+      generatePositionObject('MSFT', -1, 'put'),
     ])
     orderUtil.getOrders.mockReturnValue([])
     const result = await _preStartFilterWatchlistItems([
@@ -264,7 +264,7 @@ describe('_preStartFilterWatchlistItems', () => {
 
   it('All rules', async () => {
     positionUtil.getPositions.mockReturnValue([
-      generatePositionObject('MSFT', 3, 'put'),
+      generatePositionObject('MSFT', -3, 'put'),
       generatePositionObject('AAPL', 400, 'stock'),
     ])
     orderUtil.getOrders.mockReturnValue([

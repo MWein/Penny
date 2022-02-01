@@ -41,7 +41,7 @@ const _determineCoverableTickers = async () => {
   if (optionableStocks.length === 0) {
     return []
   }
-  const currentOptions = position.filterForCallPositions(positions)
+  const currentOptions = position.filterForShortCallPositions(positions)
 
   const orders = await order.getOrders()
   const callOrders = order.filterForCoveredCallOrders(orders)

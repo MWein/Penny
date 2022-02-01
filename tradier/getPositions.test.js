@@ -1,8 +1,8 @@
 const network = require('../utils/network')
 const {
   filterForOptionableStockPositions,
-  filterForPutPositions,
-  filterForCallPositions,
+  filterForShortPutPositions,
+  filterForShortCallPositions,
   getPositions,
 } = require('./getPositions')
 const { generatePositionObject } = require('../utils/testHelpers')
@@ -14,10 +14,10 @@ describe('Filter functions', () => {
     generatePositionObject('MSFT', 99, 'stock'),
     generatePositionObject('FB', 100, 'stock'),
     generatePositionObject('AXON', 240, 'stock'),
-    generatePositionObject('SFIX', 1, 'call'),
+    generatePositionObject('SFIX', -1, 'call'),
     generatePositionObject('IBKR', 1, 'call'),
-    generatePositionObject('ZNGA', -7, 'put'),
-    generatePositionObject('GME', 19, 'put'),
+    generatePositionObject('ZNGA', -7, 'put'), // Short put
+    generatePositionObject('GME', 19, 'put'), // Long put
   ]
 
   it('filterForOptionableStockPositions', () => {
@@ -27,17 +27,15 @@ describe('Filter functions', () => {
     ])
   })
 
-  it('filterForPutPositions', () => {
-    expect(filterForPutPositions(positions)).toEqual([
+  it('filterForShortPutPositions', () => {
+    expect(filterForShortPutPositions(positions)).toEqual([
       generatePositionObject('ZNGA', -7, 'put'),
-      generatePositionObject('GME', 19, 'put'),
     ])
   })
 
-  it('filterForCallPositions', () => {
-    expect(filterForCallPositions(positions)).toEqual([
-      generatePositionObject('SFIX', 1, 'call'),
-      generatePositionObject('IBKR', 1, 'call'),
+  it('filterForShortCallPositions', () => {
+    expect(filterForShortCallPositions(positions)).toEqual([
+      generatePositionObject('SFIX', -1, 'call'),
     ])
   })
 })

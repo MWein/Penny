@@ -18,7 +18,7 @@ const {
 
 const _idealPositions = (watchlist, positions, orders, optionsToSell, defaultVolatility) => {
   const optionablePositions = positionUtil.filterForOptionableStockPositions(positions)
-  const putPositions = positionUtil.filterForPutPositions(positions)
+  const putPositions = positionUtil.filterForShortPutPositions(positions)
   const putOrders = orderUtil.filterForCashSecuredPutOrders(orders)
 
   return watchlist
@@ -67,7 +67,7 @@ const _getBuffer = async (idealPositions, positions, orders) => {
   const prices = await priceUtil.getPrices(symbols)
 
   const optionablePositions = positionUtil.filterForOptionableStockPositions(positions)
-  const putPositions = positionUtil.filterForPutPositions(positions)
+  const putPositions = positionUtil.filterForShortPutPositions(positions)
   const putOrders = orderUtil.filterForCashSecuredPutOrders(orders)
 
   let buffer = 0

@@ -13,7 +13,7 @@ const market = require('../tradier/market')
 
 const _getPutsExpiringToday = async () => {
   const positions = await positionsUtil.getPositions()
-  const putPositions = positionsUtil.filterForPutPositions(positions)
+  const putPositions = positionsUtil.filterForShortPutPositions(positions)
 
   if (putPositions.length === 0) {
     return []
