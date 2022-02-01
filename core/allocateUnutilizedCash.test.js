@@ -170,7 +170,7 @@ describe('_idealPositions', () => {
     const watchlist = [ watchlistItem('MSFT', 2, true), ]
     const positions = []
     const orders = [
-      generateOrderObject('MSFT', -1, 'put', 'sell_to_open', 'pending')
+      generateOrderObject('MSFT', 1, 'put', 'sell_to_open', 'pending')
     ]
     const optionsToSell = []
     const result = _idealPositions(watchlist, positions, orders, optionsToSell, 0.2)
@@ -187,8 +187,8 @@ describe('_idealPositions', () => {
     const watchlist = [ watchlistItem('MSFT', 5, true), ]
     const positions = []
     const orders = [
-      generateOrderObject('MSFT', -1, 'put'),
-      generateOrderObject('MSFT', -2, 'put'),
+      generateOrderObject('MSFT', 1, 'put'),
+      generateOrderObject('MSFT', 2, 'put'),
     ]
     const optionsToSell = []
     const result = _idealPositions(watchlist, positions, orders, optionsToSell, 0.2)
@@ -227,7 +227,7 @@ describe('_idealPositions', () => {
     const watchlist = [ watchlistItem('MSFT', 5, true), ]
     const positions = []
     const orders = [
-      generateOrderObject('MSFT', -7, 'put'),
+      generateOrderObject('MSFT', 7, 'put'),
     ]
     const optionsToSell = []
     const result = _idealPositions(watchlist, positions, orders, optionsToSell, 0.2)
@@ -312,8 +312,8 @@ describe('_idealPositions', () => {
       generatePositionObject('MSFT', 1, 'put'), // 0 because its a protective put
     ]
     const orders = [
-      generateOrderObject('MSFT', -1, 'put'), // 1
-      generateOrderObject('MSFT', -1, 'put', 'buy_to_close'), // 0
+      generateOrderObject('MSFT', 1, 'put'), // 1
+      generateOrderObject('MSFT', 1, 'put', 'buy_to_close'), // 0
     ]
     const optionsToSell = [
       {
@@ -339,8 +339,8 @@ describe('_idealPositions', () => {
       generatePositionObject('MSFT', 1, 'put'), // 0 because its a protective put
     ]
     const orders = [
-      generateOrderObject('MSFT', -1, 'put'), // 1
-      generateOrderObject('MSFT', -1, 'put', 'buy_to_close'), // 0
+      generateOrderObject('MSFT', 1, 'put'), // 1
+      generateOrderObject('MSFT', 1, 'put', 'buy_to_close'), // 0
     ]
     const optionsToSell = [
       {
@@ -375,11 +375,11 @@ describe('_idealPositions', () => {
       generatePositionObject('WMT', -3, 'put'), // 2, because of max positions
     ]
     const orders = [
-      generateOrderObject('MSFT', -1, 'put'), // 1
-      generateOrderObject('MSFT', -1, 'put', 'buy_to_close'), // 0
-      generateOrderObject('TSLA', -1, 'put'), // 0 because puts arent enabled
-      generateOrderObject('IBM', -2, 'put'), // 1
-      generateOrderObject('WMT', -7, 'put'), // 0 because this might be a manual order, above max
+      generateOrderObject('MSFT', 1, 'put'), // 1
+      generateOrderObject('MSFT', 1, 'put', 'buy_to_close'), // 0
+      generateOrderObject('TSLA', 1, 'put'), // 0 because puts arent enabled
+      generateOrderObject('IBM', 2, 'put'), // 1
+      generateOrderObject('WMT', 7, 'put'), // 0 because this might be a manual order, above max
     ]
     const optionsToSell = [
       {
@@ -489,7 +489,7 @@ describe('_getBuffer', () => {
     ]
     const positions = []
     const orders = [
-      generateOrderObject('MSFT', -1, 'put')
+      generateOrderObject('MSFT', 1, 'put')
     ]
     const result = await _getBuffer(idealPositions, positions, orders)
     expect(result).toEqual(null)
@@ -702,7 +702,7 @@ describe('_getBuffer', () => {
     ]
     const positions = []
     const orders = [
-      generateOrderObject('MSFT', -2, 'put', 'sell_to_open', 'pending', 1234, '2021-01-01', 250)
+      generateOrderObject('MSFT', 2, 'put', 'sell_to_open', 'pending', 1234, '2021-01-01', 250)
     ]
     const result = await _getBuffer(idealPositions, positions, orders)
     expect(result).toEqual(5000)
@@ -725,8 +725,8 @@ describe('_getBuffer', () => {
     ]
     const positions = []
     const orders = [
-      generateOrderObject('MSFT', -2, 'put', 'sell_to_open', 'pending', 1234, '2021-01-01', 250),
-      generateOrderObject('MSFT', -2, 'put', 'sell_to_open', 'pending', 1234, '2021-01-01', 300)
+      generateOrderObject('MSFT', 2, 'put', 'sell_to_open', 'pending', 1234, '2021-01-01', 250),
+      generateOrderObject('MSFT', 2, 'put', 'sell_to_open', 'pending', 1234, '2021-01-01', 300)
     ]
     const result = await _getBuffer(idealPositions, positions, orders)
     expect(result).toEqual(6000)
@@ -749,8 +749,8 @@ describe('_getBuffer', () => {
     ]
     const positions = []
     const orders = [
-      generateOrderObject('MSFT', -2, 'put', 'sell_to_open', 'pending', 1234, '2021-01-01', 250),
-      generateOrderObject('MSFT', -2, 'put', 'sell_to_open', 'pending', 1234, '2021-01-01', 300)
+      generateOrderObject('MSFT', 2, 'put', 'sell_to_open', 'pending', 1234, '2021-01-01', 250),
+      generateOrderObject('MSFT', 2, 'put', 'sell_to_open', 'pending', 1234, '2021-01-01', 300)
     ]
     const result = await _getBuffer(idealPositions, positions, orders)
     expect(result).toEqual(7000)
@@ -808,8 +808,8 @@ describe('_getBuffer', () => {
       generatePositionObject('MSFT', -1, 'put', -230, '2021-12-01', 1234, '2022-01-01', 300)
     ]
     const orders = [
-      generateOrderObject('MSFT', -2, 'put', 'sell_to_open', 'pending', 1234, '2021-01-01', 250),
-      generateOrderObject('MSFT', -2, 'put', 'sell_to_open', 'pending', 1234, '2021-01-01', 310)
+      generateOrderObject('MSFT', 2, 'put', 'sell_to_open', 'pending', 1234, '2021-01-01', 250),
+      generateOrderObject('MSFT', 2, 'put', 'sell_to_open', 'pending', 1234, '2021-01-01', 310)
     ]
     const result = await _getBuffer(idealPositions, positions, orders)
 

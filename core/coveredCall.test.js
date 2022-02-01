@@ -150,8 +150,8 @@ describe('_determineCoverableTickers', () => {
       generatePositionObject('TSLA', -1, 'call', 1870.70),
     ])
     orders.getOrders.mockReturnValue([
-      generateOrderObject('TSLA', -1, 'call', 'sell_to_open', 'pending'),
-      generateOrderObject('AAPL', -1, 'call', 'sell_to_open', 'pending'),
+      generateOrderObject('TSLA', 1, 'call', 'sell_to_open', 'pending'),
+      generateOrderObject('AAPL', 1, 'call', 'sell_to_open', 'pending'),
     ])
     const result = await _determineCoverableTickers()
     expect(result).toEqual([])
