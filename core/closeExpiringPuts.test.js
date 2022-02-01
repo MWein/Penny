@@ -126,6 +126,48 @@ describe('_getPutsExpiringToday', () => {
 
     expect(pricesUtil.getPrices).toHaveBeenCalledWith([ 'TSLA211012P3214' ])
   })
+
+
+  it('Filters for puts expiring today, should only call quotes for puts, and prices for expiring puts. Ignores long puts', async () => {
+    const mockPositions = [
+      generatePositionObject('AAPL', -3, 'call', 100, '2021-01-01', 1234, '2021-10-12'),
+      generatePositionObject('TSLA', -3, 'put', 100, '2021-01-01', 1234, '2021-10-12'),
+      generatePositionObject('SFIX', -3, 'call', 100, '2021-01-01', 1234, '2021-10-12'),
+      generatePositionObject('ASAN', -3, 'put', 100, '2021-01-01', 1234, '2021-10-14'),
+      generatePositionObject('TQQQ', 3, 'put', 100, '2021-01-01', 1234, '2021-10-12'),
+    ]
+    positionsUtil.getPositions.mockReturnValue(mockPositions)
+    pricesUtil.getPrices.mockReturnValue([
+      {
+        symbol: 'TSLA211012P3214',
+        price: 100
+      },
+      {
+        symbol: 'ASAN211014P3214',
+        price: 100
+      },
+      {
+        symbol: 'TQQQ211014P3214',
+        price: 100
+      },
+    ])
+
+    const result = await _getPutsExpiringToday()
+
+    expect(result).toEqual([
+      {
+        symbol: 'TSLA211012P3214',
+        cost_basis: 100,
+        date_acquired: '2021-01-01',
+        expiration: '2021-10-12',
+        id: 1234,
+        price: 100,
+        quantity: -3,
+      }
+    ])
+
+    expect(pricesUtil.getPrices).toHaveBeenCalledWith([ 'TSLA211012P3214' ])
+  })
 })
 
 
