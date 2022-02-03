@@ -98,6 +98,7 @@ describe('getSettings', () => {
       putsEnabled: false,
       closeExpiringPuts: true,
       allocateUnutilizedCash: false,
+      rollProtectivePuts: false,
       defaultVolatility: 0.05,
       reserve: 20,
       profitTarget: 0.70,
