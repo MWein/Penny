@@ -3,6 +3,7 @@ const network = require('../utils/network')
 
 const _formatChain = (chain, type, target) => chain
   .filter(option => option.option_type === type)
+  .filter(option => option.greeks) // Filter out options that don't have any greeks because apparently thats a thing
   .map(option => ({
     symbol: option.symbol,
     premium: Number((option.bid * 100).toFixed()),

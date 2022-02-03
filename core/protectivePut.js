@@ -110,13 +110,19 @@ const _getOrderInstructionsFromSetting = async (currentProtectivePuts, protectiv
   } = protectivePutSetting
 
   if (number === 0 || !enabled || (frequency === 'weekly' && new Date().getDay() !== 5)) {
-    return []
+    return {
+      buy: [],
+      sell: [],
+    }
   }
 
   const optionToBuy = await _selectNewProtectivePut(symbol, minimumAge, targetDelta)
   const optionToBuySymbol = optionToBuy.symbol
   if (!optionToBuySymbol) {
-    return []
+    return {
+      buy: [],
+      sell: [],
+    }
   }
 
   const symbolsToReplace = _determinePutsToReplace(protectivePutSetting, currentProtectivePuts)
@@ -150,14 +156,14 @@ const rollProtectivePuts = async () => {
     // Get current protective puts
     const positions = await positionsUtil.getPositions()
     const currentPuts = positionsUtil.filterForLongPutPositions(positions)
-    
-    let buys = []
-    let sells = []
+
+    const buys = []
+    const sells = []
     for (let x = 0; x < enabledProtectivePuts.length; x++) {
       const current = enabledProtectivePuts[x]
       const results = await _getOrderInstructionsFromSetting(currentPuts, current)
-      buys.push(results.buy)
-      sells.push(results.sell)
+      buys.push(...results.buy)
+      sells.push(...results.sell)
     }
 
     // Sell whatever needs selling
