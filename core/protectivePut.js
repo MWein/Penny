@@ -28,19 +28,18 @@ const _determinePutsToReplace = (setting, currentPositions) => {
     ], [])
 
   // Check how many brand new positions we need
-  const additionalSymbolsToAdd = Math.max(spreadOutPuts.length - number, 0)
+  const additionalSymbolsToAdd = Math.max(number - spreadOutPuts.length, 0)
 
-  // If the number of positions is higher than setting.number, filter out newest
-  //protectivePuts.sort(x => x.date_acquired - current date).slice(-1)
-  const filteredPuts = spreadOutPuts
+  // If the number of positions is higher than setting.number, filter for newest
+  const newestPuts = spreadOutPuts.sort((a, b) => new Date(a) - new Date(b)).slice(-2)
 
   // If setting.frequency is monthly, filter out positions less than 30 days old
-  const positionsOlderThan30 = frequency === 'monthly' ? filteredPuts : filteredPuts
+  const positionsOlderThan30 = frequency === 'monthly' ? newestPuts : newestPuts
 
   // Add phantom symbols
   const symbolsToReplace = positionsOlderThan30.map(x => x.symbol)
   return additionalSymbolsToAdd > 0 ?
-    [ ...symbolsToReplace, ...Array.apply(null, additionalSymbolsToAdd).map(() => 'NEWPOSITION') ]
+    [ ...symbolsToReplace, ...Array.apply(null, Array(additionalSymbolsToAdd)).map(() => 'NEWPOSITION') ]
     : symbolsToReplace
 }
 

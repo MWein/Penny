@@ -12,7 +12,6 @@ const {
 
 describe('_determinePutsToReplace', () => {
   let mockSetting
-
   beforeEach(() => {
     mockSetting = {
       symbol: 'AAPL',
@@ -25,11 +24,9 @@ describe('_determinePutsToReplace', () => {
     const mockPositions = [
       generatePositionObject('AAPL', 2, 'put', 100, '2021-01-01', 1234, '2021-01-02', 69)
     ]
-
     const putsToReplaceWeekly = _determinePutsToReplace(mockSetting, mockPositions)
     mockSetting.frequency = 'daily'
     const putsToReplaceDaily = _determinePutsToReplace(mockSetting, mockPositions)
-
     expect(putsToReplaceWeekly).toEqual([
       'AAPL210102P00069000',
       'AAPL210102P00069000'
@@ -42,11 +39,9 @@ describe('_determinePutsToReplace', () => {
       generatePositionObject('AAPL', 1, 'put', 100, '2021-01-01', 1234, '2021-01-02', 69),
       generatePositionObject('AAPL', 1, 'put', 100, '2021-01-01', 1234, '2021-01-03', 70)
     ]
-
     const putsToReplaceWeekly = _determinePutsToReplace(mockSetting, mockPositions)
     mockSetting.frequency = 'daily'
     const putsToReplaceDaily = _determinePutsToReplace(mockSetting, mockPositions)
-
     expect(putsToReplaceWeekly).toEqual([
       'AAPL210102P00069000',
       'AAPL210103P00070000'
@@ -55,31 +50,98 @@ describe('_determinePutsToReplace', () => {
   })
 
   it('Ignores stocks, calls, short puts, short calls, and any long puts with a different symbol', () => {
-
+    const mockPositions = [
+      generatePositionObject('AAPL', 1, 'put', 100, '2021-01-01', 1234, '2021-01-02', 69),
+      generatePositionObject('AAPL', 1, 'put', 100, '2021-01-01', 1234, '2021-01-03', 70),
+      generatePositionObject('TSLA', 1, 'put', 100, '2021-01-01', 1234, '2021-01-03', 70),
+      generatePositionObject('AAPL', 1, 'stock', 100, '2021-01-01'),
+      generatePositionObject('AAPL', -1, 'put', 100, '2021-01-01', 1234, '2021-01-03', 70),
+      generatePositionObject('AAPL', 1, 'call', 100, '2021-01-01', 1234, '2021-01-03', 70),
+      generatePositionObject('AAPL', -1, 'call', 100, '2021-01-01', 1234, '2021-01-03', 70),
+    ]
+    const putsToReplace = _determinePutsToReplace(mockSetting, mockPositions)
+    expect(putsToReplace).toEqual([
+      'AAPL210102P00069000',
+      'AAPL210103P00070000'
+    ])
   })
 
-  it('Returns phantom positions up to setting.number if there are no current positions, weekly freq', () => {
-
+  it('Returns phantom positions up to setting.number if there are no current positions, daily/weekly freq', () => {
+    const mockPositions = []
+    const putsToReplaceWeekly = _determinePutsToReplace(mockSetting, mockPositions)
+    mockSetting.frequency = 'daily'
+    const putsToReplaceDaily = _determinePutsToReplace(mockSetting, mockPositions)
+    expect(putsToReplaceWeekly).toEqual([
+      'NEWPOSITION',
+      'NEWPOSITION'
+    ])
+    expect(putsToReplaceDaily).toEqual(putsToReplaceWeekly)
   })
 
   it('Returns phantom positions up to setting.number if there are no current positions, monthly freq', () => {
-        
+    const mockPositions = []
+    mockSetting.frequency = 'monthly'
+    const putsToReplace = _determinePutsToReplace(mockSetting, mockPositions)
+    expect(putsToReplace).toEqual([
+      'NEWPOSITION',
+      'NEWPOSITION'
+    ])
   })
 
-  it('Returns phantom positions and real positions up to setting.number if there are less current positions, weekly freq', () => {
-
+  it('Returns phantom positions and real positions up to setting.number if there are less current positions, daily/weekly freq', () => {
+    const mockPositions = [
+      generatePositionObject('AAPL', 1, 'put', 100, '2021-01-01', 1234, '2021-01-02', 69),
+    ]
+    const putsToReplaceWeekly = _determinePutsToReplace(mockSetting, mockPositions)
+    mockSetting.frequency = 'daily'
+    const putsToReplaceDaily = _determinePutsToReplace(mockSetting, mockPositions)
+    expect(putsToReplaceWeekly).toEqual([
+      'AAPL210102P00069000',
+      'NEWPOSITION'
+    ])
+    expect(putsToReplaceDaily).toEqual(putsToReplaceWeekly)
   })
 
   it('Returns phantom positions and real positions up to setting.number if there are less current positions, monthly freq', () => {
-        
+    const mockPositions = [
+      generatePositionObject('AAPL', 1, 'put', 100, '2021-01-01', 1234, '2021-01-02', 69),
+    ]
+    mockSetting.frequency = 'monthly'
+    const putsToReplace = _determinePutsToReplace(mockSetting, mockPositions)
+    expect(putsToReplace).toEqual([
+      'AAPL210102P00069000',
+      'NEWPOSITION'
+    ])
   })
 
-  it('Returns the newer positions if there are more positions than setting.number, weekly freq', () => {
-
+  it('Returns the older positions if there are more positions than setting.number, daily/weekly freq', () => {
+    const mockPositions = [
+      generatePositionObject('AAPL', 1, 'put', 100, '2021-01-05', 1234, '2021-01-02', 69),
+      generatePositionObject('AAPL', 1, 'put', 100, '2022-01-01', 1234, '2021-01-02', 71),
+      generatePositionObject('AAPL', 1, 'put', 100, '2021-01-02', 1234, '2021-01-02', 70),
+    ]
+    const putsToReplaceWeekly = _determinePutsToReplace(mockSetting, mockPositions)
+    mockSetting.frequency = 'daily'
+    const putsToReplaceDaily = _determinePutsToReplace(mockSetting, mockPositions)
+    expect(putsToReplaceWeekly).toEqual([
+      'AAPL210102P00071000',
+      'AAPL210102P00070000'
+    ])
+    expect(putsToReplaceDaily).toEqual(putsToReplaceWeekly)
   })
 
   it('Returns the newer positions if there are more positions than setting.number, monthly freq', () => {
-
+    const mockPositions = [
+      generatePositionObject('AAPL', 1, 'put', 100, '2021-01-05', 1234, '2021-01-02', 69),
+      generatePositionObject('AAPL', 1, 'put', 100, '2022-01-01', 1234, '2021-01-02', 71),
+      generatePositionObject('AAPL', 1, 'put', 100, '2021-01-02', 1234, '2021-01-02', 70),
+    ]
+    mockSetting.frequency = 'monthly'
+    const putsToReplace = _determinePutsToReplace(mockSetting, mockPositions)
+    expect(putsToReplace).toEqual([
+      'AAPL210102P00071000',
+      'AAPL210102P00070000'
+    ])
   })
 
   it('Returns only positions that are more than 30 days old if freq is monthly', () => {
