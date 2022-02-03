@@ -5,6 +5,10 @@ const {
   rollProtectivePuts
 } = require('./protectivePut')
 
+const settingsUtil = require('../utils/settings')
+const logUtil = require('../utils/log')
+const market = require('../tradier/market')
+
 const selectBestUtil = require('../tradier/selectBestOptionForDay')
 const expirationsUtil = require('../tradier/nextStrikeExpirations')
 
@@ -301,28 +305,39 @@ describe('_getOrderInstructionsFromSetting', () => {
 
 
 describe('rollProtectivePuts', () => {
-    it('Exits if settings.rollProtectivePuts is false', async () => {
+  beforeEach(() => {
+    settingsUtil.getSettings = jest.fn()
+    logUtil.log = jest.fn()
+    market.isMarketOpen = jest.fn()
+  })
 
-    })
+  it('Exits if settings.rollProtectivePuts is false', async () => {
+    settingsUtil.getSettings.mockReturnValue({ rollProtectivePuts: false })
+    await rollProtectivePuts()
+    expect(logUtil.log).toHaveBeenCalledWith('Roll Protective Puts Disabled')
+  })
 
-    it('Exits if market is closed', async () => {
+  it('Exits if market is closed', async () => {
+    settingsUtil.getSettings.mockReturnValue({ rollProtectivePuts: true })
+    market.isMarketOpen.mockReturnValue(false)
+    await rollProtectivePuts()
+    expect(logUtil.log).toHaveBeenCalledWith('Market Closed')
+  })
 
-    })
+  it('Logs on exception', async () => {
 
-    it('Logs on exception', async () => {
+  })
 
-    })
+  it('Exits if there arent any protectivePut orders in DB', async () => {
 
-    it('Exits if there arent any protectivePut orders in DB', async () => {
+  })
 
-    })
+  it('Exits if all protectivePut orders in DB are disabled', async () => {
 
-    it('Exits if all protectivePut orders in DB are disabled', async () => {
+  })
 
-    })
+  it('Exits if all protectivePut orders in DB have number = 0', async () => {
 
-    it('Exits if all protectivePut orders in DB have number = 0', async () => {
-        
-    })
+  })
 
 })

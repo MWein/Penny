@@ -1,6 +1,9 @@
 const positionsUtil = require('../tradier/getPositions')
 const selectBestUtil = require('../tradier/selectBestOptionForDay')
 const expirationsUtil = require('../tradier/nextStrikeExpirations')
+const settingsUtil = require('../utils/settings')
+const logUtil = require('../utils/log')
+const market = require('../tradier/market')
 const {
   getUnderlying
 } = require('../utils/determineOptionType')
@@ -111,11 +114,19 @@ const _getOrderInstructionsFromSetting = async (currentProtectivePuts, protectiv
 }
 
 
-const rollProtectivePuts = () => {
-  // Get settings
-  // If protectivePuts is disabled, return and do nothing
+const rollProtectivePuts = async () => {
+  const settings = await settingsUtil.getSettings()
 
-  // If market is closed, return and do nothing
+  if (!settings.rollProtectivePuts) {
+    logUtil.log('Roll Protective Puts Disabled')
+    return
+  }
+
+  const open = await market.isMarketOpen()
+  if (!open) {
+    logUtil.log('Market Closed')
+    return
+  }
 
   // Get protective put settings from DB
   // If none, return and do nothing
