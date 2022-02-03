@@ -8,6 +8,7 @@ const { log, clearOldLogs } = require('./utils/log')
 const { closeExpiringPuts } = require('./core/closeExpiringPuts')
 const { sellCashSecuredPuts } = require('./core/cashSecuredPut')
 const { allocateUnutilizedCash } = require('./core/allocateUnutilizedCash')
+const { rollProtectivePuts } = require('./core/protectivePut')
 
 
 const housekeeping = async () => {
@@ -57,6 +58,7 @@ const launchCrons = async () => {
   new CronJob('0 0 10 * * 1-5', sellOptions, null, true, 'America/New_York')
   new CronJob('0 0 12 * * 1-5', sellOptions, null, true, 'America/New_York')
   new CronJob('0 0 14 * * 1-5', sellOptions, null, true, 'America/New_York')
+  new CronJob('0 0 15 * * 1-5', rollProtectivePuts, null, true, 'America/New_York')
 
   // Close expiring puts before options sales on fridays
   new CronJob('0 0 09 * * 5', closeExpiringPuts, null, true, 'America/New_York')
