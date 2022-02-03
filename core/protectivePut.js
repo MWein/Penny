@@ -4,6 +4,10 @@ const expirationsUtil = require('../tradier/nextStrikeExpirations')
 const {
   getUnderlying
 } = require('../utils/determineOptionType')
+const {
+  daysSince,
+  daysUntil,
+} = require('../utils/dateDiff')
 
 
 // Daily and weekly frequency stops should be handled in _getOrderInstructionsFromSetting
@@ -39,12 +43,8 @@ const _determinePutsToReplace = (setting, currentPositions) => {
   const newestPuts = spreadOutPuts.sort((a, b) => new Date(a) - new Date(b)).slice(number * -1)
 
   // If setting.frequency is monthly, filter out positions less than 30 days old
-  const today = new Date()
   const positionsOlderThan30 = frequency === 'monthly' ?
-    newestPuts.filter(x => {
-      const diffInDays = (today.getTime() - new Date(x.date_acquired).getTime()) / (1000 * 3600 * 24)
-      return diffInDays >= 30
-    })
+    newestPuts.filter(x => daysSince(x.date_acquired) >= 30)
     : newestPuts
 
   // Add phantom symbols
@@ -57,8 +57,7 @@ const _determinePutsToReplace = (setting, currentPositions) => {
 
 const _selectNewProtectivePut = async (symbol, minimumAge, targetDelta) => {
   const expirations = await expirationsUtil.nextStrikeExpirations(symbol, 100, true)
-  const today = new Date()
-  const expiration = expirations.find(x => (new Date(x).getTime() - today.getTime()) / (1000 * 3600 * 24) >= minimumAge)
+  const expiration = expirations.find(x => daysUntil(x) >= minimumAge)
   if (!expiration) {
     return {}
   }
