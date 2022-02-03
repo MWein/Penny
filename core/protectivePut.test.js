@@ -338,7 +338,7 @@ describe('_getOrderInstructionsFromSetting', () => {
   it('Returns empty array if setting.enabled is false', async () => {
     mockSetting.enabled = false
     const orders = await _getOrderInstructionsFromSetting([], mockSetting)
-    expect(orders).toEqual([])
+    expect(orders).toEqual({ buy: [], sell: []})
     // TODO Expect that none of the network funcs were called
     expect(positionsUtil.getPositions).not.toHaveBeenCalled()
     expect(expirationsUtil.nextStrikeExpirations).not.toHaveBeenCalled()
@@ -348,7 +348,7 @@ describe('_getOrderInstructionsFromSetting', () => {
   it('Returns empty array if setting.number is 0', async () => {
     mockSetting.number = 0
     const orders = await _getOrderInstructionsFromSetting([], mockSetting)
-    expect(orders).toEqual([])
+    expect(orders).toEqual({ buy: [], sell: []})
     // TODO Expect that none of the network funcs were called
     expect(positionsUtil.getPositions).not.toHaveBeenCalled()
     expect(expirationsUtil.nextStrikeExpirations).not.toHaveBeenCalled()
@@ -360,7 +360,7 @@ describe('_getOrderInstructionsFromSetting', () => {
     jest.useFakeTimers().setSystemTime(new Date('2022-02-04').getTime()) // Thursday
     mockSetting.frequency = 'weekly'
     const orders = await _getOrderInstructionsFromSetting([], mockSetting)
-    expect(orders).toEqual([])
+    expect(orders).toEqual({ buy: [], sell: []})
     // TODO Expect that none of the network funcs were called
     expect(positionsUtil.getPositions).not.toHaveBeenCalled()
     expect(expirationsUtil.nextStrikeExpirations).not.toHaveBeenCalled()
@@ -371,7 +371,7 @@ describe('_getOrderInstructionsFromSetting', () => {
     positionsUtil.getPositions.mockReturnValue([])
     expirationsUtil.nextStrikeExpirations.mockReturnValue([])
     const orders = await _getOrderInstructionsFromSetting([], mockSetting)
-    expect(orders).toEqual([])
+    expect(orders).toEqual({ buy: [], sell: []})
   })
 
 
