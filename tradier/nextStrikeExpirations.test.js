@@ -149,7 +149,7 @@ describe('nextStrikeExpirations', () => {
     expect(networkUtil.get).toHaveBeenCalledWith('/markets/options/expirations?symbol=AAPL')
   })
 
-  it('Returns only the next expiration regardless of the limit if given SPY, QQQ, or IWM', async () => {
+  it('Returns only the next expiration regardless of the limit if given SPY, QQQ, or IWM by default', async () => {
     networkUtil.get.mockReturnValue({
       expirations: {
         date: [
@@ -167,6 +167,26 @@ describe('nextStrikeExpirations', () => {
 
     const qqqResult = await nextStrikeExpirations('QQQ', 50)
     expect(qqqResult).toEqual([ '2021-01-01' ])
+  })
+
+  it('Ignores SPY rule if ignoreSPYRule is true', async () => {
+    networkUtil.get.mockReturnValue({
+      expirations: {
+        date: [
+          '2021-01-01',
+          '2022-01-01'
+        ]
+      }
+    })
+
+    const spyResult = await nextStrikeExpirations('SPY', 50, true)
+    expect(spyResult).toEqual([ '2021-01-01', '2022-01-01' ])
+
+    const iwmResult = await nextStrikeExpirations('IWM', 50, true)
+    expect(iwmResult).toEqual([ '2021-01-01', '2022-01-01' ])
+
+    const qqqResult = await nextStrikeExpirations('QQQ', 50, true)
+    expect(qqqResult).toEqual([ '2021-01-01', '2022-01-01' ])
   })
 
   it('Excludes current date for SPY, QQQ, and IWM', async () => {

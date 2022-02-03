@@ -25,7 +25,7 @@ const _nextStrikeDates = (maxWeeksOut = 4) => {
 }
 
 
-const nextStrikeExpirations = async (symbol, limit = 2) => {
+const nextStrikeExpirations = async (symbol, limit = 2, ignoreSPYRule = false) => {
   try {
     if (limit === 0) {
       return []
@@ -40,7 +40,7 @@ const nextStrikeExpirations = async (symbol, limit = 2) => {
     const dates = response.expirations.date.filter(x => x != currentDate)
 
     // These symbols have multiple expirations per week
-    if ([ 'SPY', 'IWM', 'QQQ' ].includes(symbol)) {
+    if (!ignoreSPYRule && [ 'SPY', 'IWM', 'QQQ' ].includes(symbol)) {
       return [ dates[0] ]
     }
 
