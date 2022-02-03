@@ -115,29 +115,36 @@ const _getOrderInstructionsFromSetting = async (currentProtectivePuts, protectiv
 
 
 const rollProtectivePuts = async () => {
-  const settings = await settingsUtil.getSettings()
+  try {
+    const settings = await settingsUtil.getSettings()
 
-  if (!settings.rollProtectivePuts) {
-    logUtil.log('Roll Protective Puts Disabled')
-    return
+    if (!settings.rollProtectivePuts) {
+      logUtil.log('Roll Protective Puts Disabled')
+      return
+    }
+      
+    const open = await market.isMarketOpen()
+    if (!open) {
+      logUtil.log('Market Closed')
+      return
+    }
+      
+    // Get protective put settings from DB
+    // If none, return and do nothing
+      
+    // Get all current protective puts
+      
+    // call getOrderInstructionsFromSetting for each setting
+      
+    // Sort so that sell orders are first
+      
+      
+  } catch (e) {
+    logUtil.log({
+      type: 'error',
+      message: e.toString()
+    })
   }
-
-  const open = await market.isMarketOpen()
-  if (!open) {
-    logUtil.log('Market Closed')
-    return
-  }
-
-  // Get protective put settings from DB
-  // If none, return and do nothing
-
-  // Get all current protective puts
-
-  // call getOrderInstructionsFromSetting for each setting
-
-  // Sort so that sell orders are first
-
-
 }
 
 

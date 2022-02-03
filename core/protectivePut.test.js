@@ -306,9 +306,9 @@ describe('_getOrderInstructionsFromSetting', () => {
 
 describe('rollProtectivePuts', () => {
   beforeEach(() => {
-    settingsUtil.getSettings = jest.fn()
+    settingsUtil.getSettings = jest.fn().mockReturnValue({ rollProtectivePuts: true })
     logUtil.log = jest.fn()
-    market.isMarketOpen = jest.fn()
+    market.isMarketOpen = jest.fn().mockReturnValue(false)
   })
 
   it('Exits if settings.rollProtectivePuts is false', async () => {
@@ -318,14 +318,20 @@ describe('rollProtectivePuts', () => {
   })
 
   it('Exits if market is closed', async () => {
-    settingsUtil.getSettings.mockReturnValue({ rollProtectivePuts: true })
     market.isMarketOpen.mockReturnValue(false)
     await rollProtectivePuts()
     expect(logUtil.log).toHaveBeenCalledWith('Market Closed')
   })
 
-  it('Logs on exception', async () => {
-
+  it('Catches and logs exceptions', async () => {
+    market.isMarketOpen.mockImplementation(() => {
+      throw new Error('Oh nooooooo!')
+    })
+    await rollProtectivePuts()
+    expect(logUtil.log).toHaveBeenCalledWith({
+      type: 'error',
+      message: 'Error: Oh nooooooo!'
+    })
   })
 
   it('Exits if there arent any protectivePut orders in DB', async () => {
