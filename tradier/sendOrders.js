@@ -60,6 +60,35 @@ const sellToOpen = async (symbol, option_symbol, quantity) => {
   }
 }
 
+const buyToOpen = async (symbol, option_symbol, quantity) => {
+  const url = `accounts/${process.env.ACCOUNTNUM}/orders`
+
+  const body = {
+    account_id: process.env.ACCOUNTNUM,
+    class: 'option',
+    symbol,
+    option_symbol,
+    side: 'buy_to_open',
+    quantity,
+    type: 'market',
+    duration: 'day',
+  }
+
+  try {
+    const result = await network.post(url, body, false)
+    logUtil.log(`Buy-to-open ${quantity} ${option_symbol}`)
+    return result
+  } catch (e) {
+    logUtil.log({
+      type: 'error',
+      message: `Buy-to-open ${quantity} ${option_symbol} Failed`,
+    })
+    return {
+      status: 'not ok'
+    }
+  }
+}
+
 const sellToClose = async (symbol, option_symbol, quantity) => {
   const url = `accounts/${process.env.ACCOUNTNUM}/orders`
 
@@ -168,6 +197,7 @@ const cancelOrders = async orderIDs => {
 module.exports = {
   buy,
   sellToOpen,
+  buyToOpen,
   sellToClose,
   buyToClose,
   buyToCloseMarket,

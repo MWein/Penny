@@ -3,6 +3,7 @@ const logUtil = require('../utils/log')
 const {
   buy,
   sellToOpen,
+  buyToOpen,
   sellToClose,
   buyToClose,
   buyToCloseMarket,
@@ -93,6 +94,50 @@ describe('sellToOpen', () => {
     expect(result).toEqual({ status: 'ok', orderId: 'something' })
     expect(logUtil.log).toHaveBeenCalledTimes(1)
     expect(logUtil.log).toHaveBeenCalledWith('Sell-to-open 1 AAAAAPL')
+  })
+})
+
+
+describe('buyToOpen', () => {
+  beforeEach(() => {
+    network.post = jest.fn()
+    logUtil.log = jest.fn()
+  })
+
+  it('Calls with the correct url and body; skips throttle', async () => {
+    process.env.ACCOUNTNUM = 'thisisanaccountnumber'
+    network.post.mockReturnValue({ status: 'ok' })
+    await buyToOpen('AAPL', 'AAAAAAPL', 2)
+    expect(network.post.mock.calls[0][0]).toEqual('accounts/thisisanaccountnumber/orders')
+    expect(network.post.mock.calls[0][1]).toEqual({
+      account_id: 'thisisanaccountnumber',
+      class: 'option',
+      symbol: 'AAPL',
+      option_symbol: 'AAAAAAPL',
+      side: 'buy_to_open',
+      quantity: 2,
+      type: 'market',
+      duration: 'day',
+    })
+    expect(network.post.mock.calls[0][2]).toEqual(false)
+  })
+
+  it('Returns failed status object if network call throws', async () => {
+    network.post.mockImplementation(() => {
+      throw new Error('Ope')
+    })
+    const result = await buyToOpen('AAPL', 'AAAAAPL', 1)
+    expect(result).toEqual({ status: 'not ok' })
+    expect(logUtil.log).toHaveBeenCalledTimes(1)
+    expect(logUtil.log).toHaveBeenCalledWith({ type: 'error', message: 'Buy-to-open 1 AAAAAPL Failed' })
+  })
+
+  it('On success, returns whatever the endpoint returned', async () => {
+    network.post.mockReturnValue({ status: 'ok', orderId: 'something' })
+    const result = await buyToOpen('AAPL', 'AAAAAPL', 1)
+    expect(result).toEqual({ status: 'ok', orderId: 'something' })
+    expect(logUtil.log).toHaveBeenCalledTimes(1)
+    expect(logUtil.log).toHaveBeenCalledWith('Buy-to-open 1 AAAAAPL')
   })
 })
 
