@@ -3,6 +3,7 @@ const logUtil = require('../utils/log')
 const {
   buy,
   sellToOpen,
+  sellToClose,
   buyToClose,
   buyToCloseMarket,
   cancelOrders,
@@ -92,6 +93,49 @@ describe('sellToOpen', () => {
     expect(result).toEqual({ status: 'ok', orderId: 'something' })
     expect(logUtil.log).toHaveBeenCalledTimes(1)
     expect(logUtil.log).toHaveBeenCalledWith('Sell-to-open 1 AAAAAPL')
+  })
+})
+
+describe('sellToClose', () => {
+  beforeEach(() => {
+    network.post = jest.fn()
+    logUtil.log = jest.fn()
+  })
+
+  it('Calls with the correct url and body; skips throttle', async () => {
+    process.env.ACCOUNTNUM = 'thisisanaccountnumber'
+    network.post.mockReturnValue({ status: 'ok' })
+    await sellToClose('AAPL', 'AAAAAAPL', 2, 0.18)
+    expect(network.post.mock.calls[0][0]).toEqual('accounts/thisisanaccountnumber/orders')
+    expect(network.post.mock.calls[0][1]).toEqual({
+      account_id: 'thisisanaccountnumber',
+      class: 'option',
+      symbol: 'AAPL',
+      option_symbol: 'AAAAAAPL',
+      side: 'sell_to_close',
+      quantity: 2,
+      type: 'market',
+      duration: 'day',
+    })
+    expect(network.post.mock.calls[0][2]).toEqual(false)
+  })
+
+  it('Returns failed status object if network call throws', async () => {
+    network.post.mockImplementation(() => {
+      throw new Error('Ope')
+    })
+    const result = await sellToClose('AAPL', 'AAAAAPL', 1, 0.11)
+    expect(result).toEqual({ status: 'not ok' })
+    expect(logUtil.log).toHaveBeenCalledTimes(1)
+    expect(logUtil.log).toHaveBeenCalledWith({ type: 'error', message: 'Sell-to-close 1 AAAAAPL Failed' })
+  })
+
+  it('On success, returns whatever the endpoint returned', async () => {
+    network.post.mockReturnValue({ status: 'ok', orderId: 'something' })
+    const result = await sellToClose('AAPL', 'AAAAAPL', 1, 0.10)
+    expect(result).toEqual({ status: 'ok', orderId: 'something' })
+    expect(logUtil.log).toHaveBeenCalledTimes(1)
+    expect(logUtil.log).toHaveBeenCalledWith('Sell-to-close 1 AAAAAPL')
   })
 })
 
