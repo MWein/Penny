@@ -5,7 +5,8 @@ const settingsUtil = require('../utils/settings')
 const logUtil = require('../utils/log')
 const market = require('../tradier/market')
 const {
-  getUnderlying
+  getUnderlying,
+  getStrike,
 } = require('../utils/determineOptionType')
 const {
   daysSince,
@@ -69,6 +70,31 @@ const _selectNewProtectivePut = async (symbol, minimumAge, targetDelta) => {
 }
 
 
+const _createRollOrders = (rollIfNegative, symbolsToReplace, optionToBuySymbol) => {
+  return symbolsToReplace.reduce((acc, symbolToReplace) => {
+    if (symbolToReplace === 'NEWPOSITION') {
+      return {
+        ...acc,
+        buy: [ ...acc.buy, optionToBuySymbol ]
+      }
+    }
+
+    const oldStrike = getStrike(symbolToReplace)
+    const newStrike = getStrike(optionToBuySymbol)
+
+    if (newStrike > oldStrike || rollIfNegative) {
+      return {
+        ...acc,
+        buy: [ ...acc.buy, optionToBuySymbol ],
+        sell: [ ...acc.sell, symbolToReplace ],
+      }
+    }
+
+    return acc
+  }, { buy: [], sell: [] })
+}
+
+
 const _getOrderInstructionsFromSetting = async (currentProtectivePuts, protectivePutSetting) => {
   const {
     symbol,
@@ -81,25 +107,18 @@ const _getOrderInstructionsFromSetting = async (currentProtectivePuts, protectiv
     minimumAge,
   } = protectivePutSetting
 
-  if (number === 0 || !enabled) {
+  if (number === 0 || !enabled || (frequency === 'weekly' && new Date().getDay() !== 5)) {
     return []
   }
 
-  if (frequency === 'weekly' && new Date().getDay() !== 5) {
+  const optionToBuy = await _selectNewProtectivePut(symbol, minimumAge, targetDelta)
+  const optionToBuySymbol = optionToBuy.symbol
+  if (!optionToBuy.symbol) {
     return []
   }
 
   const currentPositions = await positionsUtil.getPositions()
   const symbolsToReplace = _determinePutsToReplace(protectivePutSetting, currentPositions)
-
-  if (symbolsToReplace.length === 0) {
-    return []
-  }
-
-  const optionToBuy = await _selectNewProtectivePut(symbol, minimumAge, targetDelta)
-  if (optionToBuy === {}) {
-    return []
-  }
 
   // Loop through symbolsToReplace and add buy orders for any NEWPOSITION
 
@@ -153,5 +172,6 @@ module.exports = {
   _determinePutsToReplace,
   _selectNewProtectivePut,
   _getOrderInstructionsFromSetting,
+  _createRollOrders,
   rollProtectivePuts
 }

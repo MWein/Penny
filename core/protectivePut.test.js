@@ -1,10 +1,12 @@
 const {
   _determinePutsToReplace,
   _selectNewProtectivePut,
+  _createRollOrders,
   _getOrderInstructionsFromSetting,
   rollProtectivePuts
 } = require('./protectivePut')
 
+const positionsUtil = require('../tradier/getPositions')
 const settingsUtil = require('../utils/settings')
 const logUtil = require('../utils/log')
 const market = require('../tradier/market')
@@ -257,6 +259,60 @@ describe('_selectNewProtectivePut', () => {
 })
 
 
+describe('_createRollOrders', () => {
+  it('Replaces NEWPOSITION with buy orders for new option', () => {
+    const result = _createRollOrders(false, [ 'NEWPOSITION', 'NEWPOSITION' ], 'TQQQ220225P00059000')
+    expect(result.buy).toEqual([
+      'TQQQ220225P00059000',
+      'TQQQ220225P00059000'
+    ])
+    expect(result.sell).toEqual([])
+  })
+
+  it('Does not replace any options if the old strikes are higher than the new one', () => {
+    const result = _createRollOrders(false, [ 'TQQQ220225P00060000', 'TQQQ220225P00060000' ], 'TQQQ220225P00059000')
+    expect(result).toEqual({
+      buy: [],
+      sell: [],
+    })
+  })
+
+  it('Returns buy and close orders where the old strikes are lower than the new one', () => {
+    const result = _createRollOrders(false, [ 'TQQQ220225P00055000', 'TQQQ220225P00055000' ], 'TQQQ220225P00059000')
+    expect(result.sell).toEqual([
+      'TQQQ220225P00055000',
+      'TQQQ220225P00055000'
+    ])
+    expect(result.buy).toEqual([
+      'TQQQ220225P00059000',
+      'TQQQ220225P00059000'
+    ])
+  })
+
+  it('Returns buy and close orders if old strikes are higher than new ones if rollIfNegative is true', () => {
+    const result = _createRollOrders(true, [ 'TQQQ220225P00060000', 'TQQQ220225P00060000' ], 'TQQQ220225P00059000')
+    expect(result.sell).toEqual([
+      'TQQQ220225P00060000',
+      'TQQQ220225P00060000'
+    ])
+    expect(result.buy).toEqual([
+      'TQQQ220225P00059000',
+      'TQQQ220225P00059000'
+    ])
+  })
+
+  it('Replaces options where strike is lower than new, does not replace where strike is higher than new', () => {
+    const result = _createRollOrders(false, [ 'TQQQ220225P00045000', 'TQQQ220225P00060000', 'NEWPOSITION' ], 'TQQQ220225P00059000')
+    expect(result.sell).toEqual([
+      'TQQQ220225P00045000',
+    ])
+    expect(result.buy).toEqual([
+      'TQQQ220225P00059000',
+      'TQQQ220225P00059000'
+    ])
+  })
+})
+
 
 describe('_getOrderInstructionsFromSetting', () => {
   let mockSetting
@@ -266,7 +322,7 @@ describe('_getOrderInstructionsFromSetting', () => {
       symbol: 'AAPL',
       enabled: true,
       number: 1,
-      frequency: 'weekly',
+      frequency: 'daily',
       targetDelta: 0.3,
       rollIfNegative: false,
       minimumTimeToLive: 45,
@@ -274,6 +330,9 @@ describe('_getOrderInstructionsFromSetting', () => {
     }
 
     // TODO Mock network funcs
+    positionsUtil.getPositions = jest.fn()
+    expirationsUtil.nextStrikeExpirations = jest.fn()
+    selectBestUtil.selectBestStrikeForDay = jest.fn()
   })
 
   it('Returns empty array if setting.enabled is false', async () => {
@@ -281,6 +340,9 @@ describe('_getOrderInstructionsFromSetting', () => {
     const orders = await _getOrderInstructionsFromSetting([], mockSetting)
     expect(orders).toEqual([])
     // TODO Expect that none of the network funcs were called
+    expect(positionsUtil.getPositions).not.toHaveBeenCalled()
+    expect(expirationsUtil.nextStrikeExpirations).not.toHaveBeenCalled()
+    expect(selectBestUtil.selectBestStrikeForDay).not.toHaveBeenCalled()
   })
 
   it('Returns empty array if setting.number is 0', async () => {
@@ -288,19 +350,32 @@ describe('_getOrderInstructionsFromSetting', () => {
     const orders = await _getOrderInstructionsFromSetting([], mockSetting)
     expect(orders).toEqual([])
     // TODO Expect that none of the network funcs were called
+    expect(positionsUtil.getPositions).not.toHaveBeenCalled()
+    expect(expirationsUtil.nextStrikeExpirations).not.toHaveBeenCalled()
+    expect(selectBestUtil.selectBestStrikeForDay).not.toHaveBeenCalled()
   })
 
   it('Returns empty array if frequency is "weekly" but its not friday', async () => {
-
-  })
-
-  it('Returns empty array if symbolsToReplace is empty', async () => {
-
+    // The 4th is actually friday but this stupid timezone thing screws that up
+    jest.useFakeTimers().setSystemTime(new Date('2022-02-04').getTime()) // Thursday
+    mockSetting.frequency = 'weekly'
+    const orders = await _getOrderInstructionsFromSetting([], mockSetting)
+    expect(orders).toEqual([])
+    // TODO Expect that none of the network funcs were called
+    expect(positionsUtil.getPositions).not.toHaveBeenCalled()
+    expect(expirationsUtil.nextStrikeExpirations).not.toHaveBeenCalled()
+    expect(selectBestUtil.selectBestStrikeForDay).not.toHaveBeenCalled()
   })
 
   it('Returns empty array if _selectNewProtectivePut returns empty object', async () => {
-
+    positionsUtil.getPositions.mockReturnValue([])
+    expirationsUtil.nextStrikeExpirations.mockReturnValue([])
+    const orders = await _getOrderInstructionsFromSetting([], mockSetting)
+    expect(orders).toEqual([])
   })
+
+
+  // TODO Need more
 })
 
 
