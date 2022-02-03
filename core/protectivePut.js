@@ -33,8 +33,11 @@ const getOrderInstructionsFromSetting = (currentProtectivePuts, protectivePutSet
     // If not, return
   }
 
+  // Filter out positions that are less than a month old, if freq is monthly
 
   // Create phantom positions if 'number' is greater than the number that we currently have
+  // NOTE: Do not create phantom position for less-than-month-old puts if frequency is "monthly"
+
   // Phantom positions will have a strike of 0, so they are guarenteed to be replaced
 
   // If 'number' is less than the number we currently have, remove the older ones from play
