@@ -70,8 +70,8 @@ const _selectNewProtectivePut = async (symbol, minimumAge, targetDelta) => {
 }
 
 
-const _createRollOrders = (rollIfNegative, symbolsToReplace, optionToBuySymbol) => {
-  return symbolsToReplace.reduce((acc, symbolToReplace) => {
+const _createRollOrders = (rollIfNegative, symbolsToReplace, optionToBuySymbol) =>
+  symbolsToReplace.reduce((acc, symbolToReplace) => {
     if (symbolToReplace === 'NEWPOSITION') {
       return {
         ...acc,
@@ -92,7 +92,6 @@ const _createRollOrders = (rollIfNegative, symbolsToReplace, optionToBuySymbol) 
 
     return acc
   }, { buy: [], sell: [] })
-}
 
 
 const _getOrderInstructionsFromSetting = async (currentProtectivePuts, protectivePutSetting) => {
@@ -103,7 +102,7 @@ const _getOrderInstructionsFromSetting = async (currentProtectivePuts, protectiv
     targetDelta,
     frequency,
     rollIfNegative,
-    minimumTimeToLive,
+    //minimumTimeToLive,
     minimumAge,
   } = protectivePutSetting
 
@@ -113,23 +112,13 @@ const _getOrderInstructionsFromSetting = async (currentProtectivePuts, protectiv
 
   const optionToBuy = await _selectNewProtectivePut(symbol, minimumAge, targetDelta)
   const optionToBuySymbol = optionToBuy.symbol
-  if (!optionToBuy.symbol) {
+  if (!optionToBuySymbol) {
     return []
   }
 
-  const currentPositions = await positionsUtil.getPositions()
-  const symbolsToReplace = _determinePutsToReplace(protectivePutSetting, currentPositions)
+  const symbolsToReplace = _determinePutsToReplace(protectivePutSetting, currentProtectivePuts)
 
-  // Loop through symbolsToReplace and add buy orders for any NEWPOSITION
-
-  // Loop through symbols older than timeToLive and add sell orders
-
-  // Loop through symbolsToReplace, including phantom positions
-  // If the new option has a strike higher than open position or rollIfNegative is true, create replacement orders
-
-  // Combine arrays from both loops, and sort so that sells are first
-
-  // Return the replacement orders
+  return _createRollOrders(rollIfNegative, symbolsToReplace, optionToBuySymbol)
 }
 
 
@@ -166,6 +155,9 @@ const rollProtectivePuts = async () => {
   }
 }
 
+
+// Loop through symbols older than timeToLive and add sell orders
+// TODO Make this a seperate function for better simplicity
 
 
 module.exports = {
