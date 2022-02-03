@@ -145,7 +145,41 @@ describe('_determinePutsToReplace', () => {
   })
 
   it('Returns only positions that are more than 30 days old if freq is monthly', () => {
+    jest.useFakeTimers().setSystemTime(new Date('2021-10-01').getTime())
+    const mockPositions = [
+      generatePositionObject('AAPL', 1, 'put', 100, '2020-10-02', 1234, '2021-01-02', 69),
+      generatePositionObject('AAPL', 1, 'put', 100, '2021-09-15', 1234, '2021-01-02', 71),
+      generatePositionObject('AAPL', 1, 'put', 100, '2022-12-04', 1234, '2021-01-02', 72),
+      generatePositionObject('AAPL', 1, 'put', 100, '2021-09-01', 1234, '2021-01-02', 73),
+      generatePositionObject('AAPL', 1, 'put', 100, '2021-10-01', 1234, '2021-01-02', 74),
+    ]
+    mockSetting.frequency = 'monthly'
+    mockSetting.number = 5
+    const putsToReplace = _determinePutsToReplace(mockSetting, mockPositions)
+    expect(putsToReplace).toEqual([
+      'AAPL210102P00069000',
+      'AAPL210102P00073000',
+    ])
+    jest.useRealTimers()
+  })
 
+  it('Returns only positions that are more than 30 days old if freq is monthly, also returns NEWPOSITIONS if number of positions is less than number', () => {
+    jest.useFakeTimers().setSystemTime(new Date('2021-10-01').getTime())
+    const mockPositions = [
+      generatePositionObject('AAPL', 1, 'put', 100, '2020-10-02', 1234, '2021-01-02', 69),
+      generatePositionObject('AAPL', 1, 'put', 100, '2021-09-15', 1234, '2021-01-02', 71),
+      generatePositionObject('AAPL', 1, 'put', 100, '2021-09-01', 1234, '2021-01-02', 73),
+    ]
+    mockSetting.frequency = 'monthly'
+    mockSetting.number = 5
+    const putsToReplace = _determinePutsToReplace(mockSetting, mockPositions)
+    expect(putsToReplace).toEqual([
+      'AAPL210102P00069000',
+      'AAPL210102P00073000',
+      'NEWPOSITION',
+      'NEWPOSITION'
+    ])
+    jest.useRealTimers()
   })
 })
 

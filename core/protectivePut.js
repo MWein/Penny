@@ -31,10 +31,16 @@ const _determinePutsToReplace = (setting, currentPositions) => {
   const additionalSymbolsToAdd = Math.max(number - spreadOutPuts.length, 0)
 
   // If the number of positions is higher than setting.number, filter for newest
-  const newestPuts = spreadOutPuts.sort((a, b) => new Date(a) - new Date(b)).slice(-2)
+  const newestPuts = spreadOutPuts.sort((a, b) => new Date(a) - new Date(b)).slice(number * -1)
 
   // If setting.frequency is monthly, filter out positions less than 30 days old
-  const positionsOlderThan30 = frequency === 'monthly' ? newestPuts : newestPuts
+  const today = new Date()
+  const positionsOlderThan30 = frequency === 'monthly' ?
+    newestPuts.filter(x => {
+      const diffInDays = (today.getTime() - new Date(x.date_acquired).getTime()) / (1000 * 3600 * 24)
+      return diffInDays >= 30
+    })
+    : newestPuts
 
   // Add phantom symbols
   const symbolsToReplace = positionsOlderThan30.map(x => x.symbol)
@@ -64,25 +70,14 @@ const _getOrderInstructionsFromSetting = (currentProtectivePuts, protectivePutSe
     return []
   }
 
-  // Filter out currentProtectivePuts for those with symbol
+  // TODO
+  const currentPositions = []
 
-  // Check if current date works with frequency
-  if (frequency === 'weekly') {
-    // Check if its friday
-    // If not, return
+  const symbolsToReplace = _determinePutsToReplace(protectivePutSetting, currentPositions)
+
+  if (symbolsToReplace.length === 0) {
+    return []
   }
-
-
-  // Filter out positions that are less than a month old, if freq is monthly
-
-  // Create phantom positions if 'number' is greater than the number that we currently have
-  // NOTE: Do not create phantom position for less-than-month-old puts if frequency is "monthly"
-
-  // Phantom positions will have a strike of 0, so they are guarenteed to be replaced
-
-  // If 'number' is less than the number we currently have, remove the older ones from play
-
-
 
   // Get expirations for symbol
   // Pick first expiration older than minimum age
@@ -91,8 +86,12 @@ const _getOrderInstructionsFromSetting = (currentProtectivePuts, protectivePutSe
 
   // Pick the one closest to targetDelta
 
-  // Loop through each open positions, including phantom positions
+  // Loop through symbolsToReplace and add buy orders for any NEWPOSITION
+
+  // Loop through symbolsToReplace, including phantom positions
   // If the new option has a strike higher than open position or rollIfNegative is true, create replacement orders
+
+  // Combine arrays from both loops, and sort so that sells are first
 
   // Return the replacement orders
 }
