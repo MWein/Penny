@@ -2,17 +2,20 @@ const positionsUtil = require('../tradier/getPositions')
 const {
   getUnderlying
 } = require('../utils/determineOptionType')
-const {
-  generateSymbol
-} = require('../utils/testHelpers')
+
 
 // Daily and weekly frequency stops should be handled in _getOrderInstructionsFromSetting
 const _determinePutsToReplace = (setting, currentPositions) => {
   const {
     symbol,
+    enabled,
     number,
     frequency,
   } = setting
+
+  if (number === 0 || !enabled) {
+    return []
+  }
 
   // Filter for puts with symbol and protective puts
   const protectivePuts = positionsUtil

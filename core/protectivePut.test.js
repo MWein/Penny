@@ -15,9 +15,28 @@ describe('_determinePutsToReplace', () => {
   beforeEach(() => {
     mockSetting = {
       symbol: 'AAPL',
+      enabled: true,
       number: 2,
       frequency: 'weekly'
     }
+  })
+
+  it('Returns empty array if number is 0, positions exist', () => {
+    const mockPositions = [
+      generatePositionObject('AAPL', 2, 'put', 100, '2021-01-01', 1234, '2021-01-02', 69)
+    ]
+    mockSetting.number = 0
+    const putsToReplace = _determinePutsToReplace(mockSetting, mockPositions)
+    expect(putsToReplace).toEqual([])
+  })
+
+  it('Returns empty array if enabled is false', () => {
+    const mockPositions = [
+      generatePositionObject('AAPL', 2, 'put', 100, '2021-01-01', 1234, '2021-01-02', 69)
+    ]
+    mockSetting.enabled = false
+    const putsToReplace = _determinePutsToReplace(mockSetting, mockPositions)
+    expect(putsToReplace).toEqual([])
   })
 
   it('Returns full list if number of positions and setting.number matches, daily/weekly freq', () => {
