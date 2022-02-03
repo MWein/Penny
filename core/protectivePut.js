@@ -1,4 +1,6 @@
 const positionsUtil = require('../tradier/getPositions')
+const selectBestUtil = require('../tradier/selectBestOptionForDay')
+const expirationsUtil = require('../tradier/nextStrikeExpirations')
 const {
   getUnderlying
 } = require('../utils/determineOptionType')
@@ -53,43 +55,48 @@ const _determinePutsToReplace = (setting, currentPositions) => {
 }
 
 
-const _getOrderInstructionsFromSetting = (currentProtectivePuts, protectivePutSetting) => {
+const _selectNewProtectivePut = async (symbol, minimumAge, targetDelta) => {
+  const expirations = await expirationsUtil.nextStrikeExpirations(symbol, 100, true)
+  const today = new Date()
+  const expiration = expirations.find(x => (new Date(x).getTime() - today.getTime()) / (1000 * 3600 * 24) >= minimumAge)
+  if (!expiration) {
+    return {}
+  }
+  const result = await selectBestUtil.selectBestStrikeForDay(symbol, 'put', expiration, null, targetDelta)
+  return result
+}
+
+
+const _getOrderInstructionsFromSetting = async (currentProtectivePuts, protectivePutSetting) => {
   const {
     symbol,
     enabled,
     number,
-    frequency,
     targetDelta,
     rollIfNegative,
     minimumTimeToLive,
     minimumAge,
   } = protectivePutSetting
 
-  if (!enabled) {
+  if (number === 0 || !enabled) {
     return []
   }
 
-  if (number === 0) {
-    return []
-  }
-
-  // TODO
-  const currentPositions = []
-
+  const currentPositions = await positionsUtil.getPositions()
   const symbolsToReplace = _determinePutsToReplace(protectivePutSetting, currentPositions)
 
   if (symbolsToReplace.length === 0) {
     return []
   }
 
-  // Get expirations for symbol
-  // Pick first expiration older than minimum age
-
-  // Get the options expiring that day
-
-  // Pick the one closest to targetDelta
+  const optionToBuy = await _selectNewProtectivePut(symbol, minimumAge, targetDelta)
+  if (optionToBuy === {}) {
+    return []
+  }
 
   // Loop through symbolsToReplace and add buy orders for any NEWPOSITION
+
+  // Loop through symbols older than timeToLive and add sell orders
 
   // Loop through symbolsToReplace, including phantom positions
   // If the new option has a strike higher than open position or rollIfNegative is true, create replacement orders
@@ -122,6 +129,7 @@ const rollProtectivePuts = () => {
 
 module.exports = {
   _determinePutsToReplace,
+  _selectNewProtectivePut,
   _getOrderInstructionsFromSetting,
   rollProtectivePuts
 }

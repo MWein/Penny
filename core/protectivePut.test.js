@@ -1,8 +1,12 @@
 const {
   _determinePutsToReplace,
+  _selectNewProtectivePut,
   _getOrderInstructionsFromSetting,
   rollProtectivePuts
 } = require('./protectivePut')
+
+const selectBestUtil = require('../tradier/selectBestOptionForDay')
+const expirationsUtil = require('../tradier/nextStrikeExpirations')
 
 const {
   generatePositionObject
@@ -199,6 +203,52 @@ describe('_determinePutsToReplace', () => {
       'NEWPOSITION'
     ])
     jest.useRealTimers()
+  })
+})
+
+
+
+describe('_selectNewProtectivePut', () => {
+  beforeEach(() => {
+    jest.useFakeTimers().setSystemTime(new Date('2021-10-01').getTime())
+    expirationsUtil.nextStrikeExpirations = jest.fn()
+    selectBestUtil.selectBestStrikeForDay = jest.fn()
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
+  it('Returns empty object if there arent any expirations at all', async () => {
+    expirationsUtil.nextStrikeExpirations.mockReturnValue([])
+    const result = await _selectNewProtectivePut('TSLA', 24, 0.3)
+    expect(result).toEqual({})
+    expect(expirationsUtil.nextStrikeExpirations).toHaveBeenCalledWith('TSLA', 100, true)
+    expect(selectBestUtil.selectBestStrikeForDay).not.toHaveBeenCalled()
+  })
+
+  it('Returns empty object if there arent any expirations that meet the minimumAge', async () => {
+    expirationsUtil.nextStrikeExpirations.mockReturnValue([
+      '2021-10-01',
+      '2021-10-03',
+      '2021-10-04'
+    ])
+    const result = await _selectNewProtectivePut('AAPL', 24, 0.3)
+    expect(result).toEqual({})
+    expect(selectBestUtil.selectBestStrikeForDay).not.toHaveBeenCalled()
+  })
+
+  it('Selects the first expiration that meets the minimumAge requirement', async () => {
+    expirationsUtil.nextStrikeExpirations.mockReturnValue([
+      '2021-10-01',
+      '2021-10-03',
+      '2022-05-04',
+      '2022-05-06',
+    ])
+    selectBestUtil.selectBestStrikeForDay.mockReturnValue('hello')
+    const result = await _selectNewProtectivePut('AAPL', 24, 0.3)
+    expect(result).toEqual('hello')
+    expect(selectBestUtil.selectBestStrikeForDay).toHaveBeenCalledWith('AAPL', 'put', '2022-05-04', null, 0.3)
   })
 })
 
