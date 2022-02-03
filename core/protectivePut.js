@@ -4,6 +4,9 @@ const expirationsUtil = require('../tradier/nextStrikeExpirations')
 const settingsUtil = require('../utils/settings')
 const logUtil = require('../utils/log')
 const market = require('../tradier/market')
+const protectivePutSchema = require('../db_models/protectivePutSchema')
+const sendOrderUtil = require('../tradier/sendOrders')
+const sleepUtil = require('../utils/sleep')
 const {
   getUnderlying,
   getStrike,
@@ -136,17 +139,41 @@ const rollProtectivePuts = async () => {
       logUtil.log('Market Closed')
       return
     }
-      
-    // Get protective put settings from DB
-    // If none, return and do nothing
-      
-    // Get all current protective puts
-      
-    // call getOrderInstructionsFromSetting for each setting
-      
-    // Sort so that sell orders are first
-      
-      
+
+    const protectivePutSettings = await protectivePutSchema.find()
+    const enabledProtectivePuts = protectivePutSettings.filter(x => x.enabled && x.number > 0)
+    if (enabledProtectivePuts.length === 0) {
+      logUtil.log('No Valid Protective Put Settings')
+      return
+    }
+
+    // Get current protective puts
+    const positions = await positionsUtil.getPositions()
+    const currentPuts = positionsUtil.filterForLongPutPositions(positions)
+    
+    let buys = []
+    let sells = []
+    for (let x = 0; x < enabledProtectivePuts.length; x++) {
+      const current = enabledProtectivePuts[x]
+      const results = await _getOrderInstructionsFromSetting(currentPuts, current)
+      buys.push(results.buy)
+      sells.push(results.sell)
+    }
+
+    // Sell whatever needs selling
+    await Promise.all(sells.map(async optionSymbol => {
+      const symbol = getUnderlying(optionSymbol)
+      await sendOrderUtil.sellToClose(symbol, optionSymbol, 1)
+    }))
+
+    // Wait a little bit for the orders to fulfil
+    await sleepUtil.sleep(30)
+
+    // Buy whatever needs buying
+    await Promise.all(buys.map(async optionSymbol => {
+      const symbol = getUnderlying(optionSymbol)
+      await sendOrderUtil.buyToOpen(symbol, optionSymbol, 1)
+    }))
   } catch (e) {
     logUtil.log({
       type: 'error',
