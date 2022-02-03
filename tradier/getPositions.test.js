@@ -2,6 +2,7 @@ const network = require('../utils/network')
 const {
   filterForOptionableStockPositions,
   filterForShortPutPositions,
+  filterForLongPutPositions,
   filterForShortCallPositions,
   getPositions,
 } = require('./getPositions')
@@ -30,6 +31,12 @@ describe('Filter functions', () => {
   it('filterForShortPutPositions', () => {
     expect(filterForShortPutPositions(positions)).toEqual([
       generatePositionObject('ZNGA', -7, 'put'),
+    ])
+  })
+
+  it('filterForLongPutPositions', () => {
+    expect(filterForLongPutPositions(positions)).toEqual([
+      generatePositionObject('GME', 19, 'put'),
     ])
   })
 

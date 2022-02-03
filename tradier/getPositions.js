@@ -8,6 +8,9 @@ const filterForOptionableStockPositions = positions =>
 const filterForShortPutPositions = positions =>
   positions.filter(pos => determineOptionTypeFromSymbol(pos.symbol) === 'put' && pos.quantity < 0)
 
+const filterForLongPutPositions = positions =>
+  positions.filter(pos => determineOptionTypeFromSymbol(pos.symbol) === 'put' && pos.quantity > 0)
+
 const filterForShortCallPositions = positions =>
   positions.filter(pos => determineOptionTypeFromSymbol(pos.symbol) === 'call' && pos.quantity < 0)
 
@@ -28,6 +31,7 @@ const getPositions = async () => {
 module.exports = {
   filterForOptionableStockPositions,
   filterForShortPutPositions,
+  filterForLongPutPositions,
   filterForShortCallPositions,
   getPositions
 }
