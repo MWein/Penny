@@ -290,7 +290,39 @@ describe('_getOrderInstructionsFromSetting', () => {
 
   })
 
-  it('Returns empty array if frequency is "monthly" but none are 30 days old', async () => {
+  it('Returns empty array if symbolsToReplace is empty', async () => {
 
   })
+
+  it('Returns empty array if _selectNewProtectivePut returns empty object', async () => {
+
+  })
+})
+
+
+describe('rollProtectivePuts', () => {
+    it('Exits if settings.rollProtectivePuts is false', async () => {
+
+    })
+
+    it('Exits if market is closed', async () => {
+
+    })
+
+    it('Logs on exception', async () => {
+
+    })
+
+    it('Exits if there arent any protectivePut orders in DB', async () => {
+
+    })
+
+    it('Exits if all protectivePut orders in DB are disabled', async () => {
+
+    })
+
+    it('Exits if all protectivePut orders in DB have number = 0', async () => {
+        
+    })
+
 })

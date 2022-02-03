@@ -72,12 +72,17 @@ const _getOrderInstructionsFromSetting = async (currentProtectivePuts, protectiv
     enabled,
     number,
     targetDelta,
+    frequency,
     rollIfNegative,
     minimumTimeToLive,
     minimumAge,
   } = protectivePutSetting
 
   if (number === 0 || !enabled) {
+    return []
+  }
+
+  if (frequency === 'weekly' && new Date().getDay() !== 5) {
     return []
   }
 
