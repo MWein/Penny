@@ -9,6 +9,7 @@ const { closeExpiringPuts } = require('./core/closeExpiringPuts')
 const { sellCashSecuredPuts } = require('./core/cashSecuredPut')
 const { allocateUnutilizedCash } = require('./core/allocateUnutilizedCash')
 const { rollProtectivePuts } = require('./core/protectivePut')
+const { sellBullPutSpreadDemo } = require('./core/sellBullPutSpreadDemo')
 
 
 const housekeeping = async () => {
@@ -39,6 +40,21 @@ const sellOptions = async () => {
 }
 
 
+const experimental = async () => {
+  try {
+    log('Rolling Protective Puts')
+    await rollProtectivePuts()
+    log('Selling SPY Bull Put Spread')
+    await sellBullPutSpreadDemo()
+  } catch (e) {
+    log({
+      type: 'ERROR experimental',
+      message: e.toString()
+    })
+  }
+}
+
+
 const launchCrons = async () => {
   log('Starting Crons')
 
@@ -58,7 +74,7 @@ const launchCrons = async () => {
   new CronJob('0 0 10 * * 1-5', sellOptions, null, true, 'America/New_York')
   new CronJob('0 0 12 * * 1-5', sellOptions, null, true, 'America/New_York')
   new CronJob('0 0 14 * * 1-5', sellOptions, null, true, 'America/New_York')
-  new CronJob('0 0 15 * * 1-5', rollProtectivePuts, null, true, 'America/New_York')
+  new CronJob('0 0 15 * * 1-5', experimental, null, true, 'America/New_York')
 
   // Close expiring puts before options sales on fridays
   new CronJob('0 0 09 * * 5', closeExpiringPuts, null, true, 'America/New_York')
