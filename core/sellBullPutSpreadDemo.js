@@ -15,8 +15,8 @@ const sellBullPutSpreadDemo = async () => {
 
     console.log('Expiration', expiration)
 
-    const shortPut = await selectBest.selectBestStrikeForDay('SPY', 'put', expiration, null, 0.2)
-    const longPut = await selectBest.selectBestStrikeForDay('SPY', 'put', expiration, null, 0.05)
+    const shortPut = await selectBest.selectBestStrikeForDay('SPY', 'put', expiration, null, 0.3)
+    const longPut = await selectBest.selectBestStrikeForDay('SPY', 'put', expiration, null, 0.15)
 
     const legs = [
       {
@@ -34,6 +34,7 @@ const sellBullPutSpreadDemo = async () => {
 
     console.log(legs)
 
+    return
     const order = await sendOrderUtil.multilegOptionOrder('SPY', 'credit', legs)
     console.log(order)
   } catch (e) {
