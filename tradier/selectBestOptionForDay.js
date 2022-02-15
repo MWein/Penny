@@ -46,10 +46,38 @@ const selectBestStrikeForDay = async (symbol, type, expiration, minStrike, targe
   }
 }
 
+// For insanity experiment
+const selectDemOptions = async (symbol, type, expiration, currentPrice) => {
+  const url = `markets/options/chains?symbol=${symbol}&expiration=${expiration}&greeks=true`
+
+  // If a bad expiration date is chosen, this will throw
+  try {
+    const response = await network.get(url)
+    const chain = _formatChain(response.options.option, type, 0.5)
+    
+    // Get 1 above strike, and one below
+    const above = chain.filter(x => x.strike > currentPrice)[0]
+    const below = chain.reverse().filter(x => x.strike < currentPrice)[0]
+
+    const shortOpt = above.premium > below.premium ? above : below
+    const longOpt = above.premium < below.premium ? above : below
+
+    return {
+      shortOpt,
+      longOpt,
+    }
+
+  } catch (e) {
+    return {}
+  }
+}
+
 
 module.exports = {
   _formatChain,
   _filterChain,
   _selectOptionClosestToTarget,
   selectBestStrikeForDay,
+
+  selectDemOptions,
 }
