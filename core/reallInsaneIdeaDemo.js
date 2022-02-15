@@ -70,10 +70,11 @@ const insaneEnoughToWork = async () => {
       'COIN', 'TLRY', 'TWTR', 'RIVN', 'T', 'KO', 'CGC', 'GOOG', 'MRNA', 'SPCE', 'BB', 'PYPL', 'UBER',
       'GM', 'ZNGA', 'NCLH', 'WKHS', 'SQ', 'DKNG', 'ABNB', 'BA', 'WMT',
       'JNJ', 'CHPT', 'LUV', 'QQQ', 'MRO', 'ARKK', 'RIOT', 'XOM', 'SOFI', 'WISH', 'SONY',
-      'PENN', 'COST', 'ZM', 'BRK.B', 'JPM'
+      'PENN', 'COST', 'ZM', 'BRK.B', 'JPM',
+      'RCL', 'CLOV', 'ET', 'INTC', 'V', 'TSM', 'FUBO', 'MA'
     ]
 
-    console.log(stonks.length)
+    //console.log(stonks.length)
 
     for (let x = 0; x < stonks.length; x++) {
       await insanityCycle(stonks[x])
