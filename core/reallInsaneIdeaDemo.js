@@ -74,7 +74,6 @@ const insaneEnoughToWork = async () => {
       'RCL', 'CLOV', 'ET', 'INTC', 'V', 'TSM', 'FUBO', 'MA'
     ]
 
-    //console.log(stonks.length)
 
     for (let x = 0; x < stonks.length; x++) {
       await insanityCycle(stonks[x])

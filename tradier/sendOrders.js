@@ -188,7 +188,7 @@ const multilegOptionOrder = async (underlying, type, legs) => {
     symbol: underlying,
     type,
     duration: 'day',
-    price: 1.00,
+    price: 0.10,
   }
 
   const bodyWithLegs = legs.reduce((acc, leg, index) => {
