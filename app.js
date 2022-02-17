@@ -65,10 +65,10 @@ const launchCrons = async () => {
     })
   }, null, true, 'America/New_York')
 
-  new CronJob('0 31 09 * * 1-6', () => {
-    log('Creating GTC Orders')
-    createGTCOrders()
-  }, null, true, 'America/New_York')
+  // new CronJob('0 31 09 * * 1-6', () => {
+  //   log('Creating GTC Orders')
+  //   createGTCOrders()
+  // }, null, true, 'America/New_York')
 
 
   new CronJob('0 0 10 * * 1-5', insaneEnoughToWork, null, true, 'America/New_York')
