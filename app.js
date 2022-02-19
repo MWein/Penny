@@ -8,6 +8,7 @@ const { log, clearOldLogs } = require('./utils/log')
 const { closeExpiringPuts } = require('./core/closeExpiringPuts')
 const { sellCashSecuredPuts } = require('./core/cashSecuredPut')
 const { allocateUnutilizedCash } = require('./core/allocateUnutilizedCash')
+const { sellSpreads } = require('./core/sellSpreads')
 
 
 const housekeeping = async () => {
@@ -25,10 +26,14 @@ const housekeeping = async () => {
 
 const sellOptions = async () => {
   try {
-    log('Selling Covered Calls')
-    await sellCoveredCalls()
-    log('Selling Cash Secured Puts')
-    await sellCashSecuredPuts()
+
+    await sellSpreads()
+
+    // Commented out because this is not compatible with stuff (for now)
+    // log('Selling Covered Calls')
+    // await sellCoveredCalls()
+    // log('Selling Cash Secured Puts')
+    // await sellCashSecuredPuts()
   } catch (e) {
     log({
       type: 'ERROR sellOptions',
