@@ -142,7 +142,7 @@ const demo2 = async () => {
       await sellSpread(symbol, 'put', 1, chain)
     } catch (e) {
       // TODO Log
-      logUtil.log('demo: Bad things happened with', tradeableSymbols[x])
+      logUtil.log('demo2: Bad things happened with', tradeableSymbols[x])
       continue
     }
   }
