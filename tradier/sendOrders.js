@@ -121,6 +121,47 @@ const buyToCloseMarket = async (symbol, option_symbol, quantity) => {
 }
 
 
+const multilegOptionOrder = async (underlying, type, legs) => {
+  const url = `accounts/${process.env.ACCOUNTNUM}/orders`
+
+  const mainBody = {
+    account_id: process.env.ACCOUNTNUM,
+    class: 'multileg',
+    symbol: underlying,
+    type,
+    duration: 'day',
+    price: 0.10,
+  }
+
+  const bodyWithLegs = legs.reduce((acc, leg, index) => {
+    const optionSymbolKey = `option_symbol[${index}]`
+    const sideKey = `side[${index}]`
+    const quantityKey = `quantity[${index}]`
+
+    return {
+      ...acc,
+      [optionSymbolKey]: leg.symbol,
+      [sideKey]: leg.side,
+      [quantityKey]: leg.quantity,
+    }
+  }, mainBody)
+
+  try {
+    const result = await network.post(url, bodyWithLegs, false)
+    logUtil.log(`Multileg Order ${underlying}`)
+    return result
+  } catch (e) {
+    logUtil.log({
+      type: 'error',
+      message: `Multileg Order ${underlying} Failed`,
+    })
+    return {
+      status: 'not ok'
+    }
+  }
+}
+
+
 const cancelOrders = async orderIDs => {
   for (let x = 0; x < orderIDs.length; x++) {
     const url = `accounts/${process.env.ACCOUNTNUM}/orders/${orderIDs[x]}`
@@ -141,5 +182,6 @@ module.exports = {
   sellToOpen,
   buyToClose,
   buyToCloseMarket,
+  multilegOptionOrder,
   cancelOrders,
 }
