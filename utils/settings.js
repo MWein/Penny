@@ -43,25 +43,3 @@ module.exports = {
   getSetting,
   getSettings,
 }
-
-
-
-
-
-
-const newWatchlist = [
-  {
-    symbol: 'SPY',
-    maxPositions: 1,
-    volatility: 0.05,
-    call: {
-      enabled: true,
-      targetDelta: 0.5,
-      minStrikeMode: 'auto'
-    },
-    put: {
-      enabled: true,
-      targetDelta: 0.5
-    }
-  }
-]
